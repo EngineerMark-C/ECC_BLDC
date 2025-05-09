@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "steer.h": "c",
+        "pid.h": "c"
+    }
+}

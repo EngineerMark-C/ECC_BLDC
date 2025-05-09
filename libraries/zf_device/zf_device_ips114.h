@@ -124,6 +124,7 @@ void    ips114_show_string              (uint16 x, uint16 y, const char dat[]); 
 void    ips114_show_int                 (uint16 x,uint16 y, const int32 dat, uint8 num);                                    // IPS114 显示32位有符号 (去除整数部分无效的0)
 void    ips114_show_uint                (uint16 x,uint16 y, const uint32 dat, uint8 num);                                   // IPS114 显示32位无符号 (去除整数部分无效的0)
 void    ips114_show_float               (uint16 x,uint16 y, const double dat, uint8 num, uint8 pointnum);
+void    ips114_show_double              (uint16 x,uint16 y, const double dat, uint8 num, uint8 pointnum);
 
 void    ips114_show_binary_image        (uint16 x, uint16 y, const uint8 *image, uint16 width, uint16 height, uint16 dis_width, uint16 dis_height);                     // IPS114 显示二值图像 数据每八个点组成一个字节数据
 void    ips114_show_gray_image          (uint16 x, uint16 y, const uint8 *image, uint16 width, uint16 height, uint16 dis_width, uint16 dis_height, uint8 threshold);    // IPS114 显示 8bit 灰度图像 带二值化阈值

@@ -689,6 +689,47 @@ void ips114_show_float (uint16 x, uint16 y, const double dat, uint8 num, uint8 p
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+// 函数简介     IPS114 显示 double 类型浮点数 (去除整数部分无效的0)
+// 参数说明     x               坐标x方向的起点 参数范围 [0, ips114_width_max-1]
+// 参数说明     y               坐标y方向的起点 参数范围 [0, ips114_height_max-1]
+// 参数说明     dat             需要显示的变量 数据类型 double
+// 参数说明     num             整数位显示长度   最高16位
+// 参数说明     pointnum        小数位显示长度   最高16位
+// 返回参数     void
+// 使用示例     ips114_show_double(0, 0, x, 5, 10);               // 显示浮点数 整数显示 5 位 小数显示 10 位
+// 备注信息     特别注意当发现小数部分显示的值与你写入的值不一样的时候，
+//              可能是由于浮点数精度丢失问题导致的，这并不是显示函数的问题，
+//              有关问题的详情，请自行百度学习   浮点数精度丢失问题。
+//              负数会显示一个 '-'号
+//-------------------------------------------------------------------------------------------------------------------
+void ips114_show_double(uint16 x, uint16 y, const double dat, uint8 num, uint8 pointnum)
+{
+    // 如果程序在输出了断言信息 并且提示出错位置在这里
+    // 那么一般是屏幕显示的时候超过屏幕分辨率范围了
+    zf_assert(x < ips114_width_max);
+    zf_assert(y < ips114_height_max);
+    zf_assert(0 < num);
+    zf_assert(16 >= num);  // 支持最多 16 位整数部分
+    zf_assert(0 < pointnum);
+    zf_assert(16 >= pointnum);  // 支持最多 16 位小数部分
+
+    double dat_temp = dat;
+    double offset = 1.0;
+    char data_buffer[35];  // 增加缓冲区大小以支持更多位数
+    memset(data_buffer, 0, 35);
+    memset(data_buffer, ' ', num + pointnum + 2);
+
+    // 用来计算余数显示 123 显示 2 位则应该显示 23
+    for(; 0 < num; num --)
+    {
+        offset *= 10;
+    }
+    dat_temp = dat_temp - ((int)dat_temp / (int)offset) * offset;
+    func_double_to_str(data_buffer, dat_temp, pointnum);
+    ips114_show_string(x, y, data_buffer);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
 // 函数简介     IPS114 显示二值图像 数据每八个点组成一个字节数据
 // 参数说明     x               坐标x方向的起点 参数范围 [0, ips114_width_max-1]
 // 参数说明     y               坐标y方向的起点 参数范围 [0, ips114_height_max-1]
