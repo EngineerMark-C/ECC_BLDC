@@ -1,4 +1,3 @@
-#include "zf_common_headfile.h"
 #include "init.h"
 
 // 状态变量

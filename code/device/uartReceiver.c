@@ -1,4 +1,3 @@
-#include "zf_common_headfile.h"
 #include "init.h"
 
 // 初始化UART接收机

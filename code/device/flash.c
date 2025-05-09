@@ -1,4 +1,3 @@
-#include "zf_common_headfile.h"
 #include "init.h"
 
 // 64 bit GPS数据存储
