@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "steer.h": "c",
-        "pid.h": "c"
+        "pid.h": "c",
+        "init.h": "c"
     }
 }

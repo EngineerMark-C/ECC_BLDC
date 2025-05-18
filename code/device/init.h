@@ -16,6 +16,7 @@
 #include "control.h"
 #include "ins.h"
 #include "menu.h"
+#include "control.h"
 
 void Init(void);
 

@@ -4,73 +4,142 @@ struct PID pid_speed;
 struct PID pid_steer;
 int16_t output_speed;
 
-void PID_init(struct PID *pid, float kp, float ki, float kd)
+void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
 {
     pid->kp = kp;
     pid->ki = ki;
     pid->kd = kd;
-    pid->target = 0;
-    pid->current = 0;
-    pid->error = 0;
-    pid->error_last = 0;
-    pid->integral = 0;
-    pid->derivative = 0;
-    pid->output = 0;
+
+    // 初始化状态量
+    pid->target = 0.0f;
+    pid->current = 0.0f;
+
+    // 初始化误差量
+    pid->error = 0.0f;
+    pid->error_last = 0.0f;
+    pid->error_prev = 0.0f;
+
+    // 初始化积分相关
+    pid->integral = 0.0f;
+    pid->integral_max = integral_limit;
+    pid->integral_min = -integral_limit;
+    pid->integral_separation_enable = false;
+    pid->integral_separation_threshold = 2000.0f;
+
+    // 初始化微分相关
+    pid->derivative = 0.0f;
+    pid->filter_coefficient = 0.8f; // 默认滤波系数
+
+    // 初始化输出相关
+    pid->output = 0.0f;
+    pid->output_min = -DUTY_MAX;
+    pid->output_max = DUTY_MAX;
+
+    // 初始化控制周期
+    pid->dt = 0.01f; // 默认时间间隔为 10ms
+
+    // 初始化控制模式
+    pid->mode = mode; // 默认位置式PID
+    pid->enabled = true;
 }
 
-//位置式 PID
-void PID_Speed_Calc(struct PID *pid, float current)
+// 重置 PID 控制器状态
+void PID_reset(struct PID *pid)
 {
-    pid->current = current;
-    pid->error = pid->target - pid->current;                    // 计算当前误差
-    
-    pid->integral += pid->error;                                // 累积误差积分
-    pid->derivative = pid->error - pid->error_last;             // 计算误差微分
-    
-    // 积分限幅，防止积分饱和
-    if(pid->integral > 10000) pid->integral = 10000;
-    if(pid->integral < -10000) pid->integral = -10000;
-    
-    // 计算PID输出
-    pid->output = pid->kp * pid->error + 
-                 pid->ki * pid->integral + 
-                 pid->kd * pid->derivative;
-    
-    // 输出限幅
-    if(pid->output > DUTY_MAX) pid->output = DUTY_MAX;
-    if(pid->output < -DUTY_MAX) pid->output = -DUTY_MAX;
-    
-    pid->error_last = pid->error;                               // 保存上次误差
+    pid->error = 0.0f;
+    pid->error_last = 0.0f;
+    pid->error_prev = 0.0f;
+    pid->integral = 0.0f;
+    pid->derivative = 0.0f;
+    pid->output = 0.0f;
 }
 
-// 增量式 PID
-// void PID_Speed_Calc(struct PID *pid, float current)
-// {
-//     pid->current = current;
-//     pid->error = pid->target - pid->current;
+// 统一的 PID 计算函数
+void PID_calc(struct PID *pid, float current)
+{
+    if (!pid->enabled)
+    {
+        return; // 如果控制器未启用，直接返回
+    }
 
-//     pid->output += pid->kp * (pid->error - pid->error_last) + 
-//                   pid->ki * pid->error + 
-//                   pid->kd * (pid->error - 2 * pid->error_last + pid->derivative);
-    
-//     // 输出限幅
-//     if(pid->output > DUTY_MAX) pid->output = DUTY_MAX;
-//     if(pid->output < -DUTY_MAX) pid->output = -DUTY_MAX;
+    // 更新当前值
+    pid->current = current;
 
-//     pid->derivative = pid->error_last;
-//     pid->error_last = pid->error;
-// }
+    // 计算误差
+    pid->error = pid->target - pid->current;
+
+    // 选择使用位置式PID还是增量式PID
+    if (pid->mode == 0)
+    {
+        // 位置式PID
+
+        // 积分项计算（带积分分离）
+        if (!pid->integral_separation_enable || fabsf(pid->error) < pid->integral_separation_threshold)
+        {
+            pid->integral += pid->error * pid->dt;
+        }
+
+        // 积分限幅
+        if (pid->integral > pid->integral_max)
+        {
+            pid->integral = pid->integral_max;
+        }
+        else if (pid->integral < pid->integral_min)
+        {
+            pid->integral = pid->integral_min;
+        }
+
+        // 微分项计算（带低通滤波）
+        float derivative_raw = (pid->error - pid->error_last) / pid->dt;
+        pid->derivative = pid->filter_coefficient * derivative_raw +
+                          (1.0f - pid->filter_coefficient) * pid->derivative;
+
+        // 计算PID输出
+        pid->output = pid->kp * pid->error +
+                      pid->ki * pid->integral +
+                      pid->kd * pid->derivative;
+    }
+    else
+    {
+        // 增量式PID
+        float dp = pid->kp * (pid->error - pid->error_last);
+        float di = pid->ki * pid->error * pid->dt;
+        float dd = pid->kd * (pid->error - 2 * pid->error_last + pid->error_prev) / pid->dt;
+
+        // 计算输出增量
+        float delta_output = dp + di + dd;
+
+        // 更新输出
+        pid->output += delta_output;
+    }
+
+    // 输出限幅
+    if (pid->output > pid->output_max)
+    {
+        pid->output = pid->output_max;
+    }
+    else if (pid->output < pid->output_min)
+    {
+        pid->output = pid->output_min;
+    }
+
+    // 保存历史误差
+    pid->error_prev = pid->error_last;
+    pid->error_last = pid->error;
+}
 
 // 电机 PID 控制
 void Motor_PID_Control(float target)
 {
-    pid_speed.target = target;                                      // 设置目标值
-    PID_Speed_Calc(&pid_speed, speed);                              // 使用当前速度作为反馈值
-    output_speed += (int16_t)pid_speed.output;                      // 将PID输出转换为占空比
-    
+    pid_speed.target = target;                // 设置目标值
+    PID_calc(&pid_speed, speed);              // 使用当前速度作为反馈值
+    output_speed = (int16_t)pid_speed.output; // 将PID输出转换为占空比
+
     // 输出限幅
-    if(output_speed > DUTY_MAX) output_speed = DUTY_MAX;
-    if(output_speed < -DUTY_MAX) output_speed = -DUTY_MAX;
+    if (output_speed > DUTY_MAX)
+        output_speed = DUTY_MAX;
+    if (output_speed < -DUTY_MAX)
+        output_speed = -DUTY_MAX;
 
     // 电机控制
     BLDC_Set_Duty(output_speed);

@@ -48,10 +48,19 @@ int core0_main(void)
     debug_init();                   // 初始化默认调试串口
     cpu_wait_event_ready();         // 等待所有核心初始化完毕
     Init();                         // 初始化函数
-    BLDC_Set_Duty(800);                // 设置电机占空比为0
+    // target_speed = 5.0f;            // 目标速度
     while (TRUE)
     {
+        // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
 
+        Menu();                                                     // 菜单逻辑
+        system_delay_ms(100);                                       // 将刷新间隔增加到100ms
+        // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
+        // time = end_time - start_time;
+        // float time_us = (float)time / 100.0f;
+        // printf("所需时间: %.2f us\n", time_us);
+        // printf("%f\n", yaw);
+        printf("%f,%f\n", speed, target_speed);
     }
 }
 

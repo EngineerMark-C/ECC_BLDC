@@ -55,7 +55,7 @@ void Calibrate_Gyro(void)
     int samples = 1000;  // 采样次数
     float sum_x = 0.0f, sum_y = 0.0f, sum_z = 0.0f;
     char progress_str[20];
-    
+    pit_disable(PIT1);
     system_delay_ms(1000);  // 延时1秒
 
     // 采集静止状态下的陀螺仪数据
@@ -85,6 +85,7 @@ void Calibrate_Gyro(void)
     ips114_show_float(60, 80, gyro_bias[1], 6, 2);  // Y
     ips114_show_float(60, 96, gyro_bias[2], 6, 2);  // Z
     ips114_show_string(60, 112, "Calibration Done!");
+    pit_enable(PIT1);
     system_delay_ms(1000);
 }
 
