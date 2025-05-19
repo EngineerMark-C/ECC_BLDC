@@ -2,6 +2,7 @@
     "files.associations": {
         "steer.h": "c",
         "pid.h": "c",
-        "init.h": "c"
+        "init.h": "c",
+        "zf_driver_soft_iic.h": "c"
     }
 }

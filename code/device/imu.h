@@ -1,6 +1,10 @@
 #ifndef _imu_h_
 #define _imu_h_
 
+// 选择使用的IMU传感器
+// 0: IMU963RA, 1: ICM42688
+#define USE_IMU_TYPE                    0
+
 #define PIT1                            (CCU60_CH1 )                            // 使用的周期中断编号
 
 #define sampleFreq                      200.0f                                  // sample frequency in Hz

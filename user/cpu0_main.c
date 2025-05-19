@@ -49,6 +49,7 @@ int core0_main(void)
     cpu_wait_event_ready();         // 等待所有核心初始化完毕
     Init();                         // 初始化函数
     // target_speed = 5.0f;            // 目标速度
+    // icm42688_init();  // 初始化 ICM42688
     while (TRUE)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
@@ -59,8 +60,11 @@ int core0_main(void)
         // time = end_time - start_time;
         // float time_us = (float)time / 100.0f;
         // printf("所需时间: %.2f us\n", time_us);
-        // printf("%f\n", yaw);
-        printf("%f,%f\n", speed, target_speed);
+        printf("%f\n", yaw);
+        // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
+        // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
+        // printf("%f,%f,%f\n", pitch, roll, yaw);
+        // printf("%f,%f\n", speed, target_speed);
     }
 }
 

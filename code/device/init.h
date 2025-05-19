@@ -2,6 +2,7 @@
 #define _init_h_
 
 #include "zf_common_headfile.h"
+#include "icm42688.h"
 #include "bldc.h"
 #include "encoder.h"
 #include "steer.h"
