@@ -61,6 +61,8 @@ void Imu_get_data(void)
     gy_raw = icm42688_gyro_transition(icm42688_gyro_y);
     gz_raw = icm42688_gyro_transition(icm42688_gyro_z);
 #endif
+    //printf("%f, %f, %f\n", ax_raw, ay_raw, az_raw);
+    //printf("%f, %f, %f\n", gx_raw, gy_raw, gz_raw);
 }
 
 // 陀螺仪偏置校准函数

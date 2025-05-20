@@ -28,4 +28,6 @@ void INS_Points_Init(void);
 void Save_Basic_Data(void);
 void Basic_Data_Init(void);
 
+void Reset_All_Flash_Data(void);
+
 #endif
