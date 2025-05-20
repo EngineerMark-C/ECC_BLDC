@@ -35,6 +35,7 @@
 
 #include "isr_config.h"
 #include "isr.h"
+#include "init.h"
 
 // 对于TC系列默认是不支持中断嵌套的，希望支持中断嵌套需要在中断内使用 interrupt_global_enable(0); 来开启中断嵌套
 // 简单点说实际上进入中断后TC系列的硬件自动调用了 interrupt_global_disable(); 来拒绝响应任何的中断，因此需要我们自己手动调用 interrupt_global_enable(0); 来开启中断的响应。
@@ -42,37 +43,35 @@
 // **************************** PIT中断函数 ****************************
 IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 {
-    interrupt_global_enable(0);                     // 开启中断嵌套
+    interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU60_CH0);
-
-
-
+    encoder_data_dir = encoder_get_count(ENCODER_DIR);              // 获取编码器计数
+    encoder_clear_count(ENCODER_DIR);
+    Encoder_get_speed();                                            // 计算速度
+    // Motor_PID_Control(target_speed);                              // 电机 PID 控制
 }
 
 
 IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
 {
-    interrupt_global_enable(0);                     // 开启中断嵌套
+    interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU60_CH1);
-
-
-
-
+    Imu_get_data();                                                 // 获取 IMU963RA 数据
+    Imu_Update();                                                   // 四元数解算
+    Steer_PID_Control(target_angle);                                // 舵机 PID 控制
 }
 
 IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
 {
-    interrupt_global_enable(0);                     // 开启中断嵌套
+    interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU61_CH0);
-
-
-
-
+    Get_Now_Location();                                             // 获取当前位置
+    Navigation_Mode_Switch();                                       // 导航模式切换
 }
 
 IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)
 {
-    interrupt_global_enable(0);                     // 开启中断嵌套
+    interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU61_CH1);
 
 

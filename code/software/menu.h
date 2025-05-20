@@ -1,7 +1,7 @@
 #ifndef _menu_h_
 #define _menu_h_
 
-void Button_init(void);
+void Button_Init(void);
 void Menu(void);
 
 void Display_Menu(void);

@@ -134,7 +134,7 @@ static key_state_enum key2_state;
 static key_state_enum key3_state;
 static key_state_enum key4_state;
 
-void Button_init(void)
+void Button_Init(void)
 {
     key_init(10); // 初始化按键
 }
@@ -313,24 +313,47 @@ void Display_Steer_Menu(void)
     ips114_show_string(0, 64, "Press KEY4 to return");
 }
 
-// 显示速度和IMU信息
 void Display_Speed_Imu_Info(void)
 {
-    // 速度相关信息
-    ips114_show_string(0, 0, "Speed:");
-    ips114_show_float(60, 0, pid_speed.target, 5, 2);     // 目标值
-    ips114_show_float(60, 16, speed, 5, 2);               // 当前速度
-    ips114_show_float(60, 32, pid_speed.error, 5, 2);     // 误差
-    ips114_show_float(60, 48, pid_speed.integral, 5, 2);  // 积分项
-    ips114_show_int(60, 64, output_speed, 5);             // 输出值
+    // 速度控制标题与信息
+    ips114_show_string(0, 0, "Speed Control");
+    
+    // 速度相关数据
+    ips114_show_string(0, 16, "Target:");
+    ips114_show_float(50, 16, pid_speed.target, 4, 1);    // 目标速度
+    ips114_show_string(100, 16, "m/s");
+    
+    ips114_show_string(0, 32, "Actual:");
+    ips114_show_float(50, 32, speed, 4, 1);              // 当前速度
+    ips114_show_string(100, 32, "m/s");
+    
+    ips114_show_string(0, 48, "Error:");
+    ips114_show_float(50, 48, pid_speed.error, 4, 1);     // 误差
+    ips114_show_string(100, 48, "m/s");
+    
+    // 输出信息
+    ips114_show_string(0, 64, "Out:");
+    ips114_show_int(50, 64, output_speed, 5);             // 输出值
+    
+    // 分割线
+    ips114_draw_line(0, 79, 150, 79, RGB565_GRAY);
+    
     // IMU姿态信息
-    ips114_show_string(0, 80, "IMU:");
+    ips114_show_string(0, 84, "IMU:");
+    
+    // 第一行展示pitch和roll
     ips114_show_string(0, 96, "P:");
-    ips114_show_float(20, 96, pitch, 6, 2);               // pitch
-    ips114_show_string(90, 96, "R:");
-    ips114_show_float(110, 96, roll, 6, 2);              // roll
+    ips114_show_float(15, 96, pitch, 5, 1);              // pitch
+    
+    ips114_show_string(75, 96, "R:");
+    ips114_show_float(90, 96, roll, 5, 1);               // roll
+    
+    // 第二行展示yaw和gyro_x
     ips114_show_string(0, 112, "Y:");
-    ips114_show_float(20, 112, yaw, 6, 2);               // yaw
+    ips114_show_float(15, 112, yaw, 5, 1);               // yaw
+    
+    // ips114_show_string(75, 112, "G:");
+    // ips114_show_float(90, 112, gx_raw, 5, 0);            // 陀螺仪X轴原始数据
 }
 
 // 显示GPS信息
@@ -865,7 +888,7 @@ void Calibrate_Gyro_Menu_Key_Process(void)
     if(key3_state == KEY_SHORT_PRESS) 
     {
         Calibrate_Gyro();
-        Calibrate_Acc();
+        //Calibrate_Acc();
         key_clear_state(KEY_3);
     }
     if(key4_state == KEY_SHORT_PRESS) 

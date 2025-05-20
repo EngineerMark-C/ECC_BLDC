@@ -264,3 +264,91 @@ void Basic_Data_Init(void)
     ips114_show_string(60, 32, "Basic Data Loaded.");
     system_delay_ms(500);
 }
+
+//************************************Flash完全重置****************************************//
+/**
+ * 重置所有Flash数据区域
+ * 
+ * 此函数会清除所有存储在Flash中的数据，包括：
+ * 1. GPS点位数据
+ * 2. INS点位数据
+ * 3. 基本参数数据
+ * 
+ * 调用此函数后，所有Flash区域将被擦除为0xFF（擦除状态）
+ */
+void Reset_All_Flash_Data(void)
+{
+    // 显示开始重置提示
+    ips114_clear();
+    ips114_show_string(60, 16, "Resetting Flash...");
+    
+    // 1. 擦除GPS点位数据区
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
+    ips114_show_string(60, 32, "GPS Data Reset");
+    system_delay_ms(300);
+    
+    // 2. 擦除INS点位数据区
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
+    ips114_show_string(60, 48, "INS Data Reset");
+    system_delay_ms(300);
+    
+    // 3. 擦除基本参数数据区
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
+    ips114_show_string(60, 64, "Basic Data Reset");
+    system_delay_ms(300);
+    
+    // 4. 重置内存中的数据结构（可选）
+    // 重置GPS点位数组
+    for(uint8_t i = 0; i < MAX_GPS_POINTS; i++)
+    {
+        GPS_Point[i][0] = 0.0;
+        GPS_Point[i][1] = 0.0;
+        GPS_ENU[i][0] = 0.0;
+        GPS_ENU[i][1] = 0.0;
+    }
+    GPS_Point_Index = 0;
+    
+    // 重置INS点位数组
+    for(uint8_t i = 0; i < MAX_INS_POINTS; i++)
+    {
+        INS_Point[i][0] = 0.0;
+        INS_Point[i][1] = 0.0;
+    }
+    INS_Point_Index = 0;
+    
+    // 重置基本参数为默认值
+    Start_GPS_Point = 0;
+    End_GPS_Point = 0;
+    target_speed = 1.0f;  // 默认目标速度
+    gyro_bias[0] = 0.0f;
+    gyro_bias[1] = 0.0f;
+    gyro_bias[2] = 0.0f;
+    Start_INS_Point = 0;
+    End_INS_Point = 0;
+    GPS_TO_INS_POINT = 0;
+    Navigation_Flag = 0;
+    Start_S_Point = 0;
+    End_S_Point = 0;
+    SAFETY_X_MAX = 100.0f;  // 默认安全边界
+    SAFETY_X_MIN = -100.0f;
+    SAFETY_Y_MAX = 100.0f;
+    SAFETY_Y_MIN = -100.0f;
+    MAX_SPEED = 4.0f;     // 默认速度限制
+    MIN_SPEED = 2.0f;
+    APPROACH_SPEED = 3.0f;
+    BRAKING_DISTANCE = 5.0f;
+    S_Distance = 0.5f;
+    acc_bias[0] = 0.0f;
+    acc_bias[1] = 0.0f;
+    acc_bias[2] = 0.0f;
+    
+    NOW_GPS_Point = 0;
+    NOW_INS_Point = 0;
+    NOW_S_Point = 0;
+    
+    // 显示重置完成提示
+    ips114_clear();
+    ips114_show_string(60, 32, "Flash Reset Complete");
+    system_delay_ms(1000);
+    ips114_clear();
+}
