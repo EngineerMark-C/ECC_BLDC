@@ -3,6 +3,7 @@
         "steer.h": "c",
         "pid.h": "c",
         "init.h": "c",
-        "zf_driver_soft_iic.h": "c"
+        "zf_driver_soft_iic.h": "c",
+        "zf_device_imu660rb.h": "c"
     }
 }
