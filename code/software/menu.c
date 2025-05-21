@@ -21,6 +21,7 @@ typedef enum
     MENU_S_Point,        // S型走位显示状态
     MENU_Camera,         // 摄像头显示状态
     MUNU_Boundary,       // 边界显示状态
+    MENU_PATH,           // 添加路径显示状态
 } MenuState;
 
 // 主菜单项定义
@@ -74,7 +75,9 @@ MainMenuItem main_menu_items[] = {
     {"Navigation Mode"},
     {"S Point"},
     {"Camera"},
-    {"Boundary"}};
+    {"Boundary"},
+    {"Path Display"}     // 添加路径显示菜单项
+};
 
 // 路径设置菜单项
 GPSINSPathMenuItem gps_ins_path_menu[] = {
@@ -110,7 +113,7 @@ MotorMenuItem motor_menu[] = {
     {"S_Distance", 0.1f, &S_Distance}};
 
 // 导航模式菜单显示文本数组
-static const char *nav_mode_names[] = {
+const char *nav_mode_names[] = {
     "GPS Navigation",
     "GPS-ENU Navigation",
     "INS Navigation",
@@ -192,6 +195,9 @@ void Display_Menu(void)
     case MUNU_Boundary:
         Display_Boundary();
         break;
+    case MENU_PATH:      // 添加路径显示菜单处理
+        Display_Path();  // 调用pathshow.c中的函数
+        break;
     }
 }
 
@@ -253,6 +259,9 @@ void Menu(void)
         break;
     case MUNU_Boundary:
         Boundary_Menu_Key_Process();
+        break;
+    case MENU_PATH:      // 添加路径显示菜单按键处理
+        Path_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -638,6 +647,28 @@ void Display_Boundary(void)
     ips114_show_string(0, 112, "KEY4:Back");
 }
 
+// 主路径显示函数
+void Display_Path(void) {
+    // 获取路径边界
+    float min_x, max_x, min_y, max_y;
+    Find_Path_Bounds(&min_x, &max_x, &min_y, &max_y);
+    
+    // 计算自动缩放(如果需要)
+    Calculate_Auto_Zoom(min_x, max_x, min_y, max_y);
+    
+    // 绘制坐标系
+    Draw_Coordinate_System();
+    
+    // 绘制路径线条
+    Draw_Path_Lines();
+    
+    // 绘制点位标记
+    Draw_Points();
+    
+    // 绘制界面信息
+    Draw_UI_Info();
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -709,6 +740,9 @@ void Main_Menu_Key_Process(void)
         case 12:
             menu_state = MUNU_Boundary;
             current_item = 0;
+            break;
+        case 13: // 添加路径显示菜单进入处理
+            menu_state = MENU_PATH;
             break;
         }
         key_clear_state(KEY_3);
@@ -1282,5 +1316,54 @@ void Boundary_Menu_Key_Process(void)
             Save_Basic_Data();
             key_clear_state(KEY_4);
         }
+    }
+}
+
+// 路径显示界面按键处理
+void Path_Menu_Key_Process(void) {
+    
+    // 按键1：改变路径类型
+    if (key1_state == KEY_SHORT_PRESS) {
+        path_type = (path_type + 1) % 5; // 循环切换路径类型
+        key_clear_state(KEY_1);
+    }
+    
+    // 按键2：切换显示选项
+    if (key2_state == KEY_SHORT_PRESS) {
+        // 循环切换显示选项: 全部显示 -> 只显示点 -> 只显示线 -> 全部显示
+        if (show_points && show_current) {
+            show_points = 0;
+        } else if (!show_points && show_current) {
+            show_current = 0;
+            show_points = 1;
+        } else {
+            show_points = 1;
+            show_current = 1;
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    // 按键3：缩放控制
+    if (key3_state == KEY_SHORT_PRESS) {
+        // 增加缩放因子
+        zoom_factor *= 1.2f;
+        if (zoom_factor > 10.0f) {
+            zoom_factor = 10.0f;
+        }
+        key_clear_state(KEY_3);
+    } else if (key3_state == KEY_LONG_PRESS) {
+        // 减小缩放因子
+        zoom_factor *= 0.8f;
+        if (zoom_factor < 0.1f) {
+            zoom_factor = 0.1f;
+        }
+        key_clear_state(KEY_3);
+    }
+    
+    // 按键4：退出路径显示
+    if (key4_state == KEY_SHORT_PRESS) {
+        // 返回主菜单
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_4);
     }
 }

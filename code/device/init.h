@@ -18,6 +18,7 @@
 #include "ins.h"
 #include "menu.h"
 #include "control.h"
+#include "pathshow.h"
 
 void Init(void);
 
