@@ -19,6 +19,7 @@
 #include "menu.h"
 #include "control.h"
 #include "pathshow.h"
+#include "switch.h"
 
 void Init(void);
 

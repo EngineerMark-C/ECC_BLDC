@@ -49,7 +49,7 @@ int core0_main(void)
     cpu_wait_event_ready();         // 等待所有核心初始化完毕
     Init();                         // 初始化函数
     // Reset_All_Flash_Data();         // 重置所有Flash数据区域
-    // target_speed = 5.0f;            // 目标速度
+    // target_speed = 2.0f;            // 目标速度
     // icm42688_init();  // 初始化 ICM42688
     while (TRUE)
     {
@@ -65,7 +65,8 @@ int core0_main(void)
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
-        // printf("%f,%f\n", speed, target_speed);
+        printf("%f,%f\n", speed, target_speed);
+        // printf("%d,%d,%d,%d,%d\n", SWITCH_1_STATUS, SWITCH_2_STATUS, SWITCH_3_STATUS, SWITCH_4_STATUS, SWITCH_ALL_STATUS);
     }
 }
 
