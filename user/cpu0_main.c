@@ -54,8 +54,8 @@ int core0_main(void)
     while (TRUE)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
-
-        Menu();                                                     // 菜单逻辑
+        receive_command();
+        //Menu();                                                     // 菜单逻辑
         system_delay_ms(100);                                       // 将刷新间隔增加到100ms
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         // time = end_time - start_time;
@@ -65,7 +65,7 @@ int core0_main(void)
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
-        printf("%f,%f\n", speed, target_speed);
+        //printf("%f,%f\n", speed, target_speed);
         // printf("%d,%d,%d,%d,%d\n", SWITCH_1_STATUS, SWITCH_2_STATUS, SWITCH_3_STATUS, SWITCH_4_STATUS, SWITCH_ALL_STATUS);
     }
 }
