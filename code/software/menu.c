@@ -20,7 +20,7 @@ typedef enum
     MENU_NAV_MODE,       // 导航模式选择状态
     MENU_S_Point,        // S型走位显示状态
     MENU_Camera,         // 摄像头显示状态
-    MUNU_Boundary,       // 边界显示状态
+    MENU_Boundary,       // 边界显示状态
     MENU_PATH,           // 添加路径显示状态
 } MenuState;
 
@@ -217,11 +217,11 @@ void Display_Menu(void)
     case MENU_Camera:
         Display_Camera();
         break;
-    case MUNU_Boundary:
+    case MENU_Boundary:
         Display_Boundary();
         break;
-    case MENU_PATH:     // 添加路径显示菜单处理
-        Display_Path(); // 调用pathshow.c中的函数
+    case MENU_PATH:
+        Display_Path();
         break;
     }
 }
@@ -282,7 +282,7 @@ void Menu(void)
     case MENU_Camera:
         Camera_Menu_Key_Process();
         break;
-    case MUNU_Boundary:
+    case MENU_Boundary:
         Boundary_Menu_Key_Process();
         break;
     case MENU_PATH: // 添加路径显示菜单按键处理
@@ -797,10 +797,10 @@ void Main_Menu_Key_Process(void)
             menu_state = MENU_Camera;
             break;
         case 12:
-            menu_state = MUNU_Boundary;
+            menu_state = MENU_Boundary;
             current_item = 0;
             break;
-        case 13: // 添加路径显示菜单进入处理
+        case 13:
             menu_state = MENU_PATH;
             break;
         }
