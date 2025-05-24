@@ -533,7 +533,16 @@ void Display_INS_Point(void)
     else
     {
         char buffer[32];
-        sprintf(buffer, "Idx:%02d K3:Save/Edit K4:Back", INS_Point_Index);
+        
+        // 根据拨码开关状态显示不同的KEY3功能提示
+        if (SWITCH_4_STATUS == SWITCH_LEFT)
+        {
+            sprintf(buffer, "Idx:%02d K3:Edit K4:Back", INS_Point_Index);
+        }
+        else if (SWITCH_4_STATUS == SWITCH_RIGHT)
+        {
+            sprintf(buffer, "Idx:%02d K3:Save K4:Back", INS_Point_Index);
+        }
         ips114_show_string(0, 112, buffer);
     }
 }
@@ -1099,24 +1108,25 @@ void INS_Point_Menu_Key_Process(void)
 
         if (key3_state == KEY_SHORT_PRESS)
         {
-            // 短按KEY3进入编辑模式或保存当前位置
-            if (key3_state == KEY_LONG_PRESS)
+            // 根据SWITCH_4的状态决定KEY3的功能
+            if (SWITCH_4_STATUS == SWITCH_LEFT)
             {
+                // 当拨码开关在左边时，进入编辑模式
+                edit_mode = true;
+                edit_coord = false; // 默认先编辑X坐标
+            }
+            else if (SWITCH_4_STATUS == SWITCH_RIGHT)
+            {
+                // 当拨码开关在右边时，保存当前位置
                 Save_INS_Point();
                 // 保存后自动跳转到下一个点位并调整显示
                 if (INS_Point_Index < MAX_INS_POINTS - 1)
                 {
                     INS_Point_Index++; // 自动跳到下一个点位
-                                       // 滚动显示逻辑
+                    // 滚动显示逻辑
                     if (INS_Point_Index >= start_index + visible_items)
                         start_index = INS_Point_Index - visible_items + 1;
                 }
-            }
-            else
-            {
-                // 短按进入编辑模式
-                edit_mode = true;
-                edit_coord = false; // 默认先编辑X坐标
             }
             key_clear_state(KEY_3);
         }
