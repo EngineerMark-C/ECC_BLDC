@@ -94,14 +94,6 @@ void GPS_Points_Init(void)
     }
 }
 
-// 擦除 GPS 数据
-void Erase_GPS_Points(void)
-{
-    flash_erase_page(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
-    ips114_show_string(60, 32, "GPS Points Erased.");
-    system_delay_ms(500);
-}
-
 //************************************INS点位处理****************************************//
 //                     | 索引 | 数据类型    | 说明                  |
 //                     |------|------------|----------------------|
@@ -158,6 +150,64 @@ void INS_Points_Init(void)
             }
         }
         ips114_show_string(60, 32, "INS Points Loaded.");
+        system_delay_ms(1000);  // 显示1秒
+        ips114_clear();         // 清屏
+    }
+}
+
+//************************************S 点位处理****************************************//
+//                     | 索引 | 数据类型    | 说明                  |
+//                     |------|------------|----------------------|
+//                     | 0    | uint8      | 点位索引              |
+//                     | 1    | float      | x轴坐标               |
+//                     | 2    | float      | y轴坐标               |
+
+// 保存 S 型走位点
+void Save_S_Point(void)
+{
+    if(S_Point_Index < MAX_INS_POINTS)
+    {
+        // 清空数据缓冲区
+        flash_buffer_clear();
+        
+        // 写入缓冲区
+        for(uint8_t i = 0; i < MAX_INS_POINTS; i++)
+        {
+            flash_union_buffer[i * INS_DATA_SIZE].uint8_type = i;
+            flash_union_buffer[i * INS_DATA_SIZE + 1].float_type = S_Point[i][0];
+            flash_union_buffer[i * INS_DATA_SIZE + 2].float_type = S_Point[i][1];
+        }
+        
+        // 擦除并写入Flash
+        flash_erase_page(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
+        flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
+        ips114_show_string(60, 32, "S Point Saved.");
+        system_delay_ms(500);
+    }
+}
+
+// 上电初始化时调用
+void S_Point_Init(void)
+{
+    ips114_show_string(60, 32, "Loading S Points...");
+
+    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
+
+    if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
+    {
+        for(uint8_t i = 0; i < MAX_S_POINTS; i++)
+        {
+            if(flash_union_buffer[i * INS_DATA_SIZE].uint8_type == i)
+            {
+                S_Point[i][0] = flash_union_buffer[i * INS_DATA_SIZE + 1].float_type;
+                S_Point[i][1] = flash_union_buffer[i * INS_DATA_SIZE + 2].float_type;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        ips114_show_string(60, 32, "S Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
         ips114_clear();         // 清屏
     }

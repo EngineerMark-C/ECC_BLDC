@@ -126,7 +126,6 @@ static MenuState menu_state = MENU_MAIN; // 当前菜单状态
 static bool edit_mode = false;           // 编辑模式标志
 static uint8_t start_index = 0;          // 新增：当前显示起始索引
 static const uint8_t visible_items = 6;  // 一屏显示6个条目（16px/item）
-uint8_t S_Point_Index = 0;               // S型走位点索引
 uint8_t Camera_Choose = 0;               // 摄像头选择
 static MenuState last_state = MENU_MAIN; // 记录上次菜单状态
 static uint8_t need_clear = 1;           // 清屏标志
@@ -559,19 +558,41 @@ void Display_S_Point(void)
             break;
 
         char point_info[32];
-        sprintf(point_info, "%sP%d:%.6f,%.6f",
+        sprintf(point_info, "%sP%d:%.3f,%.3f",
                 (point_num == S_Point_Index) ? ">" : " ",
                 point_num,
                 S_Point[point_num][0],
                 S_Point[point_num][1]);
         ips114_show_string(0, 16 + i * 16, point_info);
     }
-    // 底部提示信息
-    char buffer[32];
-    sprintf(buffer, "Idx:%02d KEY3:Back KEY4:Back", S_Point_Index);
-    ips114_show_string(0, 112, buffer);
-}
 
+    // 底部提示信息
+    if (edit_mode)
+    {
+        char buffer[32];
+        sprintf(buffer, "Edit P%d: %s K1:+ K2:- K3:Switch",
+                S_Point_Index,
+                edit_coord ? "Y" : "X");
+        ips114_show_string(0, 96, buffer);
+        ips114_show_string(0, 112, "K4:Exit Edit");
+    }
+    else
+    {
+        char buffer[32];
+        
+        // 根据拨码开关状态显示不同的KEY3功能提示
+        if (SWITCH_4_STATUS == SWITCH_LEFT)
+        {
+            sprintf(buffer, "Idx:%02d K3:Edit K4:Back", S_Point_Index);
+        }
+        else if (SWITCH_4_STATUS == SWITCH_RIGHT)
+        {
+            sprintf(buffer, "Idx:%02d K3:Generate K4:Back", S_Point_Index);
+        }
+        
+        ips114_show_string(0, 112, buffer);
+    }
+}
 // 显示ENU点位管理界面
 void Display_ENU_Point(void)
 {
@@ -592,9 +613,9 @@ void Display_ENU_Point(void)
         ips114_show_string(0, 16 + i * 16, point_info);
     }
     // 底部提示信息
-    char buffer[32];
+        char buffer[32];
     sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
-    ips114_show_string(0, 112, buffer);
+        ips114_show_string(0, 112, buffer);
 }
 
 // 导航模式菜单显示函数
@@ -1142,37 +1163,101 @@ void INS_Point_Menu_Key_Process(void)
 
 void S_Point_Menu_Key_Process(void)
 {
-    if (key1_state == KEY_SHORT_PRESS)
+    if (edit_mode)
     {
-        if (S_Point_Index > 0)
+        // 编辑模式下的按键处理
+        if (key1_state == KEY_SHORT_PRESS)
         {
-            S_Point_Index--;
-            // 滚动逻辑：当当前索引小于起始索引时调整显示范围
-            if (S_Point_Index < start_index)
-                start_index = S_Point_Index;
+            // 增加坐标值
+            if (!edit_coord)
+            {
+                S_Point[S_Point_Index][0] += adjust_step;
+            }
+            else
+            {
+                S_Point[S_Point_Index][1] += adjust_step;
+            }
+            key_clear_state(KEY_1);
         }
-        key_clear_state(KEY_1);
-    }
-    if (key2_state == KEY_SHORT_PRESS)
-    {
-        if (S_Point_Index < MAX_INS_POINTS - 1)
+
+        if (key2_state == KEY_SHORT_PRESS)
         {
-            S_Point_Index++;
-            // 滚动逻辑：当当前索引超过显示范围时调整显示范围
-            if (S_Point_Index >= start_index + visible_items)
-                start_index = S_Point_Index - visible_items + 1;
+            // 减少坐标值
+            if (!edit_coord)
+            {
+                S_Point[S_Point_Index][0] -= adjust_step;
+            }
+            else
+            {
+                S_Point[S_Point_Index][1] -= adjust_step;
+            }
+            key_clear_state(KEY_2);
         }
-        key_clear_state(KEY_2);
+
+        if (key3_state == KEY_SHORT_PRESS)
+        {
+            // 切换编辑X/Y坐标
+            edit_coord = !edit_coord;
+            key_clear_state(KEY_3);
+        }
+
+        if (key4_state == KEY_SHORT_PRESS)
+        {
+            // 退出编辑模式
+            edit_mode = false;
+            key_clear_state(KEY_4);
+        }
     }
-    if (key3_state == KEY_SHORT_PRESS)
+    else
     {
-        menu_state = MENU_MAIN;
-        key_clear_state(KEY_3);
-    }
-    if (key4_state == KEY_SHORT_PRESS)
-    {
-        menu_state = MENU_MAIN;
-        key_clear_state(KEY_4);
+        // 非编辑模式下的按键处理
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (S_Point_Index > 0)
+            {
+                S_Point_Index--;
+                // 滚动逻辑：当当前索引小于起始索引时调整显示范围
+                if (S_Point_Index < start_index)
+                    start_index = S_Point_Index;
+            }
+            key_clear_state(KEY_1);
+        }
+
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (S_Point_Index < MAX_INS_POINTS - 1)
+            {
+                S_Point_Index++;
+                // 滚动逻辑：当当前索引超过显示范围时调整显示范围
+                if (S_Point_Index >= start_index + visible_items)
+                    start_index = S_Point_Index - visible_items + 1;
+            }
+            key_clear_state(KEY_2);
+        }
+
+        if (key3_state == KEY_SHORT_PRESS)
+        {
+            // 根据拨码开关SWITCH_4的状态决定按键3的功能
+            if (SWITCH_4_STATUS == SWITCH_RIGHT)
+            {
+                // 当拨码开关在左边时，生成S点位
+                S_Point_Generate_All();
+            }
+            else if (SWITCH_4_STATUS == SWITCH_LEFT)
+            {
+                // 当拨码开关在右边时，进入编辑模式
+                edit_mode = true;
+                edit_coord = false; // 默认先编辑X坐标
+            }
+            key_clear_state(KEY_3);
+        }
+
+        if (key4_state == KEY_SHORT_PRESS)
+        {
+            menu_state = MENU_MAIN;
+            Save_S_Point(); // 保存S点位数据
+            key_clear_state(KEY_4);
+        }
     }
 }
 

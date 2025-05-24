@@ -13,18 +13,26 @@
 
 void Save_GPS_Point(void);
 void GPS_Points_Init(void);
-void Erase_GPS_Points(void);
 
 //************************************INS点位处理****************************************//
 
 #define FLASH_INS_DATA_INDEX            (4)                                     // 存储 INS 数据用的页码
 #define MAX_INS_POINTS                  (16)                                    // 最大 INS 点位数
-#define INS_DATA_SIZE                   (3)                                     // 5个存储单元（索引 + x轴坐标 + y轴坐标）
+#define INS_DATA_SIZE                   (3)                                     // 3个存储单元（索引 + x轴坐标 + y轴坐标）
+
 void Save_INS_Point(void);
 void INS_Points_Init(void);
 
+//************************************S点位处理****************************************//
+#define FLASH_S_DATA_INDEX              (3)                                     // 存储 S 数据用的页码
+#define MAX_S_POINTS                    (16)                                    // 最大 S 点位数
+
+void Save_S_Point(void);
+void S_Point_Init(void);
+
 //************************************基础数据处理****************************************//
 #define FLASH_BASIC_DATA_INDEX          (6)                                     // 存储基础数据用的页码
+
 void Save_Basic_Data(void);
 void Basic_Data_Init(void);
 
