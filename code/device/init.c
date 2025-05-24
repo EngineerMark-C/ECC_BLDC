@@ -13,7 +13,7 @@ void Init(void)
     Encoder_Init();                                                             // 初始化编码器
     Steer_Init();                                                               // 初始化舵机
     BLDC_Init();                                                                // 初始化 BLDC 驱动
-    // Camera_Init();                                                              // 初始化摄像头
+    //Camera_Init();                                                              // 初始化摄像头
     Imu_Init();                                                                 // 初始化 IMU
     GPS_Init();                                                                 // 初始化 GPS
     INS_Init();                                                                  // 初始化惯导系统

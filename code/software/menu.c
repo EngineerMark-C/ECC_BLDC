@@ -670,7 +670,8 @@ void Display_Nav_Mode_Menu(void)
 // 摄像头显示函数
 void Display_Camera(void)
 {
-    ips114_show_string(0, 0, "Camera");
+    ips114_show_float(200, 0, adjust_step, 2, 1);
+
     if (mt9v03x_finish_flag)
     {
         if (Camera_Choose == 0)
@@ -679,11 +680,16 @@ void Display_Camera(void)
         }
         else if (Camera_Choose == 1)
         {
-            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 240, 135, 64); // 显示灰度图像
+            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 188, 120, Camera_Threshold); // 显示二值化图像
         }
         mt9v03x_finish_flag = 0;
     }
-    ips114_show_string(0, 112, "Press KEY4:Back");
+    // 显示相机类型和阈值
+    char buffer[32];
+    sprintf(buffer, "Mode:%s Thres:%d",
+            Camera_Choose ? "Binary" : "Normal",
+            Camera_Threshold);
+    ips114_show_string(0, 112, buffer);
 }
 
 // 边界编辑界面
@@ -1379,14 +1385,38 @@ void Nav_Mode_Key_Process(void)
 // Camera按键处理函数
 void Camera_Menu_Key_Process(void)
 {
-    if (key1_state == KEY_SHORT_PRESS)
+    Update_Adjust_Step();
+    // 按键3：切换显示模式（原始/二值化）
+    if (key3_state == KEY_SHORT_PRESS)
     {
         Camera_Choose = Camera_Choose ? 0 : 1;
-        key_clear_state(KEY_1);
+        key_clear_state(KEY_3);
     }
+    // 仅在二值化模式下调节阈值
+    if (Camera_Choose == 1)
+    {
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (Camera_Threshold > 0)
+            {
+                Camera_Threshold -= (uint8_t)adjust_step;
+            }
+            key_clear_state(KEY_1);
+        }
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (Camera_Threshold < 255)
+            {
+                Camera_Threshold += (uint8_t)adjust_step;
+            }
+            key_clear_state(KEY_2);
+        }
+    }
+    // 按键4：返回主菜单
     if (key4_state == KEY_SHORT_PRESS)
     {
         menu_state = MENU_MAIN;
+        Save_Basic_Data();
         key_clear_state(KEY_4);
     }
 }
