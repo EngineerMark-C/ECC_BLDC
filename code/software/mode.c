@@ -29,6 +29,7 @@ void Navigation_Mode_Switch(void)
     }
     if (Fire_Flag == 0)
     {
-        Remote_Control();                               // 遥控逻辑
+        //Remote_Control();                               // 遥控逻辑
+        target_speed = 0.0f;                              // 停车
     }
 }

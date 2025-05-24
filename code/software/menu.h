@@ -1,6 +1,8 @@
 #ifndef _menu_h_
 #define _menu_h_
 
+extern const char *nav_mode_names[];
+
 void Button_Init(void);
 void Menu(void);
 
@@ -19,6 +21,7 @@ void Display_Nav_Mode_Menu(void);
 void Display_S_Point(void);
 void Display_Camera(void);
 void Display_Boundary(void);
+void Display_Path(void);
 
 void Main_Menu_Key_Process(void);
 void Steer_Menu_Key_Process(void);
@@ -32,5 +35,6 @@ void Nav_Mode_Key_Process(void);
 void S_Point_Menu_Key_Process(void);
 void Camera_Menu_Key_Process(void);
 void Boundary_Menu_Key_Process(void);
+void Path_Menu_Key_Process(void);
 
 #endif

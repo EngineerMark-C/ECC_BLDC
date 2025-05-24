@@ -3,38 +3,39 @@
 float target_speed;
 float target_angle;
 
-float SAFETY_X_MAX;                                                  // X轴最大安全范围
-float SAFETY_X_MIN;                                                  // X轴最小安全范围
-float SAFETY_Y_MAX;                                                  // Y轴最大安全范围
-float SAFETY_Y_MIN;                                                  // Y轴最小安全范围
+float SAFETY_X_MAX;                                                             // X轴最大安全范围
+float SAFETY_X_MIN;                                                             // X轴最小安全范围
+float SAFETY_Y_MAX;                                                             // Y轴最大安全范围
+float SAFETY_Y_MIN;                                                             // Y轴最小安全范围
 
-float MAX_SPEED;                                                     // 最大速度
-float MIN_SPEED;                                                     // 最小速度
-float APPROACH_SPEED;                                                // 靠近速度    
-float BRAKING_DISTANCE;                                              // 开始减速距离
+float MAX_SPEED;                                                                // 最大速度
+float MIN_SPEED;                                                                // 最小速度
+float APPROACH_SPEED;                                                           // 靠近速度
+float BRAKING_DISTANCE;                                                         // 开始减速距离
 
-float GPS_ENU[MAX_GPS_POINTS][2];                                    // GPS ENU 坐标
-float S_Point[MAX_INS_POINTS][2];                                    // S 型走位点
+float GPS_ENU[MAX_GPS_POINTS][2];                                               // GPS ENU 坐标
 
-float S_Distance;                                                    // S 型走位偏移距离
+float S_Distance;                                                               // S 型走位偏移距离
 
 uint8_t GPS_Point_Index = 0;                                                    // GPS 数据索引
 double GPS_Point[MAX_GPS_POINTS][2];                                            // GPS 数据
-uint8_t Start_GPS_Point;                                             // 第一个 GPS 数据索引
-uint8_t End_GPS_Point;                                               // 最后一个 GPS 数据索引
-uint8_t NOW_GPS_Point;                                               // 当前 GPS 数据索引
+uint8_t Start_GPS_Point;                                                        // 第一个 GPS 数据索引
+uint8_t End_GPS_Point;                                                          // 最后一个 GPS 数据索引
+uint8_t NOW_GPS_Point;                                                          // 当前 GPS 数据索引
 
 uint8_t INS_Point_Index = 0;                                                    // INS 数据索引
 float INS_Point[MAX_INS_POINTS][2];                                             // INS 点位
-uint8_t Start_INS_Point;                                             // 第一个 INS 数据索引
-uint8_t End_INS_Point;                                               // 最后一个 INS 数据索引
-uint8_t NOW_INS_Point;                                               // 当前 INS 数据索引
+uint8_t Start_INS_Point;                                                        // 第一个 INS 数据索引
+uint8_t End_INS_Point;                                                          // 最后一个 INS 数据索引
+uint8_t NOW_INS_Point;                                                          // 当前 INS 数据索引
 
-uint8_t Start_S_Point;                                               // S 型走位开始索引
-uint8_t End_S_Point;                                                 // S 型走位结束索引
-uint8_t NOW_S_Point;                                                 // 当前 S 型走位索引
+uint8_t S_Point_Index = 0;                                                      // S 型走位数据索引
+uint8_t Start_S_Point;                                                          // S 型走位开始索引
+float S_Point[MAX_INS_POINTS][2];                                               // S 型走位点
+uint8_t End_S_Point;                                                            // S 型走位结束索引
+uint8_t NOW_S_Point;                                                            // 当前 S 型走位索引
 
-uint8_t GPS_TO_INS_POINT = 0;                                        // GPS点位转换到INS点位
+uint8_t GPS_TO_INS_POINT = 0;                                                   // GPS点位转换到INS点位
 
 typedef struct {
     double origin_lat;    // 原点纬度（弧度）
@@ -131,8 +132,8 @@ void S_Point_Generate(uint8_t i)
     S_Point[i][1] = INS_Point[i][1] + ((i & 1) ? 1 : -1) * S_Distance;
 }
 
-// S 型走位点位初始化
-void S_Point_Init(void)
+// 生成所有 S 型走位点
+void S_Point_Generate_All(void)
 {
     for(uint8_t i=0; i < End_S_Point; i++)
     {
