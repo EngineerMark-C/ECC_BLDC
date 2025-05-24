@@ -4,6 +4,5 @@
 
 extern int8 Remotecontrol_Flag;
 void wifiudp_init(void);
-void receive_command(void);
-
+void receive_command1(void);
 #endif /* CODE_SOFTWARE_WIFI_H_ */

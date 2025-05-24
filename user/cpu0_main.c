@@ -54,7 +54,7 @@ int core0_main(void)
     while (TRUE)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
-        receive_command();
+        receive_command1();
         //Menu();                                                     // 菜单逻辑
         system_delay_ms(100);                                       // 将刷新间隔增加到100ms
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
