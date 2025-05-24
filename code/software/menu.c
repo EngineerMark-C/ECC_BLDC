@@ -76,7 +76,7 @@ MainMenuItem main_menu_items[] = {
     {"S Point"},
     {"Camera"},
     {"Boundary"},
-    {"Path Display"}     // 添加路径显示菜单项
+    {"Path Display"} // 添加路径显示菜单项
 };
 
 // 路径设置菜单项
@@ -144,6 +144,32 @@ void Button_Init(void)
     key_init(10); // 初始化按键
 }
 
+void Update_Adjust_Step(void)
+{
+    // 读取三个拨码开关的组合状态 (从0到7)
+    uint8_t switch_status = (SWITCH_2_STATUS << 1) | (SWITCH_1_STATUS);
+
+    // 根据拨码开关组合选择不同的步长
+    switch (switch_status)
+    {
+    case 0: // 00
+        adjust_step = 0.1f;
+        break;
+    case 1: // 01
+        adjust_step = 1.0f;
+        break;
+    case 2: // 10
+        adjust_step = 5.0f;
+        break;
+    case 3: // 11
+        adjust_step = 10.0f;
+        break;
+    default:
+        adjust_step = 0.1f; // 默认步长
+        break;
+    }
+}
+
 void Display_Menu(void)
 {
     if (need_clear)
@@ -194,8 +220,8 @@ void Display_Menu(void)
     case MUNU_Boundary:
         Display_Boundary();
         break;
-    case MENU_PATH:      // 添加路径显示菜单处理
-        Display_Path();  // 调用pathshow.c中的函数
+    case MENU_PATH:     // 添加路径显示菜单处理
+        Display_Path(); // 调用pathshow.c中的函数
         break;
     }
 }
@@ -259,7 +285,7 @@ void Menu(void)
     case MUNU_Boundary:
         Boundary_Menu_Key_Process();
         break;
-    case MENU_PATH:      // 添加路径显示菜单按键处理
+    case MENU_PATH: // 添加路径显示菜单按键处理
         Path_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
@@ -503,6 +529,7 @@ void Display_INS_Point(void)
     ips114_show_string(0, 0, "INS Points");
     ips114_show_float(90, 0, position[0], 6, 2);
     ips114_show_float(150, 0, position[1], 6, 2);
+    ips114_show_float(200, 0, adjust_step, 2, 1);
     // 显示当前可见范围的点位（Y轴间隔16像素）
     for (uint8_t i = 0; i < visible_items; i++)
     {
@@ -532,7 +559,7 @@ void Display_INS_Point(void)
     else
     {
         char buffer[32];
-        
+
         // 根据拨码开关状态显示不同的KEY3功能提示
         if (SWITCH_4_STATUS == SWITCH_LEFT)
         {
@@ -550,6 +577,7 @@ void Display_INS_Point(void)
 void Display_S_Point(void)
 {
     ips114_show_string(0, 0, "S Points");
+    ips114_show_float(200, 0, adjust_step, 2, 1);
     // 显示当前可见范围的点位（Y轴间隔16像素）
     for (uint8_t i = 0; i < visible_items; i++)
     {
@@ -579,7 +607,7 @@ void Display_S_Point(void)
     else
     {
         char buffer[32];
-        
+
         // 根据拨码开关状态显示不同的KEY3功能提示
         if (SWITCH_4_STATUS == SWITCH_LEFT)
         {
@@ -589,7 +617,7 @@ void Display_S_Point(void)
         {
             sprintf(buffer, "Idx:%02d K3:Generate K4:Back", S_Point_Index);
         }
-        
+
         ips114_show_string(0, 112, buffer);
     }
 }
@@ -613,9 +641,9 @@ void Display_ENU_Point(void)
         ips114_show_string(0, 16 + i * 16, point_info);
     }
     // 底部提示信息
-        char buffer[32];
+    char buffer[32];
     sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
-        ips114_show_string(0, 112, buffer);
+    ips114_show_string(0, 112, buffer);
 }
 
 // 导航模式菜单显示函数
@@ -662,7 +690,7 @@ void Display_Camera(void)
 void Display_Boundary(void)
 {
     ips114_show_string(0, 0, "Boundary");
-
+    ips114_show_float(200, 0, adjust_step, 2, 1);
     for (uint8_t i = 0; i < 4; i++)
     {
         char buffer[32];
@@ -678,23 +706,24 @@ void Display_Boundary(void)
 }
 
 // 主路径显示函数
-void Display_Path(void) {
+void Display_Path(void)
+{
     // 获取路径边界
     float min_x, max_x, min_y, max_y;
     Find_Path_Bounds(&min_x, &max_x, &min_y, &max_y);
-    
+
     // 计算自动缩放(如果需要)
     Calculate_Auto_Zoom(min_x, max_x, min_y, max_y);
-    
+
     // 绘制坐标系
     Draw_Coordinate_System();
-    
+
     // 绘制路径线条
     Draw_Path_Lines();
-    
+
     // 绘制点位标记
     Draw_Points();
-    
+
     // 绘制界面信息
     Draw_UI_Info();
 }
@@ -1055,6 +1084,7 @@ void Calibrate_Gyro_Menu_Key_Process(void)
 
 void INS_Point_Menu_Key_Process(void)
 {
+    Update_Adjust_Step();
     if (edit_mode)
     {
         // 编辑模式下的按键处理
@@ -1163,6 +1193,7 @@ void INS_Point_Menu_Key_Process(void)
 
 void S_Point_Menu_Key_Process(void)
 {
+    Update_Adjust_Step();
     if (edit_mode)
     {
         // 编辑模式下的按键处理
@@ -1363,16 +1394,17 @@ void Camera_Menu_Key_Process(void)
 // 编辑边界按键处理函数
 void Boundary_Menu_Key_Process(void)
 {
+    Update_Adjust_Step();
     if (edit_mode)
     {
         if (key1_state == KEY_SHORT_PRESS)
         {
-            *boundary_menu[current_item].num += 10;
+            *boundary_menu[current_item].num += adjust_step;
             key_clear_state(KEY_1);
         }
         if (key2_state == KEY_SHORT_PRESS)
         {
-            *boundary_menu[current_item].num -= 10;
+            *boundary_menu[current_item].num -= adjust_step;
             key_clear_state(KEY_2);
         }
         if (key3_state == KEY_SHORT_PRESS || key4_state == KEY_SHORT_PRESS)
@@ -1415,48 +1447,62 @@ void Boundary_Menu_Key_Process(void)
 }
 
 // 路径显示界面按键处理
-void Path_Menu_Key_Process(void) {
-    
+void Path_Menu_Key_Process(void)
+{
+
     // 按键1：改变路径类型
-    if (key1_state == KEY_SHORT_PRESS) {
+    if (key1_state == KEY_SHORT_PRESS)
+    {
         path_type = (path_type + 1) % 5; // 循环切换路径类型
         key_clear_state(KEY_1);
     }
-    
+
     // 按键2：切换显示选项
-    if (key2_state == KEY_SHORT_PRESS) {
+    if (key2_state == KEY_SHORT_PRESS)
+    {
         // 循环切换显示选项: 全部显示 -> 只显示点 -> 只显示线 -> 全部显示
-        if (show_points && show_current) {
+        if (show_points && show_current)
+        {
             show_points = 0;
-        } else if (!show_points && show_current) {
+        }
+        else if (!show_points && show_current)
+        {
             show_current = 0;
             show_points = 1;
-        } else {
+        }
+        else
+        {
             show_points = 1;
             show_current = 1;
         }
         key_clear_state(KEY_2);
     }
-    
+
     // 按键3：缩放控制
-    if (key3_state == KEY_SHORT_PRESS) {
+    if (key3_state == KEY_SHORT_PRESS)
+    {
         // 增加缩放因子
         zoom_factor *= 1.2f;
-        if (zoom_factor > 10.0f) {
+        if (zoom_factor > 10.0f)
+        {
             zoom_factor = 10.0f;
         }
         key_clear_state(KEY_3);
-    } else if (key3_state == KEY_LONG_PRESS) {
+    }
+    else if (key3_state == KEY_LONG_PRESS)
+    {
         // 减小缩放因子
         zoom_factor *= 0.8f;
-        if (zoom_factor < 0.1f) {
+        if (zoom_factor < 0.1f)
+        {
             zoom_factor = 0.1f;
         }
         key_clear_state(KEY_3);
     }
-    
+
     // 按键4：退出路径显示
-    if (key4_state == KEY_SHORT_PRESS) {
+    if (key4_state == KEY_SHORT_PRESS)
+    {
         // 返回主菜单
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
