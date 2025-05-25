@@ -1,0 +1,520 @@
+[
+    {
+        "id": "8863af5168db98a5",
+        "type": "tab",
+        "label": "小车遥控",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "5dc86a2589fa16a3",
+        "type": "ui_button",
+        "z": "8863af5168db98a5",
+        "name": "左转",
+        "group": "edbec4d3501231f1",
+        "order": 7,
+        "width": 2,
+        "height": 2,
+        "passthru": false,
+        "label": "左转",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#5390e3",
+        "className": "",
+        "icon": "fa-arrow-left",
+        "payload": "left",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 530,
+        "y": 300,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "f5fd1084c614e418",
+        "type": "ui_button",
+        "z": "8863af5168db98a5",
+        "name": "右转",
+        "group": "edbec4d3501231f1",
+        "order": 8,
+        "width": 2,
+        "height": 2,
+        "passthru": false,
+        "label": "右转",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#5390e3",
+        "className": "",
+        "icon": "fa-arrow-right",
+        "payload": "right",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 530,
+        "y": 340,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "d710afd897a6ae9b",
+        "type": "ui_button",
+        "z": "8863af5168db98a5",
+        "name": "前进",
+        "group": "edbec4d3501231f1",
+        "order": 4,
+        "width": 4,
+        "height": 2,
+        "passthru": false,
+        "label": "前进",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#5390e3",
+        "className": "",
+        "icon": "fa-arrow-up",
+        "payload": "forward",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 530,
+        "y": 260,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "39e37c954a58f89e",
+        "type": "ui_button",
+        "z": "8863af5168db98a5",
+        "name": "后退",
+        "group": "edbec4d3501231f1",
+        "order": 11,
+        "width": 4,
+        "height": 2,
+        "passthru": false,
+        "label": "后退",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#5390e3",
+        "icon": "fa-arrow-down",
+        "payload": "backward",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 530,
+        "y": 380,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "0818dd1122b75df5",
+        "type": "ui_button",
+        "z": "8863af5168db98a5",
+        "name": "停止",
+        "group": "edbec4d3501231f1",
+        "order": 16,
+        "width": 3,
+        "height": 1,
+        "passthru": false,
+        "label": "停止",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#f03838",
+        "className": "",
+        "icon": "fa-stop",
+        "payload": "stop",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 530,
+        "y": 420,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "79f73ae43f65e211",
+        "type": "json",
+        "z": "8863af5168db98a5",
+        "name": "解析 JSON",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 490,
+        "y": 500,
+        "wires": [
+            [
+                "53dddef0e5a0d59b"
+            ]
+        ]
+    },
+    {
+        "id": "2cba871db9c06ea8",
+        "type": "ui_slider",
+        "z": "8863af5168db98a5",
+        "name": "速度控制",
+        "label": "速度",
+        "tooltip": "",
+        "group": "edbec4d3501231f1",
+        "order": 1,
+        "width": 1,
+        "height": 7,
+        "passthru": true,
+        "outs": "all",
+        "topic": "",
+        "topicType": "str",
+        "min": "-800",
+        "max": "800",
+        "step": "1",
+        "className": "nr-dashboard-vertical",
+        "x": 400,
+        "y": 160,
+        "wires": [
+            [
+                "4d5596673bf34c82"
+            ]
+        ]
+    },
+    {
+        "id": "4d5596673bf34c82",
+        "type": "function",
+        "z": "8863af5168db98a5",
+        "name": "生成速度命令",
+        "func": "return {payload: \"speed:\" + msg.payload};",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 160,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "e676175a93c56039",
+        "type": "ui_slider",
+        "z": "8863af5168db98a5",
+        "name": "角度控制",
+        "label": "角度",
+        "tooltip": "",
+        "group": "edbec4d3501231f1",
+        "order": 14,
+        "width": 6,
+        "height": 1,
+        "passthru": true,
+        "outs": "all",
+        "topic": "",
+        "topicType": "str",
+        "min": "655",
+        "max": "885",
+        "step": 1,
+        "className": "",
+        "x": 400,
+        "y": 200,
+        "wires": [
+            [
+                "d134be212a4e93e9"
+            ]
+        ]
+    },
+    {
+        "id": "d134be212a4e93e9",
+        "type": "function",
+        "z": "8863af5168db98a5",
+        "name": "生成角度命令",
+        "func": "return {payload: \"angle:\" + msg.payload};",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 200,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "9c52f36c3032afe8",
+        "type": "udp out",
+        "z": "8863af5168db98a5",
+        "name": "发送到 WiFi 模块",
+        "addr": "192.168.1.26",
+        "iface": "",
+        "port": "8080",
+        "ipv": "udp4",
+        "outport": "",
+        "base64": false,
+        "multicast": "false",
+        "x": 830,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "fb47e0b61ec944c5",
+        "type": "udp in",
+        "z": "8863af5168db98a5",
+        "name": "接收来自 WiFi 模块的数据",
+        "iface": "",
+        "port": "1111",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 110,
+        "y": 500,
+        "wires": [
+            [
+                "580524c311fa4aa5"
+            ]
+        ]
+    },
+    {
+        "id": "942a37f8cbdc884f",
+        "type": "debug",
+        "z": "8863af5168db98a5",
+        "name": "调试输出",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "580524c311fa4aa5",
+        "type": "function",
+        "z": "8863af5168db98a5",
+        "name": "格式化状态数据",
+        "func": "// 将收到的数据转换为字符串\nlet str = msg.payload.toString();\n\n// 检查是否是状态数据\nif (str.indexOf('status:') === 0) {\n    // 提取速度和角度\n    let match = str.match(/speed=([\\-0-9]+),angle=([\\-0-9\\.]+)/);\n    if (match) {\n        return {\n            payload: {\n                speed: parseInt(match[1]),\n                angle: parseFloat(match[2])\n            }\n        };\n    }\n}\n\n// 如果无法解析，返回原始数据\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 500,
+        "wires": [
+            [
+                "79f73ae43f65e211",
+                "293afbeff14c255b"
+            ]
+        ]
+    },
+    {
+        "id": "293afbeff14c255b",
+        "type": "debug",
+        "z": "8863af5168db98a5",
+        "name": "接收数据调试",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "5ac2cd2c7f540770",
+        "type": "inject",
+        "z": "8863af5168db98a5",
+        "name": "测试命令",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "forward",
+        "payloadType": "str",
+        "x": 400,
+        "y": 100,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "6cdd3e4aa8e5c315",
+        "type": "ui_button",
+        "z": "8863af5168db98a5",
+        "name": "连接测试",
+        "group": "edbec4d3501231f1",
+        "order": 15,
+        "width": 3,
+        "height": 1,
+        "passthru": false,
+        "label": "连接测试",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#42f5ef",
+        "className": "",
+        "icon": "fa-wifi",
+        "payload": "ping",
+        "payloadType": "str",
+        "topic": "",
+        "topicType": "str",
+        "x": 400,
+        "y": 460,
+        "wires": [
+            [
+                "942a37f8cbdc884f",
+                "9c52f36c3032afe8"
+            ]
+        ]
+    },
+    {
+        "id": "53dddef0e5a0d59b",
+        "type": "ui_text",
+        "z": "8863af5168db98a5",
+        "group": "edbec4d3501231f1",
+        "order": 2,
+        "width": 4,
+        "height": 1,
+        "name": "状态显示",
+        "label": "当前状态: ",
+        "format": "{{msg.payload.speed}} | {{msg.payload.angle}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "x": 720,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "972a990023bd7039",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 3,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "abce14149a889593",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 5,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "b3888be46e1035ab",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 6,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "04da6811bd9eae6c",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 9,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "cc43d6b795d6faa1",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 10,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "3407deb6d4a027a5",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 12,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "5757aa54bd210bb6",
+        "type": "ui_spacer",
+        "z": "8863af5168db98a5",
+        "name": "spacer",
+        "group": "edbec4d3501231f1",
+        "order": 13,
+        "width": 1,
+        "height": 1
+    },
+    {
+        "id": "edbec4d3501231f1",
+        "type": "ui_group",
+        "name": "控制组",
+        "tab": "666553ad3d899ddf",
+        "order": 0,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "666553ad3d899ddf",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
