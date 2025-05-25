@@ -22,6 +22,7 @@ typedef enum
     MENU_Camera,         // 摄像头显示状态
     MENU_Boundary,       // 边界显示状态
     MENU_PATH,           // 添加路径显示状态
+    MENU_Adjusted_ENU_Point // **新增：调整后的ENU点位显示状态**
 } MenuState;
 
 // 主菜单项定义
@@ -76,7 +77,8 @@ MainMenuItem main_menu_items[] = {
     {"S Point"},
     {"Camera"},
     {"Boundary"},
-    {"Path Display"} // 添加路径显示菜单项
+    {"Path Display"},
+    {"Adjusted ENU"} // **新增：调整后的ENU点位显示菜单项**
 };
 
 // 路径设置菜单项
@@ -222,6 +224,9 @@ void Display_Menu(void)
         break;
     case MENU_PATH:
         Display_Path();
+        break;
+    case MENU_Adjusted_ENU_Point: // **新增：调整后的ENU点位显示菜单显示函数**
+        Display_Adjusted_ENU_Point();
         break;
     }
 }
@@ -646,6 +651,32 @@ void Display_ENU_Point(void)
     ips114_show_string(0, 112, buffer);
 }
 
+// 显示调整后的 ENU 点位管理界面
+void Display_Adjusted_ENU_Point(void)
+{
+    ips114_show_string(0, 0, "Adjusted ENU Points");
+    // 显示当前可见范围的点位（Y轴间隔16像素）
+    for (uint8_t i = 0; i < visible_items; i++)
+    {
+        uint8_t point_num = start_index + i;
+        if (point_num >= MAX_GPS_POINTS)
+            break;
+
+        char point_info[32];
+        // 显示调整后的 ENU 坐标
+        sprintf(point_info, "%sP%d:%.6f,%.6f",
+                (point_num == GPS_Point_Index) ? ">" : " ",
+                point_num,
+                Adjusted_GPS_ENU[point_num][0],
+                Adjusted_GPS_ENU[point_num][1]);
+        ips114_show_string(0, 16 + i * 16, point_info);
+    }
+    // 底部提示信息
+    char buffer[32];
+    sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
+    ips114_show_string(0, 112, buffer);
+}
+
 // 导航模式菜单显示函数
 void Display_Nav_Mode_Menu(void)
 {
@@ -802,6 +833,10 @@ void Main_Menu_Key_Process(void)
             break;
         case 13:
             menu_state = MENU_PATH;
+            break;
+        case 14:
+            menu_state = MENU_ENU_Point; // 新增：进入调整后的ENU点位显示菜单
+            start_index = 0;
             break;
         }
         key_clear_state(KEY_3);

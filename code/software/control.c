@@ -14,7 +14,7 @@ float APPROACH_SPEED;                                                           
 float BRAKING_DISTANCE;                                                         // 开始减速距离
 
 float GPS_ENU[MAX_GPS_POINTS][2];                                               // GPS ENU 坐标
-
+float Adjusted_GPS_ENU[MAX_GPS_POINTS][2];                                      // 调整后的 GPS ENU 坐标
 float S_Distance;                                                               // S 型走位偏移距离
 
 uint8_t GPS_Point_Index = 0;                                                    // GPS 数据索引
@@ -121,10 +121,62 @@ void WGS84_to_ENU_Init(void)
     Local_Frame_Init(GPS_Point[0][0], GPS_Point[0][1]);
     for(int i=0; i <= End_GPS_Point; i++){
         WGS84_to_ENU(GPS_Point[i][0], GPS_Point[i][1], 
-                    &GPS_ENU[i][0], &GPS_ENU[i][1]);
+                     &GPS_ENU[i][0], &GPS_ENU[i][1]);
     }
 }
 
+//-----------------------------------
+// 定义一个全局变量，用于存储陀螺仪初始化的方向与GPS正北方向的差角
+float gyro_to_gps_angle_offset = 0.0f;
+
+// 初始化陀螺仪方向为正北方向
+void Gyro_North_Init(float gyro_angle)
+{
+    // 计算陀螺仪方向与GPS正北方向的差角
+    gyro_to_gps_angle_offset = yaw - gnss.direction;;
+}
+
+// 使用旋转矩阵调整ENU坐标
+void Adjust_ENU_Coordinates(float* east, float* north)
+{
+    // 将差角转换为弧度
+    float angle_rad = ANGLE_TO_RAD(gyro_to_gps_angle_offset);
+
+    // 构建旋转矩阵
+    float cos_angle = cosf(angle_rad);
+    float sin_angle = sinf(angle_rad);
+
+    // 保存原始坐标
+    float original_east = *east;
+    float original_north = *north;
+
+    // 应用旋转矩阵
+    *east = cos_angle * original_east - sin_angle * original_north;  // x cos - y sin
+    *north = sin_angle * original_east + cos_angle * original_north; // x sin + y cos
+}
+
+// 定义一个新的全局数组，用于存储调整后的 ENU 坐标
+float Adjusted_GPS_ENU[MAX_GPS_POINTS][2];  // 调整后的 GPS ENU 坐标
+
+// 将路径点预转换为ENU坐标（启动时初始化）
+void WGS84_to_IMU_ENU_Init(void)
+{
+    Local_Frame_Init(GPS_Point[0][0], GPS_Point[0][1]);
+    for (int i = 0; i <= End_GPS_Point; i++) {
+        WGS84_to_ENU(GPS_Point[i][0], GPS_Point[i][1], 
+                     &GPS_ENU[i][0], &GPS_ENU[i][1]);
+        // 调整ENU坐标
+        float adjusted_east = GPS_ENU[i][0];
+        float adjusted_north = GPS_ENU[i][1];
+        Adjust_ENU_Coordinates(&adjusted_east, &adjusted_north);
+
+        // 将调整后的坐标存入新的数组
+        Adjusted_GPS_ENU[i][0] = adjusted_east;
+        Adjusted_GPS_ENU[i][1] = adjusted_north;
+    }
+}
+
+//------------------------------------------------------------------------------
 // S 型走位点位生成
 void S_Point_Generate(uint8_t i)
 {

@@ -50,12 +50,11 @@ int core0_main(void)
     Init();                         // 初始化函数
     // Reset_All_Flash_Data();         // 重置所有Flash数据区域
     // target_speed = 2.0f;            // 目标速度
-    // icm42688_init();  // 初始化 ICM42688
+    // icm42688_init();                // 初始化 ICM42688
     while (TRUE)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
-        receive_command1();
-        //Menu();                                                     // 菜单逻辑
+        Menu();                                                     // 菜单逻辑
         system_delay_ms(100);                                       // 将刷新间隔增加到100ms
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         // time = end_time - start_time;
