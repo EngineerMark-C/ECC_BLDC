@@ -20,4 +20,5 @@ void Init(void)
     // UartReceiver_Init();                                                        // 初始化 UART 接收器
     PID_init(&pid_speed, 0.0f, 200.0f, 0.0f, 0, 10000);                          // 初始化电机 PID 控制器
     PID_init(&pid_steer, 1.0f, 0.0f, 0.0f, 0, 100);                            // 初始化舵机 PID 控制器
+    // Wifiudp_Init();                                                               // 初始化 WiFi 模块
 }

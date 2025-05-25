@@ -20,6 +20,7 @@
 #include "control.h"
 #include "pathshow.h"
 #include "switch.h"
+#include "wifi.h"
 
 void Init(void);
 

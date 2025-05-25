@@ -65,7 +65,10 @@ int core0_main(void)
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
-        printf("%f,%f\n", speed, target_speed);
+        // printf("%f,%f\n", speed, target_speed);
+        // printf("%d\n", wifi_uart_information.wifi_uart_connect_state);
+        // printf("%s\n", wifi_uart_information.wifi_uart_local_ip);
+        // wifi_process();                                          // 处理接收到的数据
         // printf("%d,%d,%d,%d,%d\n", SWITCH_1_STATUS, SWITCH_2_STATUS, SWITCH_3_STATUS, SWITCH_4_STATUS, SWITCH_ALL_STATUS);
     }
 }

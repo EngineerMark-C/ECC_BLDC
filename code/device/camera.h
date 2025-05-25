@@ -5,4 +5,9 @@ extern uint8_t Camera_Threshold;                                                
 
 void Camera_Init(void);
 
+// void Camera_BinarizeImage(uint8_t threshold);
+// void Camera_ProcessImage(void);
+// void Control_SetDirection(int16_t direction_error, float target_angle);
+
+
 #endif
