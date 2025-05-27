@@ -17,7 +17,7 @@
 #define twoKpDef                        (2.0f * 0.5f)                           // 2 * proportional gain
 #define twoKiDef                        (2.0f * 0.0005f)                        // 2 * integral gain
 #else
-#define betaDef                         (0.1f)                                  // Madgwick algorithm gain
+#define betaDef                         (1.0f)                                  // Madgwick algorithm gain
 #endif
 
 extern float pitch, roll, yaw;

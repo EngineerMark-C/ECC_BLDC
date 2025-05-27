@@ -61,7 +61,7 @@ int core0_main(void)
         // time = end_time - start_time;
         // float time_us = (float)time / 100.0f;
         // printf("所需时间: %.2f us\n", time_us);
-        // printf("%f\n", yaw);
+        printf("%f\n", yaw);
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);

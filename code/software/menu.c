@@ -44,7 +44,6 @@ typedef struct
 typedef struct
 {
     const char *name;
-    float step;
     float *num;
 } MotorMenuItem;
 
@@ -106,11 +105,11 @@ SteerMenuItem steer_menu = {
 
 // 电机菜单项
 MotorMenuItem motor_menu[] = {
-    {"MAX_SPEED", 0.1f, &MAX_SPEED},
-    {"MIN_SPEED", 0.1f, &MIN_SPEED},
-    {"APPROACH_SPEED", 0.1f, &APPROACH_SPEED},
-    {"BRAKING_DISTANCE", 0.1f, &BRAKING_DISTANCE},
-    {"S_Distance", 0.1f, &S_Distance}};
+    {"MAX_SPEED", &MAX_SPEED},
+    {"MIN_SPEED", &MIN_SPEED},
+    {"APPROACH_SPEED", &APPROACH_SPEED},
+    {"BRAKING_DISTANCE", &BRAKING_DISTANCE},
+    {"S_Distance", &S_Distance}};
 
 // 导航模式菜单显示文本数组
 const char *nav_mode_names[] = {
@@ -130,7 +129,7 @@ uint8_t Camera_Choose = 0;               // 摄像头选择
 static MenuState last_state = MENU_MAIN; // 记录上次菜单状态
 static uint8_t need_clear = 1;           // 清屏标志
 
-static bool edit_coord = false;  // 编辑坐标选择，false=X坐标，true=Y坐标
+static bool edit_coord = true;   // 编辑坐标选择，false=X坐标，true=Y坐标
 static float adjust_step = 0.1f; // 默认调整步长
 
 // 添加全局按键状态变量声明
@@ -159,7 +158,7 @@ void Update_Adjust_Step(void)
         adjust_step = 1.0f;
         break;
     case 2: // 10
-        adjust_step = 5.0f;
+        adjust_step = 0.01f;
         break;
     case 3: // 11
         adjust_step = 10.0f;
@@ -502,7 +501,7 @@ void Display_GPS_INS_Path(void)
 void Display_Speed_Manage_Menu(void)
 {
     ips114_show_string(0, 0, "Speed Management");
-
+    ips114_show_float(200, 0, adjust_step, 2, 1);
     for (uint8_t i = 0; i < 5; i++)
     {
         char buffer[32];
@@ -1021,16 +1020,18 @@ void GPS_INS_Path_Menu_Key_Process(void)
 // 电机调节按键处理
 void Speed_Manage_Menu_Key_Process(void)
 {
+    Update_Adjust_Step();
+
     if (edit_mode)
     {
         if (key1_state == KEY_SHORT_PRESS)
         {
-            *motor_menu[current_item].num += motor_menu[current_item].step;
+            *motor_menu[current_item].num += adjust_step;
             key_clear_state(KEY_1);
         }
         if (key2_state == KEY_SHORT_PRESS)
         {
-            *motor_menu[current_item].num -= motor_menu[current_item].step;
+            *motor_menu[current_item].num -= adjust_step;
             key_clear_state(KEY_2);
         }
         if (key3_state == KEY_SHORT_PRESS || key4_state == KEY_SHORT_PRESS)
@@ -1170,7 +1171,7 @@ void INS_Point_Menu_Key_Process(void)
             {
                 // 当拨码开关在左边时，进入编辑模式
                 edit_mode = true;
-                edit_coord = false; // 默认先编辑X坐标
+                edit_coord = true; // 默认先编辑X坐标
             }
             else if (SWITCH_4_STATUS == SWITCH_RIGHT)
             {
@@ -1284,7 +1285,7 @@ void S_Point_Menu_Key_Process(void)
             {
                 // 当拨码开关在右边时，进入编辑模式
                 edit_mode = true;
-                edit_coord = false; // 默认先编辑X坐标
+                edit_coord = true; // 默认先编辑Y坐标
             }
             key_clear_state(KEY_3);
         }
