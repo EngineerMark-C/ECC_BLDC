@@ -6,6 +6,7 @@
         "zf_driver_soft_iic.h": "c",
         "zf_device_imu660rb.h": "c",
         "uartreceiver.h": "c",
-        "zf_device_wifi_uart.h": "c"
+        "zf_device_wifi_uart.h": "c",
+        "typeinfo": "c"
     }
 }

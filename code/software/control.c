@@ -3,11 +3,6 @@
 float target_speed;
 float target_angle;
 
-float SAFETY_X_MAX;                                                             // X轴最大安全范围
-float SAFETY_X_MIN;                                                             // X轴最小安全范围
-float SAFETY_Y_MAX;                                                             // Y轴最大安全范围
-float SAFETY_Y_MIN;                                                             // Y轴最小安全范围
-
 float MAX_SPEED;                                                                // 最大速度
 float MIN_SPEED;                                                                // 最小速度
 float APPROACH_SPEED;                                                           // 靠近速度
@@ -48,24 +43,6 @@ CoordinateSystem local_frame;  // 本地坐标系
 
 // 到达标志位
 uint8_t reach_flag = 0;
-
-// 边界检查函数
-void Safety_Boundary_Check(void)
-{
-    // 检查东向坐标
-    if(position[0] < SAFETY_X_MIN || position[0] > SAFETY_X_MAX) 
-    {
-        target_speed = 0.0f;
-        Fire_Flag = 0;
-    }
-    // 检查北向坐标
-    if(position[1] < SAFETY_Y_MIN || position[1] > SAFETY_Y_MAX) 
-    {
-        target_speed = 0.0f;
-        Fire_Flag = 0;
-    }
-}
-
 
 // 速度管理函数
 void Speed_Management(float distance)
@@ -111,8 +88,10 @@ void WGS84_to_ENU(double lat, double lon, float* east, float* north)
     double N = a / sqrt(1 - (2*f - f*f)*sin_lat0*sin_lat0);
     
     // 泰勒展开近似（适用于10km范围内）
-    *east  = (float)(N * cos_lat0 * dLon);
-    *north = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    // *east  = (float)(N * cos_lat0 * dLon);
+    // *north = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    *east  = - (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    *north = (float)(N * cos_lat0 * dLon);
 }
 
 // 将路径点预转换为ENU坐标（启动时初始化）

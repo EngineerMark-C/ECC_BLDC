@@ -21,6 +21,7 @@
 #include "pathshow.h"
 #include "switch.h"
 #include "wifi.h"
+#include "boundary.h"
 
 void Init(void);
 

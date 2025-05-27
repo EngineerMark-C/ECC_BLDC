@@ -4,12 +4,6 @@
 extern float target_speed;
 extern float target_angle;
 
-//************************************* 边界保护 ******************************************//
-extern float SAFETY_X_MAX;
-extern float SAFETY_X_MIN;
-extern float SAFETY_Y_MAX;
-extern float SAFETY_Y_MIN;
-
 //************************************* 速度管理 ******************************************//
 extern float MAX_SPEED;
 extern float MIN_SPEED;

@@ -90,10 +90,12 @@ GPSINSPathMenuItem gps_ins_path_menu[] = {
 
 // 边界编辑菜单项
 BoundaryMenuItem boundary_menu[] = {
+    {"SAFETY_MARGIN", &SAFETY_MARGIN},
     {"SAFETY_X_MAX", &SAFETY_X_MAX},
     {"SAFETY_X_MIN", &SAFETY_X_MIN},
     {"SAFETY_Y_MAX", &SAFETY_Y_MAX},
-    {"SAFETY_Y_MIN", &SAFETY_Y_MIN}};
+    {"SAFETY_Y_MIN", &SAFETY_Y_MIN}
+};
 
 // 舵机菜单项
 SteerMenuItem steer_menu = {
@@ -696,17 +698,25 @@ void Display_Boundary(void)
 {
     ips114_show_string(0, 0, "Boundary");
     ips114_show_float(200, 0, adjust_step, 2, 1);
-    for (uint8_t i = 0; i < 4; i++)
+    
+    // 显示可编辑的安全边界外扩距离
+    char buffer[32];
+    sprintf(buffer, "> %s: %.2f",
+            boundary_menu[0].name,
+            *boundary_menu[0].num);
+    ips114_show_string(0, 16, buffer);
+    
+    // 显示只读的边界值
+    for (uint8_t i = 1; i < 5; i++)
     {
-        char buffer[32];
-        sprintf(buffer, "%s%s: %.2f",
-                (i == current_item) ? "> " : "  ",
+        sprintf(buffer, "  %s: %.2f",
                 boundary_menu[i].name,
                 *boundary_menu[i].num);
         ips114_show_string(0, 16 + i * 16, buffer);
     }
+    
     // 底部提示信息
-    ips114_show_string(0, 96, edit_mode ? "KEY1:+  KEY2:-" : "KEY3:Edit");
+    ips114_show_string(0, 96, "KEY1:+  KEY2:-  KEY3:Update");
     ips114_show_string(0, 112, "KEY4:Back");
 }
 
@@ -1374,6 +1384,7 @@ void Nav_Mode_Key_Process(void)
     {
         menu_state = MENU_MAIN;
         Save_Basic_Data();
+        Calculate_Safety_Boundary(Navigation_Flag);
         key_clear_state(KEY_3);
     }
     if (key4_state == KEY_SHORT_PRESS)
@@ -1426,54 +1437,33 @@ void Camera_Menu_Key_Process(void)
 void Boundary_Menu_Key_Process(void)
 {
     Update_Adjust_Step();
-    if (edit_mode)
+    if (key1_state == KEY_SHORT_PRESS)
     {
-        if (key1_state == KEY_SHORT_PRESS)
-        {
-            *boundary_menu[current_item].num += adjust_step;
-            key_clear_state(KEY_1);
-        }
-        if (key2_state == KEY_SHORT_PRESS)
-        {
-            *boundary_menu[current_item].num -= adjust_step;
-            key_clear_state(KEY_2);
-        }
-        if (key3_state == KEY_SHORT_PRESS || key4_state == KEY_SHORT_PRESS)
-        {
-            edit_mode = false;
-            key_clear_state(KEY_3);
-            key_clear_state(KEY_4);
-        }
+        // 增加安全边界外扩距离
+        *boundary_menu[0].num += adjust_step;
+        if (*boundary_menu[0].num < 5.0f) *boundary_menu[0].num = 5.0f; // 设置最小值
+        key_clear_state(KEY_1);
     }
-    else
+    
+    if (key2_state == KEY_SHORT_PRESS)
     {
-        if (key1_state == KEY_SHORT_PRESS)
-        {
-            if (current_item > 0)
-            {
-                current_item--;
-            }
-            key_clear_state(KEY_1);
-        }
-        if (key2_state == KEY_SHORT_PRESS)
-        {
-            if (current_item < 3)
-            {
-                current_item++;
-            }
-            key_clear_state(KEY_2);
-        }
-        if (key3_state == KEY_SHORT_PRESS)
-        {
-            edit_mode = true;
-            key_clear_state(KEY_3);
-        }
-        if (key4_state == KEY_SHORT_PRESS)
-        {
-            menu_state = MENU_MAIN;
-            Save_Basic_Data();
-            key_clear_state(KEY_4);
-        }
+        // 减少安全边界外扩距离
+        *boundary_menu[0].num -= adjust_step;
+        if (*boundary_menu[0].num < 5.0f) *boundary_menu[0].num = 5.0f; // 设置最小值
+        key_clear_state(KEY_2);
+    }
+    
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        Calculate_Safety_Boundary(Navigation_Flag);
+        key_clear_state(KEY_3);
+    }
+    
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        menu_state = MENU_MAIN;
+        Save_Basic_Data();
+        key_clear_state(KEY_4);
     }
 }
 
