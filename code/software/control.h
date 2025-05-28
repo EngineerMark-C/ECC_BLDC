@@ -21,7 +21,7 @@ extern double GPS_Point[MAX_GPS_POINTS][2];                                     
 extern float INS_Point[MAX_INS_POINTS][2];                                      // INS 点位
 extern float GPS_ENU[MAX_GPS_POINTS][2];                                        // ENU点位
 extern float S_Point[MAX_INS_POINTS][2];                                        // S 型走位点位
-float Adjusted_GPS_ENU[MAX_GPS_POINTS][2];                                      // 调整后的 GPS ENU 坐标
+extern float Adjusted_GPS_ENU[MAX_GPS_POINTS][2];                                      // 调整后的 GPS ENU 坐标
 
 //************************************* GPS 点位处理*****************************************//
 extern uint8_t GPS_Point_Index;                                                 // GPS 数据索引
@@ -55,8 +55,10 @@ void GPS_ENU_Navigation(void);
 void INS_Navigation(void);
 void GPS_INS_Navigation(void);
 void GPS_ENU_INS_Navigation(void);
-
+void Adjust_ENU_Coordinates(float input_east, float input_north, float* output_east, float* output_north);
 void S_Point_Generate_All(void);
+
+void Test_Adjust_ENU_Coordinates(void);
 
 
 #endif

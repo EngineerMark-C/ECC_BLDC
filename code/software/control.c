@@ -1,4 +1,6 @@
 #include "init.h"
+#include <stdio.h>
+#include <math.h>
 
 float target_speed;
 float target_angle;
@@ -136,27 +138,7 @@ void Gyro_North_Init(float gyro_angle)
     gyro_to_gps_angle_offset = yaw - gnss.direction;;
 }
 
-// 使用旋转矩阵调整ENU坐标
-void Adjust_ENU_Coordinates(float* east, float* north)
-{
-    // 将差角转换为弧度
-    float angle_rad = ANGLE_TO_RAD(gyro_to_gps_angle_offset);
 
-    // 构建旋转矩阵
-    float cos_angle = cosf(angle_rad);
-    float sin_angle = sinf(angle_rad);
-
-    // 保存原始坐标
-    float original_east = *east;
-    float original_north = *north;
-
-    // 应用旋转矩阵
-    *east = cos_angle * original_east - sin_angle * original_north;  // x cos - y sin
-    *north = sin_angle * original_east + cos_angle * original_north; // x sin + y cos
-}
-
-// 定义一个新的全局数组，用于存储调整后的 ENU 坐标
-float Adjusted_GPS_ENU[MAX_GPS_POINTS][2];  // 调整后的 GPS ENU 坐标
 
 // 将路径点预转换为ENU坐标（启动时初始化）
 void WGS84_to_IMU_ENU_Init(void)
@@ -168,7 +150,7 @@ void WGS84_to_IMU_ENU_Init(void)
         // 调整ENU坐标
         float adjusted_east = GPS_ENU[i][0];
         float adjusted_north = GPS_ENU[i][1];
-        Adjust_ENU_Coordinates(&adjusted_east, &adjusted_north);
+        Adjust_ENU_Coordinates(float input_east, float input_north, float* output_east, float* output_north);
 
         // 将调整后的坐标存入新的数组
         Adjusted_GPS_ENU[i][0] = adjusted_east;
@@ -486,5 +468,52 @@ void GPS_ENU_INS_Navigation(void)
                 target_speed = 0.0f;
             }
             break;
+    }
+}
+
+// 调整 ENU 坐标的函数
+void Adjust_ENU_Coordinates(float input_east, float input_north, float* output_east, float* output_north) {
+    // 将差角转换为弧度
+    float angle_rad = ANGLE_TO_RAD(gyro_to_gps_angle_offset);
+
+    // 构建旋转矩阵
+    float cos_angle = cosf(angle_rad);
+    float sin_angle = sinf(angle_rad);
+
+    // 应用旋转矩阵
+    *output_east = cos_angle * input_east - sin_angle * input_north;  // x cos - y sin
+    *output_north = sin_angle * input_east + cos_angle * input_north; // x sin + y cos
+}
+
+// 测试函数
+void Test_Adjust_ENU_Coordinates() {
+    // 模拟输入数据
+    float test_gps_enu[3][2] = {
+        {10.0f, 20.0f}, // 点 1
+        {15.0f, 25.0f}, // 点 2
+        {20.0f, 30.0f}  // 点 3
+    };
+
+    // 假设 GPS 给出的正北方向角固定为 30°
+    float gps_north_angle =0.0f;
+
+    // 模拟陀螺仪方向角（例如 60°）
+    float gyro_angle = 30.0f;
+
+    // 计算陀螺仪与 GPS 正北方向的差角
+    gyro_to_gps_angle_offset = gyro_angle - gps_north_angle;
+
+    printf("原始 ENU 坐标 -> 调整后的 ENU 坐标:\n");
+    for (int i = 0; i < 3; i++) {
+        float input_east = test_gps_enu[i][0];
+        float input_north = test_gps_enu[i][1];
+        float output_east, output_north;
+
+        // 调整 ENU 坐标
+        Adjust_ENU_Coordinates(input_east, input_north, &output_east, &output_north);
+
+        // 打印结果
+        printf("点 %d: 原始 (%.2f, %.2f) -> 调整后 (%.2f, %.2f)\n",
+               i + 1, input_east, input_north, output_east, output_north);
     }
 }

@@ -225,8 +225,11 @@ void Display_Menu(void)
     case MENU_PATH:
         Display_Path();
         break;
-    case MENU_Adjusted_ENU_Point: // **新增：调整后的ENU点位显示菜单显示函数**
+    case MENU_Adjusted_ENU_Point:      // **新增：处理调整后的ENU点位显示**
         Display_Adjusted_ENU_Point();
+        break;
+    default:
+        // 可选：处理未知状态
         break;
     }
 }

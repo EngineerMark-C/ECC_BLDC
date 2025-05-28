@@ -37,4 +37,6 @@ void Camera_Menu_Key_Process(void);
 void Boundary_Menu_Key_Process(void);
 void Path_Menu_Key_Process(void);
 
+void Display_Adjusted_ENU_Point(void);
+
 #endif
