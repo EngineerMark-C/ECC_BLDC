@@ -1,6 +1,5 @@
 #include "init.h"
-#include <stdio.h>
-#include <math.h>
+
 
 float target_speed;
 float target_angle;
@@ -150,7 +149,7 @@ void WGS84_to_IMU_ENU_Init(void)
         // 调整ENU坐标
         float adjusted_east = GPS_ENU[i][0];
         float adjusted_north = GPS_ENU[i][1];
-        Adjust_ENU_Coordinates(float input_east, float input_north, float* output_east, float* output_north);
+        Adjust_ENU_Coordinates(adjusted_east, adjusted_north, &Adjusted_GPS_ENU[i][0], &Adjusted_GPS_ENU[i][1]);
 
         // 将调整后的坐标存入新的数组
         Adjusted_GPS_ENU[i][0] = adjusted_east;

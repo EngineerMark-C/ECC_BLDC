@@ -55,6 +55,7 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
         Motor_PID_Control(target_speed);                                // 电机 PID 控制
     }
     // }
+    timer_10ms_flag = 1; // 设置定时器标志位，10ms 定时器中断
 }
 
 
@@ -86,7 +87,7 @@ IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)
 {
     interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU61_CH1);
-
+    audio_callback();
 
 
 
@@ -107,7 +108,7 @@ IFX_INTERRUPT(exti_ch0_ch4_isr, 0, EXTI_CH0_CH4_INT_PRIO)
     if(exti_flag_get(ERU_CH4_REQ13_P15_5))          // 通道4中断
     {
         exti_flag_clear(ERU_CH4_REQ13_P15_5);
-
+        dot_matrix_screen_scan();
 
 
 
@@ -208,6 +209,7 @@ IFX_INTERRUPT(uart1_rx_isr, 0, UART1_RX_INT_PRIO)
 {
     interrupt_global_enable(0);                     // 开启中断嵌套
     camera_uart_handler();                          // 摄像头参数配置统一回调函数
+    tld7002_callback();
 }
 
 // 串口2默认连接到无线转串口模块

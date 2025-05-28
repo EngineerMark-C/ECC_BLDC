@@ -78,7 +78,8 @@ MainMenuItem main_menu_items[] = {
     {"Camera"},
     {"Boundary"},
     {"Path Display"},
-    {"Adjusted ENU"} // **新增：调整后的ENU点位显示菜单项**
+    {"Adjusted ENU"},
+    {"Voice Recognize"} // **新增：语音识别选项**
 };
 
 // 路径设置菜单项
@@ -295,6 +296,9 @@ void Menu(void)
         break;
     case MENU_PATH: // 添加路径显示菜单按键处理
         Path_Menu_Key_Process();
+        break;
+    case MENU_Adjusted_ENU_Point:
+        Display_Adjusted_ENU_Point(); // 调用显示调整后的 ENU 点位的函数
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -821,7 +825,6 @@ void Main_Menu_Key_Process(void)
             break;
         case 9:
             menu_state = MENU_NAV_MODE;
-            ;
             break;
         case 10:
             menu_state = MENU_S_Point;
@@ -840,6 +843,9 @@ void Main_Menu_Key_Process(void)
         case 14:
             menu_state = MENU_ENU_Point; // 新增：进入调整后的ENU点位显示菜单
             start_index = 0;
+            break;
+        case 15: // **新增：处理 Voice Recognize 选项**
+            True_complete_command(); // 执行语音识别命令
             break;
         }
         key_clear_state(KEY_3);

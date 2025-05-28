@@ -20,7 +20,9 @@
 #include "control.h"
 #include "pathshow.h"
 #include "switch.h"
-#include "wifi.h"
+#include "test44.h"
+#include "asr_audio.h"
+#include "asr_audio.h"
 
 void Init(void);
 
