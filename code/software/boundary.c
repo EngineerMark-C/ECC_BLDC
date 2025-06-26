@@ -213,7 +213,24 @@ void Calculate_Safety_Boundary(NavigationFlag flag)
             // 如果有S型走位，也要考虑进去
             if (End_S_Point >= Start_S_Point) {
                 SafetyBoundary s_boundary = {0.0f, 0.0f, 0.0f, 0.0f, 0};
-                Calculate_S_Safety_Boundary();
+                float x_min = S_Point[Start_S_Point][0];
+                float x_max = S_Point[Start_S_Point][0];
+                float y_min = S_Point[Start_S_Point][1];
+                float y_max = S_Point[Start_S_Point][1];
+                
+                for (uint8_t i = Start_S_Point; i <= End_S_Point; i++) {
+                    if (S_Point[i][0] < x_min) x_min = S_Point[i][0];
+                    if (S_Point[i][0] > x_max) x_max = S_Point[i][0];
+                    if (S_Point[i][1] < y_min) y_min = S_Point[i][1];
+                    if (S_Point[i][1] > y_max) y_max = S_Point[i][1];
+                }
+                
+                s_boundary.x_min = x_min - SAFETY_MARGIN;
+                s_boundary.x_max = x_max + SAFETY_MARGIN;
+                s_boundary.y_min = y_min - SAFETY_MARGIN;
+                s_boundary.y_max = y_max + SAFETY_MARGIN;
+                s_boundary.is_initialized = 1;
+                
                 Merge_Safety_Boundaries(&current_boundary, &s_boundary);
             }
             break;

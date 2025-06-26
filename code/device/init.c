@@ -11,6 +11,7 @@ void Init(void)
     INS_Points_Init();                                                          // 初始化 INS 点位
     WGS84_to_ENU_Init();                                                        // 初始化 WGS84 坐标转 ENU 坐标
     S_Point_Init();                                                             // 初始化 S 型走位点
+    Calculate_Safety_Boundary(Navigation_Flag);
     Encoder_Init();                                                             // 初始化编码器
     Steer_Init();                                                               // 初始化舵机
     BLDC_Init();                                                                // 初始化 BLDC 驱动

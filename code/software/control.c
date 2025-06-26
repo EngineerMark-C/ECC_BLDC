@@ -7,6 +7,7 @@ float MAX_SPEED;                                                                
 float MIN_SPEED;                                                                // 最小速度
 float APPROACH_SPEED;                                                           // 靠近速度
 float BRAKING_DISTANCE;                                                         // 开始减速距离
+
 float GPS_SWITCH_DISTANCE;                                                      // GPS 切换距离
 float INS_SWITCH_DISTANCE;                                                      // INS 切换距离
 
@@ -141,7 +142,7 @@ void GPS_Point_to_Point(uint8_t i)
     }
 }
 
-void GPS_ENU_Point_to_Point(uint8_t i) 
+void GPS_ENU_Point_to_Point(uint8_t i)
 {
     // 使用平面坐标系计算
     float dx = GPS_ENU[i][0] - position[0];  // 东向差值

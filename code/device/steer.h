@@ -1,7 +1,7 @@
 #ifndef _steer_h_
 #define _steer_h_
 
-#define STEER_PIN                       (ATOM1_CH1_P33_9)                       // 舵机PWM输出引脚
+#define STEER_PIN                       (ATOM3_CH3_P00_12)                       // 舵机PWM输出引脚
 
 #define PWM_STEER_MIN_R                 655                                     // R 车舵机PWM右极限
 #define PWM_STEER_MIDDLE_R              765                                     // R 车舵机PWM中值

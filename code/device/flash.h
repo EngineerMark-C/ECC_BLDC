@@ -2,7 +2,7 @@
 #define _flash_h_
 
 #define FLASH_SECTION_INDEX             (0)                                     // 存储数据用的扇区
-#define FLASH_PAGE_INDEX                (8)                                     // 存储数据用的页码       目前未使用    第7页好像死了
+#define FLASH_PAGE_INDEX                (8)                                     // 存储数据用的页码       目前未使用
 
 
 //************************************GPS点位处理****************************************//
@@ -18,7 +18,7 @@ void GPS_Points_Init(void);
 
 #define FLASH_INS_DATA_INDEX            (4)                                     // 存储 INS 数据用的页码
 #define MAX_INS_POINTS                  (16)                                    // 最大 INS 点位数
-#define INS_DATA_SIZE                   (3)                                     // 3个存储单元（索引 + x轴坐标 + y轴坐标）
+#define INS_DATA_SIZE                   (7)                                     // 3个存储单元（索引 + x轴坐标 + y轴坐标） 第3页有问题
 
 void Save_INS_Point(void);
 void INS_Points_Init(void);
