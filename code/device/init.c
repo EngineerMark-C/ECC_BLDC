@@ -3,6 +3,7 @@
 void Init(void)
 {
     IPS_Init();                                                                 // 初始化 IPS
+    Boot_Animation();                                                           // 启动画面
     Switch_Init();                                                              // 初始化拨码开关
     Button_Init();                                                              // 初始化按键
     Basic_Data_Init();                                                          // 初始化基本数据

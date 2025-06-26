@@ -22,6 +22,7 @@
 #include "switch.h"
 #include "wifi.h"
 #include "boundary.h"
+#include "image.h"
 
 void Init(void);
 
