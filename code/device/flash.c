@@ -241,6 +241,8 @@ void S_Point_Init(void)
 //                     | 22   | float      | acc_bias[1]          |
 //                     | 23   | float      | acc_bias[2]          |
 //                     | 24   | uint8      | Camera_Threshold     |
+//                     | 25   | float      | GPS_SWITCH_DISTANCE  |
+//                     | 26   | float      | INS_SWITCH_DISTANCE  |
 
 // 保存基础数据
 void Save_Basic_Data(void)
@@ -272,6 +274,8 @@ void Save_Basic_Data(void)
     flash_union_buffer[22].float_type = acc_bias[1];
     flash_union_buffer[23].float_type = acc_bias[2];
     flash_union_buffer[24].uint8_type = Camera_Threshold;
+    flash_union_buffer[25].float_type = GPS_SWITCH_DISTANCE;
+    flash_union_buffer[26].float_type = INS_SWITCH_DISTANCE;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
@@ -309,6 +313,8 @@ void Basic_Data_Init(void)
     acc_bias[1] = flash_union_buffer[22].float_type;
     acc_bias[2] = flash_union_buffer[23].float_type;
     Camera_Threshold = flash_union_buffer[24].uint8_type;
+    GPS_SWITCH_DISTANCE = flash_union_buffer[25].float_type;
+    INS_SWITCH_DISTANCE = flash_union_buffer[26].float_type;
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;
@@ -395,6 +401,8 @@ void Reset_All_Flash_Data(void)
     acc_bias[1] = 0.0f;
     acc_bias[2] = 0.0f;
     Camera_Threshold = 64; // 默认二值化阈值为64
+    GPS_SWITCH_DISTANCE = 1.0f; // 默认GPS切换距离
+    INS_SWITCH_DISTANCE = 0.2f;  // 默认INS切换距离
     
     NOW_GPS_Point = 0;
     NOW_INS_Point = 0;

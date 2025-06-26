@@ -7,6 +7,8 @@ float MAX_SPEED;                                                                
 float MIN_SPEED;                                                                // 最小速度
 float APPROACH_SPEED;                                                           // 靠近速度
 float BRAKING_DISTANCE;                                                         // 开始减速距离
+float GPS_SWITCH_DISTANCE;                                                      // GPS 切换距离
+float INS_SWITCH_DISTANCE;                                                      // INS 切换距离
 
 float GPS_ENU[MAX_GPS_POINTS][2];                                               // GPS ENU 坐标
 
@@ -133,7 +135,7 @@ void GPS_Point_to_Point(uint8_t i)
     Speed_Management((float)distance);
     // ips114_show_float(0, 96, target_angle, 5, 1);
     // ips114_show_float(90, 96, (float)distance, 5, 1);
-    if (distance < 1.0f)
+    if (distance < GPS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
@@ -153,7 +155,7 @@ void GPS_ENU_Point_to_Point(uint8_t i)
     Speed_Management(distance);
     
     // 修改到达判断条件
-    if (distance < 1.0f)
+    if (distance < GPS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
@@ -210,7 +212,7 @@ void S_Point_to_Point(uint8_t i)
     target_angle = angle;
     Speed_Management(distance);
     
-    if (distance < 0.2f)
+    if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
@@ -249,8 +251,8 @@ void INS_Point_to_Point(uint8_t i)
 
     target_angle = angle;
     Speed_Management(distance);
-    
-    if (distance < 0.2f)
+
+    if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }

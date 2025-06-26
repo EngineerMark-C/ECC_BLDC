@@ -3,6 +3,7 @@
 #define MAIN_MENU_ITEMS_COUNT (sizeof(main_menu_items) / sizeof(MainMenuItem))
 #define NAV_MODE_COUNT (sizeof(nav_mode_names) / sizeof(nav_mode_names[0]))
 #define GPS_INS_PATH_MENU_COUNT (sizeof(gps_ins_path_menu) / sizeof(GPSINSPathMenuItem))
+#define Motor_MENU_ITEMS_COUNT (sizeof(motor_menu) / sizeof(MotorMenuItem))
 
 // 定义菜单状态
 typedef enum
@@ -75,7 +76,7 @@ MainMenuItem main_menu_items[] = {
     {"S Point"},
     {"Camera"},
     {"Boundary"},
-    {"Path Display"} // 添加路径显示菜单项
+    {"Path Display"}
 };
 
 // 路径设置菜单项
@@ -86,7 +87,8 @@ GPSINSPathMenuItem gps_ins_path_menu[] = {
     {"End INS Point", &End_INS_Point},
     {"GPS to INS Point", &GPS_TO_INS_POINT},
     {"Start S Point", &Start_S_Point},
-    {"End S Point", &End_S_Point}};
+    {"End S Point", &End_S_Point}
+};
 
 // 边界编辑菜单项
 BoundaryMenuItem boundary_menu[] = {
@@ -111,7 +113,10 @@ MotorMenuItem motor_menu[] = {
     {"MIN_SPEED", &MIN_SPEED},
     {"APPROACH_SPEED", &APPROACH_SPEED},
     {"BRAKING_DISTANCE", &BRAKING_DISTANCE},
-    {"S_Distance", &S_Distance}};
+    {"S_Distance", &S_Distance},
+    {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
+    {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE}
+};
 
 // 导航模式菜单显示文本数组
 const char *nav_mode_names[] = {
@@ -504,17 +509,24 @@ void Display_Speed_Manage_Menu(void)
 {
     ips114_show_string(0, 0, "Speed Management");
     ips114_show_float(200, 0, adjust_step, 2, 1);
-    for (uint8_t i = 0; i < 5; i++)
+    
+    // 显示当前可见范围的菜单项（Y轴间隔16像素）
+    for (uint8_t i = 0; i < visible_items; i++)
     {
+        uint8_t item_num = start_index + i;
+        if (item_num >= Motor_MENU_ITEMS_COUNT)
+            break;
+
         char buffer[32];
         sprintf(buffer, "%s%s: %.1f",
-                (i == current_item) ? "> " : "  ",
-                motor_menu[i].name,
-                *motor_menu[i].num);
+                (item_num == current_item) ? "> " : "  ",
+                motor_menu[item_num].name,
+                *motor_menu[item_num].num);
         ips114_show_string(0, 16 + i * 16, buffer);
     }
-    ips114_show_string(0, 96, edit_mode ? "KEY1:+  KEY2:-" : "KEY3:Edit");
-    ips114_show_string(0, 112, "KEY4:Back");
+    
+    // 底部提示信息
+    ips114_show_string(0, 112, edit_mode ? "KEY1:+  KEY2:-" : "KEY3:Edit KEY4:Back");
 }
 
 // 显示陀螺仪校准界面
@@ -1058,14 +1070,20 @@ void Speed_Manage_Menu_Key_Process(void)
             if (current_item > 0)
             {
                 current_item--;
+                // 添加滚动逻辑：当当前索引小于起始索引时调整显示范围
+                if (current_item < start_index)
+                    start_index = current_item;
             }
             key_clear_state(KEY_1);
         }
         if (key2_state == KEY_SHORT_PRESS)
         {
-            if (current_item < 4)
+            if (current_item < Motor_MENU_ITEMS_COUNT - 1)
             {
                 current_item++;
+                // 添加滚动逻辑：当当前索引超过显示范围时调整显示范围
+                if (current_item >= start_index + visible_items)
+                    start_index = current_item - visible_items + 1;
             }
             key_clear_state(KEY_2);
         }
