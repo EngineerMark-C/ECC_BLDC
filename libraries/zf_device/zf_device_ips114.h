@@ -112,6 +112,8 @@ extern  uint16  ips114_height_max;
 
 //=================================================声明 IPS114 基础函数================================================
 void    ips114_clear                    (void);                                                                             // IPS114 清屏函数
+void    ips114_clear_line               (uint16 y);                                                                        // IPS114 清除一行函数
+void    ips114_clear_lines              (uint16 y_start, uint16 y_end);                                                   // IPS114 清除多行函数
 void    ips114_full                     (const uint16 color);                                                               // IPS114 屏幕填充函数
 void    ips114_set_dir                  (ips114_dir_enum dir);                                                              // IPS114 设置显示方向
 void    ips114_set_font                 (ips114_font_size_enum font);                                                       // IPS114 设置显示字体

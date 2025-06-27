@@ -64,8 +64,8 @@ void Save_GPS_Point(void)
 // 上电初始化时调用
 void GPS_Points_Init(void)
 {
-    ips114_show_string(60, 32, "Loading GPS Points...");
-    
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading GPS Points...");
+
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
 
     if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
@@ -88,9 +88,9 @@ void GPS_Points_Init(void)
                 continue;
             }
         }
-        ips114_show_string(60, 32, "GPS Points Loaded.");
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "GPS Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();         // 清屏
+            ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
 
@@ -131,8 +131,8 @@ void Save_INS_Point(void)
 // 上电初始化时调用
 void INS_Points_Init(void)
 {
-    ips114_show_string(60, 32, "Loading INS Points...");
-    
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading INS Points...");
+
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
 
     if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
@@ -149,9 +149,9 @@ void INS_Points_Init(void)
                 continue;
             }
         }
-        ips114_show_string(60, 32, "INS Points Loaded.");
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "INS Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();         // 清屏
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
 
@@ -189,7 +189,7 @@ void Save_S_Point(void)
 // 上电初始化时调用
 void S_Point_Init(void)
 {
-    ips114_show_string(60, 32, "Loading S Points...");
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading S Points...");
 
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
 
@@ -207,9 +207,9 @@ void S_Point_Init(void)
                 continue;
             }
         }
-        ips114_show_string(60, 32, "S Points Loaded.");
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "S Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();         // 清屏
+        ips114_clear();
     }
 }
 
@@ -323,8 +323,9 @@ void Basic_Data_Init(void)
     NOW_INS_Point = Start_INS_Point;
     NOW_S_Point = Start_S_Point;
 
-    ips114_show_string(60, 32, "Basic Data Loaded.");
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Basic Data Loaded.");
     system_delay_ms(500);
+    ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
 }
 
 //************************************Flash完全重置****************************************//

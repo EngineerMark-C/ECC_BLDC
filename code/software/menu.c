@@ -563,11 +563,10 @@ void Display_INS_Point(void)
     if (edit_mode)
     {
         char buffer[32];
-        sprintf(buffer, "Edit P%d: %s K1:+ K2:- K3:Switch",
+        sprintf(buffer, "P%d: %s K1:+ K2:- K3:Switch",
                 INS_Point_Index,
                 edit_coord ? "Y" : "X");
-        ips114_show_string(0, 96, buffer);
-        ips114_show_string(0, 112, "K4:Exit Edit");
+        ips114_show_string(0, 112, buffer);
     }
     else
     {
@@ -611,11 +610,10 @@ void Display_S_Point(void)
     if (edit_mode)
     {
         char buffer[32];
-        sprintf(buffer, "Edit P%d: %s K1:+ K2:- K3:Switch",
+        sprintf(buffer, "P%d: %s K1:+ K2:- K3:Switch",
                 S_Point_Index,
                 edit_coord ? "Y" : "X");
-        ips114_show_string(0, 96, buffer);
-        ips114_show_string(0, 112, "K4:Exit Edit");
+        ips114_show_string(0, 112, buffer);
     }
     else
     {
