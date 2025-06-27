@@ -772,40 +772,39 @@ void Display_Path(void)
 // 显示方向向量采集界面
 void Display_Direction(void)
 {
-    ips114_show_string(0, 0, "Direction Vector Setup");
+    ips114_show_string(0, 0, "Direction Setup");
     
-    // 显示当前方向角度
+    // // 显示当前方向角度
     ips114_show_string(0, 16, "Current Direction:");
-    ips114_show_float(120, 16, Start_Direction, 6, 1);
-    ips114_show_string(180, 16, "deg");
-    
-    // 显示方向点位信息
+    ips114_show_float(150, 16, Start_Direction, 3, 2);
+    ips114_show_string(200, 16, "deg");
+
+     // 显示方向点位信息
     for (uint8_t i = 0; i < 2; i++)
     {
-        char point_info[40];
-        sprintf(point_info, "%sP%d: %.8f, %.8f",
+        char point_info[32];
+        sprintf(point_info, "%sP%d: %.6f, %.6f",
                 (i == Direction_Point_Index) ? ">" : " ",
                 i,
                 Direction_Point[i][0],
                 Direction_Point[i][1]);
-        ips114_show_string(0, 32 + i * 16, point_info);
+         ips114_show_string(0, 32 + i * 16, point_info);
     }
     
     // 显示GPS状态
     ips114_show_string(0, 64, "GPS Status:");
-    ips114_show_string(80, 64, gnss.state ? "Valid" : "No Fix");
+    ips114_show_string(100, 64, gnss.state ? "Valid" : "No Fix");
     
     // 显示当前GPS位置
     if (gnss.state)
     {
-        ips114_show_string(0, 80, "Current GPS:");
-        ips114_show_double(0, 96, NOW_location.latitude, 4, 8);
-        ips114_show_double(120, 96, NOW_location.longitude, 4, 8);
+        ips114_show_double(0, 80, NOW_location.latitude, 4, 8);
+        ips114_show_double(0, 96, NOW_location.longitude, 4, 8);
     }
     
     // 底部提示信息
-    char buffer[40];
-    sprintf(buffer, "Index:%d KEY1:- KEY2:+ KEY3:Save", Direction_Point_Index);
+    char buffer[32];
+    sprintf(buffer, "Index:%d KEY3:Save KEY4:Back", Direction_Point_Index);
     ips114_show_string(0, 112, buffer);
 }
 

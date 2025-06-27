@@ -117,7 +117,7 @@ void Get_Start_Direction(void)
 {
     //Direction_Point[0]发车方向起点
     //Direction_Point[1]发车方向终点
-    Start_Direction = get_two_points_azimuth(Direction_Point[0][0], Direction_Point[0][1],
+    Start_Direction = (float)get_two_points_azimuth(Direction_Point[0][0], Direction_Point[0][1],
                                             Direction_Point[1][0], Direction_Point[1][1]);
 }
 
