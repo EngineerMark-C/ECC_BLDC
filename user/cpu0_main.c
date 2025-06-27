@@ -44,28 +44,31 @@
 // **************************** 代码区域 ****************************
 int core0_main(void)
 {
-    clock_init();                   // 获取时钟频率<务必保留>
-    debug_init();                   // 初始化默认调试串口
-    cpu_wait_event_ready();         // 等待所有核心初始化完毕
-    Init();                         // 初始化函数
-    // Reset_All_Flash_Data();         // 重置所有Flash数据区域
-    // target_speed = 2.0f;            // 目标速度
-    // icm42688_init();  // 初始化 ICM42688
+    clock_init();                                                               // 获取时钟频率<务必保留>
+    debug_init();                                                               // 初始化默认调试串口
+    cpu_wait_event_ready();                                                     // 等待所有核心初始化完毕
+    Init();                                                                     // 初始化函数
+    // Reset_All_Flash_Data();                                                    // 重置所有Flash数据区域
+    // target_speed = 2.0f;                                                       // 目标速度
+    // icm42688_init();                                                           // 初始化 ICM42688
     while (TRUE)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
 
-        Menu();                                                     // 菜单逻辑
-        system_delay_ms(100);                                       // 将刷新间隔增加到100ms
+        Menu();                                                                 // 菜单逻辑
+        system_delay_ms(100);                                                   // 将刷新间隔增加到100ms
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         // time = end_time - start_time;
         // float time_us = (float)time / 100.0f;
         // printf("所需时间: %.2f us\n", time_us);
-        // printf("%f\n", yaw);
+        printf("%f\n", yaw);
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
-        printf("%f,%f\n", speed, target_speed);
+        // printf("%f,%f\n", speed, target_speed);
+        // printf("%d\n", wifi_uart_information.wifi_uart_connect_state);
+        // printf("%s\n", wifi_uart_information.wifi_uart_local_ip);
+        // wifi_process();                                                           // 处理接收到的数据
         // printf("%d,%d,%d,%d,%d\n", SWITCH_1_STATUS, SWITCH_2_STATUS, SWITCH_3_STATUS, SWITCH_4_STATUS, SWITCH_ALL_STATUS);
     }
 }

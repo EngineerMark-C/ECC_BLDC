@@ -64,8 +64,8 @@ void Save_GPS_Point(void)
 // 上电初始化时调用
 void GPS_Points_Init(void)
 {
-    ips114_show_string(60, 32, "Loading GPS Points...");
-    
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading GPS Points...");
+
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
 
     if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
@@ -88,9 +88,9 @@ void GPS_Points_Init(void)
                 continue;
             }
         }
-        ips114_show_string(60, 32, "GPS Points Loaded.");
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "GPS Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();         // 清屏
+            ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
 
@@ -100,7 +100,7 @@ void GPS_Points_Init(void)
 //                     | 0    | uint8      | 点位索引              |
 //                     | 1    | float      | x轴坐标               |
 //                     | 2    | float      | y轴坐标               |
-// 保存 INS 点位
+// 保存 INS 点位 (踩点)
 void Save_INS_Point(void)
 {
     if(INS_Point_Index < MAX_INS_POINTS)
@@ -128,11 +128,32 @@ void Save_INS_Point(void)
     }
 }
 
+//保存 INS 点位 (内存到Flash)
+void Save_INS_Point_Memory(void)
+{
+    // 清空数据缓冲区
+    flash_buffer_clear();
+    
+    // 写入缓冲区
+    for(uint8_t i = 0; i < MAX_INS_POINTS; i++)
+    {
+        flash_union_buffer[i * INS_DATA_SIZE].uint8_type = i;
+        flash_union_buffer[i * INS_DATA_SIZE + 1].float_type = INS_Point[i][0];
+        flash_union_buffer[i * INS_DATA_SIZE + 2].float_type = INS_Point[i][1];
+    }
+    
+    // 擦除并写入Flash
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
+    flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
+    ips114_show_string(30, 32, "INS Point Memory Saved.");
+    system_delay_ms(500);
+}
+
 // 上电初始化时调用
 void INS_Points_Init(void)
 {
-    ips114_show_string(60, 32, "Loading INS Points...");
-    
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading INS Points...");
+
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
 
     if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
@@ -149,9 +170,9 @@ void INS_Points_Init(void)
                 continue;
             }
         }
-        ips114_show_string(60, 32, "INS Points Loaded.");
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "INS Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();         // 清屏
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
 
@@ -189,7 +210,7 @@ void Save_S_Point(void)
 // 上电初始化时调用
 void S_Point_Init(void)
 {
-    ips114_show_string(60, 32, "Loading S Points...");
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading S Points...");
 
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
 
@@ -207,9 +228,9 @@ void S_Point_Init(void)
                 continue;
             }
         }
-        ips114_show_string(60, 32, "S Points Loaded.");
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "S Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();         // 清屏
+        ips114_clear();
     }
 }
 
@@ -224,7 +245,7 @@ void S_Point_Init(void)
 //                     | 5    | float      | gyro_bias[2]         |
 //                     | 6    | uint8      | Start_INS_Point      |
 //                     | 7    | uint8      | End_INS_Point        |
-//                     | 8    | uint8      | GPS_TO_INS_POINT     |
+//                     | 8    | uint8      | GPS_TO_INS_Point     |
 //                     | 9    | uint8      | Navigation_Flag      |
 //                     | 10   | uint8      | Start_S_Point        |
 //                     | 11   | uint8      | End_S_Point          |
@@ -240,6 +261,11 @@ void S_Point_Init(void)
 //                     | 21   | float      | acc_bias[0]          |
 //                     | 22   | float      | acc_bias[1]          |
 //                     | 23   | float      | acc_bias[2]          |
+//                     | 24   | uint8      | Camera_Threshold     |
+//                     | 25   | float      | GPS_SWITCH_DISTANCE  |
+//                     | 26   | float      | INS_SWITCH_DISTANCE  |
+//                     | 27   | float      | SAFETY_MARGIN        |
+//                     | 28   | uint8      | Back_INS_Point       |
 
 // 保存基础数据
 void Save_Basic_Data(void)
@@ -254,7 +280,7 @@ void Save_Basic_Data(void)
     flash_union_buffer[5].float_type = gyro_bias[2];
     flash_union_buffer[6].uint8_type = Start_INS_Point;
     flash_union_buffer[7].uint8_type = End_INS_Point;
-    flash_union_buffer[8].uint8_type = GPS_TO_INS_POINT;
+    flash_union_buffer[8].uint8_type = GPS_TO_INS_Point;
     flash_union_buffer[9].uint8_type = (uint8_t)Navigation_Flag;
     flash_union_buffer[10].uint8_type = Start_S_Point;
     flash_union_buffer[11].uint8_type = End_S_Point;
@@ -270,6 +296,11 @@ void Save_Basic_Data(void)
     flash_union_buffer[21].float_type = acc_bias[0];
     flash_union_buffer[22].float_type = acc_bias[1];
     flash_union_buffer[23].float_type = acc_bias[2];
+    flash_union_buffer[24].uint8_type = Camera_Threshold;
+    flash_union_buffer[25].float_type = GPS_SWITCH_DISTANCE;
+    flash_union_buffer[26].float_type = INS_SWITCH_DISTANCE;
+    flash_union_buffer[27].float_type = SAFETY_MARGIN;
+    flash_union_buffer[28].uint8_type = Back_INS_Point;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
@@ -290,7 +321,7 @@ void Basic_Data_Init(void)
     gyro_bias[2] = flash_union_buffer[5].float_type;
     Start_INS_Point = flash_union_buffer[6].uint8_type;
     End_INS_Point = flash_union_buffer[7].uint8_type;
-    GPS_TO_INS_POINT = flash_union_buffer[8].uint8_type;
+    GPS_TO_INS_Point = flash_union_buffer[8].uint8_type;
     Navigation_Flag = flash_union_buffer[9].uint8_type;
     Start_S_Point = flash_union_buffer[10].uint8_type;
     End_S_Point = flash_union_buffer[11].uint8_type;
@@ -306,13 +337,19 @@ void Basic_Data_Init(void)
     acc_bias[0] = flash_union_buffer[21].float_type;
     acc_bias[1] = flash_union_buffer[22].float_type;
     acc_bias[2] = flash_union_buffer[23].float_type;
+    Camera_Threshold = flash_union_buffer[24].uint8_type;
+    GPS_SWITCH_DISTANCE = flash_union_buffer[25].float_type;
+    INS_SWITCH_DISTANCE = flash_union_buffer[26].float_type;
+    SAFETY_MARGIN = flash_union_buffer[27].float_type;
+    Back_INS_Point = flash_union_buffer[28].uint8_type;
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;
     NOW_S_Point = Start_S_Point;
 
-    ips114_show_string(60, 32, "Basic Data Loaded.");
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Basic Data Loaded.");
     system_delay_ms(500);
+    ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
 }
 
 //************************************Flash完全重置****************************************//
@@ -375,7 +412,7 @@ void Reset_All_Flash_Data(void)
     gyro_bias[2] = 0.0f;
     Start_INS_Point = 0;
     End_INS_Point = 0;
-    GPS_TO_INS_POINT = 0;
+    GPS_TO_INS_Point = 0;
     Navigation_Flag = 0;
     Start_S_Point = 0;
     End_S_Point = 0;
@@ -391,6 +428,11 @@ void Reset_All_Flash_Data(void)
     acc_bias[0] = 0.0f;
     acc_bias[1] = 0.0f;
     acc_bias[2] = 0.0f;
+    Camera_Threshold = 64; // 默认二值化阈值为64
+    GPS_SWITCH_DISTANCE = 1.0f; // 默认GPS切换距离
+    INS_SWITCH_DISTANCE = 0.2f;  // 默认INS切换距离
+    SAFETY_MARGIN = 5.0f;
+    Back_INS_Point = 0;
     
     NOW_GPS_Point = 0;
     NOW_INS_Point = 0;

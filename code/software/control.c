@@ -3,15 +3,13 @@
 float target_speed;
 float target_angle;
 
-float SAFETY_X_MAX;                                                             // X轴最大安全范围
-float SAFETY_X_MIN;                                                             // X轴最小安全范围
-float SAFETY_Y_MAX;                                                             // Y轴最大安全范围
-float SAFETY_Y_MIN;                                                             // Y轴最小安全范围
-
 float MAX_SPEED;                                                                // 最大速度
 float MIN_SPEED;                                                                // 最小速度
 float APPROACH_SPEED;                                                           // 靠近速度
 float BRAKING_DISTANCE;                                                         // 开始减速距离
+
+float GPS_SWITCH_DISTANCE;                                                      // GPS 切换距离
+float INS_SWITCH_DISTANCE;                                                      // INS 切换距离
 
 float GPS_ENU[MAX_GPS_POINTS][2];                                               // GPS ENU 坐标
 
@@ -26,6 +24,7 @@ uint8_t NOW_GPS_Point;                                                          
 uint8_t INS_Point_Index = 0;                                                    // INS 数据索引
 float INS_Point[MAX_INS_POINTS][2];                                             // INS 点位
 uint8_t Start_INS_Point;                                                        // 第一个 INS 数据索引
+uint8_t Back_INS_Point;                                                         // 掉头 INS 数据索引
 uint8_t End_INS_Point;                                                          // 最后一个 INS 数据索引
 uint8_t NOW_INS_Point;                                                          // 当前 INS 数据索引
 
@@ -35,7 +34,7 @@ float S_Point[MAX_INS_POINTS][2];                                               
 uint8_t End_S_Point;                                                            // S 型走位结束索引
 uint8_t NOW_S_Point;                                                            // 当前 S 型走位索引
 
-uint8_t GPS_TO_INS_POINT = 0;                                                   // GPS点位转换到INS点位
+uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
 
 typedef struct {
     double origin_lat;    // 原点纬度（弧度）
@@ -48,24 +47,6 @@ CoordinateSystem local_frame;  // 本地坐标系
 
 // 到达标志位
 uint8_t reach_flag = 0;
-
-// 边界检查函数
-void Safety_Boundary_Check(void)
-{
-    // 检查东向坐标
-    if(position[0] < SAFETY_X_MIN || position[0] > SAFETY_X_MAX) 
-    {
-        target_speed = 0.0f;
-        Fire_Flag = 0;
-    }
-    // 检查北向坐标
-    if(position[1] < SAFETY_Y_MIN || position[1] > SAFETY_Y_MAX) 
-    {
-        target_speed = 0.0f;
-        Fire_Flag = 0;
-    }
-}
-
 
 // 速度管理函数
 void Speed_Management(float distance)
@@ -111,8 +92,10 @@ void WGS84_to_ENU(double lat, double lon, float* east, float* north)
     double N = a / sqrt(1 - (2*f - f*f)*sin_lat0*sin_lat0);
     
     // 泰勒展开近似（适用于10km范围内）
-    *east  = (float)(N * cos_lat0 * dLon);
-    *north = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    // *east  = (float)(N * cos_lat0 * dLon);
+    // *north = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    *east  = - (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    *north = (float)(N * cos_lat0 * dLon);
 }
 
 // 将路径点预转换为ENU坐标（启动时初始化）
@@ -122,6 +105,16 @@ void WGS84_to_ENU_Init(void)
     for(int i=0; i <= End_GPS_Point; i++){
         WGS84_to_ENU(GPS_Point[i][0], GPS_Point[i][1], 
                     &GPS_ENU[i][0], &GPS_ENU[i][1]);
+    }
+}
+
+void Mirror_INS_Point_Generate(void)
+{
+    // 镜像 INS 点位
+    for(uint8_t i=1; i <= Back_INS_Point; i++)
+    {
+        INS_Point[Back_INS_Point + i][0] = INS_Point[Back_INS_Point - i][0];
+        INS_Point[Back_INS_Point + i][1] = INS_Point[Back_INS_Point - i][1];
     }
 }
 
@@ -154,13 +147,13 @@ void GPS_Point_to_Point(uint8_t i)
     Speed_Management((float)distance);
     // ips114_show_float(0, 96, target_angle, 5, 1);
     // ips114_show_float(90, 96, (float)distance, 5, 1);
-    if (distance < 1.0f)
+    if (distance < GPS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
 }
 
-void GPS_ENU_Point_to_Point(uint8_t i) 
+void GPS_ENU_Point_to_Point(uint8_t i)
 {
     // 使用平面坐标系计算
     float dx = GPS_ENU[i][0] - position[0];  // 东向差值
@@ -174,7 +167,7 @@ void GPS_ENU_Point_to_Point(uint8_t i)
     Speed_Management(distance);
     
     // 修改到达判断条件
-    if (distance < 1.0f)
+    if (distance < GPS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
@@ -231,7 +224,7 @@ void S_Point_to_Point(uint8_t i)
     target_angle = angle;
     Speed_Management(distance);
     
-    if (distance < 0.2f)
+    if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
@@ -270,8 +263,8 @@ void INS_Point_to_Point(uint8_t i)
 
     target_angle = angle;
     Speed_Management(distance);
-    
-    if (distance < 0.2f)
+
+    if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
@@ -319,12 +312,12 @@ void GPS_INS_Navigation(void)
     
     switch(navigation_phase) {
         case 0:
-            if (NOW_GPS_Point <= GPS_TO_INS_POINT) {
+            if (NOW_GPS_Point <= GPS_TO_INS_Point) {
                 // 继续使用GPS导航到切换点
                 GPS_Point_to_Point(NOW_GPS_Point);
                 if (reach_flag)  // 改为检查标志位
                 {
-                    if (NOW_GPS_Point == GPS_TO_INS_POINT)
+                    if (NOW_GPS_Point == GPS_TO_INS_Point)
                     {
                         // 到达切换点，准备切换到INS导航
                         navigation_phase = 1;
@@ -348,7 +341,7 @@ void GPS_INS_Navigation(void)
                     {
                         // INS导航结束，切回GPS导航
                         navigation_phase = 2;
-                        NOW_GPS_Point = GPS_TO_INS_POINT + 1;  // 从切换点后的GPS点继续导航
+                        NOW_GPS_Point = GPS_TO_INS_Point + 1;  // 从切换点后的GPS点继续导航
                     }
                     reach_flag = 0;  // 重置标志位
                 }
@@ -384,12 +377,12 @@ void GPS_ENU_INS_Navigation(void)
     
     switch(navigation_phase) {
         case 0:
-            if (NOW_GPS_Point <= GPS_TO_INS_POINT) {
+            if (NOW_GPS_Point <= GPS_TO_INS_Point) {
                 // 继续使用GPS导航到切换点
                 GPS_ENU_Point_to_Point(NOW_GPS_Point);
                 if (reach_flag)  // 改为检查标志位
                 {
-                    if (NOW_GPS_Point == GPS_TO_INS_POINT)
+                    if (NOW_GPS_Point == GPS_TO_INS_Point)
                     {
                         // 到达切换点，准备切换到INS导航
                         navigation_phase = 1;
@@ -413,7 +406,7 @@ void GPS_ENU_INS_Navigation(void)
                     {
                         // INS导航结束，切回GPS导航
                         navigation_phase = 2;
-                        NOW_GPS_Point = GPS_TO_INS_POINT + 1;  // 从切换点后的GPS点继续导航
+                        NOW_GPS_Point = GPS_TO_INS_Point + 1;  // 从切换点后的GPS点继续导航
                     }
                     reach_flag = 0;  // 重置标志位
                 }

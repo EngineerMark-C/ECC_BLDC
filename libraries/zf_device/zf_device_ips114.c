@@ -290,6 +290,69 @@ void ips114_clear (void)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+// 函数简介     IPS114 清空指定行
+// 参数说明     y               需要清空的行坐标 参数范围 [0, ips114_height_max-1]
+// 返回参数     void
+// 使用示例     ips114_clear_line(10);                      // 清空第10行
+// 备注信息     将指定行清空成背景颜色
+//-------------------------------------------------------------------------------------------------------------------
+void ips114_clear_line(uint16 y)
+{
+    zf_assert(y < ips114_height_max);
+    
+    uint16 color_buffer[ips114_width_max];
+    uint32 i = 0;
+
+    IPS114_CS(0);
+    ips114_set_region(0, y, ips114_width_max - 1, y);
+    
+    // 填充颜色缓冲区为背景色
+    for(i = 0; i < ips114_width_max; i++)
+    {
+        color_buffer[i] = ips114_bgcolor;
+    }
+    
+    // 写入一行数据
+    ips114_write_16bit_data_array(color_buffer, ips114_width_max);
+    IPS114_CS(1);
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     IPS114 清空指定行范围
+// 参数说明     y_start         起始行坐标 参数范围 [0, ips114_height_max-1]
+// 参数说明     y_end           结束行坐标 参数范围 [0, ips114_height_max-1]
+// 返回参数     void
+// 使用示例     ips114_clear_lines(10, 20);                // 清空第10到20行
+// 备注信息     将指定行范围清空成背景颜色
+//-------------------------------------------------------------------------------------------------------------------
+void ips114_clear_lines(uint16 y_start, uint16 y_end)
+{
+    zf_assert(y_start < ips114_height_max);
+    zf_assert(y_end < ips114_height_max);
+    zf_assert(y_start <= y_end);
+    
+    uint16 color_buffer[ips114_width_max];
+    uint32 i = 0, j = 0;
+
+    IPS114_CS(0);
+    ips114_set_region(0, y_start, ips114_width_max - 1, y_end);
+    
+    // 填充颜色缓冲区为背景色
+    for(i = 0; i < ips114_width_max; i++)
+    {
+        color_buffer[i] = ips114_bgcolor;
+    }
+    
+    // 写入多行数据
+    for(j = y_start; j <= y_end; j++)
+    {
+        ips114_write_16bit_data_array(color_buffer, ips114_width_max);
+    }
+    IPS114_CS(1);
+}
+
+
+//-------------------------------------------------------------------------------------------------------------------
 // 函数简介     IPS114 屏幕填充函数
 // 参数说明     color           颜色格式 RGB565 或者可以使用 zf_common_font.h 内 rgb565_color_enum 枚举值或者自行写入
 // 返回参数     void

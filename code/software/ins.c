@@ -2,19 +2,19 @@
 
 // 状态变量
 float position[2] = {0};   // 东北天坐标系位置 (x,y)
-float velocity[2] = {0};   // 东北天坐标系速度 (vx, vy)
+// float velocity[2] = {0};   // 东北天坐标系速度 (vx, vy)
 
-// 上一次加速度值
-float last_ax = 0.0f;
-float last_ay = 0.0f;
-float last_vx = 0.0f;
-float last_vy = 0.0f;
+// // 上一次加速度值
+// float last_ax = 0.0f;
+// float last_ay = 0.0f;
+// float last_vx = 0.0f;
+// float last_vy = 0.0f;
 
 // 初始化惯导系统
 void INS_Init(void)
 {
     memset(position, 0, sizeof(position));
-    memset(velocity, 0, sizeof(velocity));
+    // memset(velocity, 0, sizeof(velocity));
 }
 
 // 速度位置更新
