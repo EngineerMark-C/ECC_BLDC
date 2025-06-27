@@ -21,6 +21,7 @@ void GPS_Points_Init(void);
 #define INS_DATA_SIZE                   (7)                                     // 3个存储单元（索引 + x轴坐标 + y轴坐标） 第3页有问题
 
 void Save_INS_Point(void);
+void Save_INS_Point_Memory(void);
 void INS_Points_Init(void);
 
 //************************************S点位处理****************************************//

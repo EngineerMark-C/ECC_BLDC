@@ -85,7 +85,8 @@ GPSINSPathMenuItem gps_ins_path_menu[] = {
     {"End GPS Point", &End_GPS_Point},
     {"Start INS Point", &Start_INS_Point},
     {"End INS Point", &End_INS_Point},
-    {"GPS to INS Point", &GPS_TO_INS_POINT},
+    {"Back INS Point", &Back_INS_Point},
+    {"GPS to INS Point", &GPS_TO_INS_Point},
     {"Start S Point", &Start_S_Point},
     {"End S Point", &End_S_Point}
 };
@@ -579,7 +580,14 @@ void Display_INS_Point(void)
         }
         else if (SWITCH_4_STATUS == SWITCH_RIGHT)
         {
-            sprintf(buffer, "Idx:%02d K3:Save K4:Back", INS_Point_Index);
+            if (SWITCH_1_STATUS == SWITCH_RIGHT)
+            {
+                sprintf(buffer, "Idx:%02d K3:Mirror K4:Back", INS_Point_Index);
+            }
+            else
+            {
+                sprintf(buffer, "Idx:%02d K3:Save K4:Back", INS_Point_Index);
+            }
         }
         ips114_show_string(0, 112, buffer);
     }
@@ -954,12 +962,15 @@ void GPS_INS_Path_Menu_Key_Process(void)
                 End_INS_Point = (End_INS_Point + 1) % MAX_INS_POINTS;
                 break;
             case 4:
-                GPS_TO_INS_POINT = (GPS_TO_INS_POINT + 1) % MAX_GPS_POINTS;
+                Back_INS_Point = (Back_INS_Point + 1) % MAX_INS_POINTS;
                 break;
             case 5:
-                Start_S_Point = (Start_S_Point + 1) % MAX_INS_POINTS;
+                GPS_TO_INS_Point = (GPS_TO_INS_Point + 1) % MAX_INS_POINTS;
                 break;
             case 6:
+                Start_S_Point = (Start_S_Point + 1) % MAX_INS_POINTS;
+                break;
+            case 7:
                 End_S_Point = (End_S_Point + 1) % MAX_INS_POINTS;
                 break;
             }
@@ -982,12 +993,15 @@ void GPS_INS_Path_Menu_Key_Process(void)
                 End_INS_Point = (End_INS_Point + MAX_INS_POINTS - 1) % MAX_INS_POINTS;
                 break;
             case 4:
-                GPS_TO_INS_POINT = (GPS_TO_INS_POINT + MAX_GPS_POINTS - 1) % MAX_GPS_POINTS;
+                Back_INS_Point = (Back_INS_Point + MAX_INS_POINTS - 1) % MAX_INS_POINTS;
                 break;
             case 5:
-                Start_S_Point = (Start_S_Point + MAX_INS_POINTS - 1) % MAX_INS_POINTS;
+                GPS_TO_INS_Point = (GPS_TO_INS_Point + MAX_GPS_POINTS - 1) % MAX_GPS_POINTS;
                 break;
             case 6:
+                Start_S_Point = (Start_S_Point + MAX_INS_POINTS - 1) % MAX_INS_POINTS;
+                break;
+            case 7:
                 End_S_Point = (End_S_Point + MAX_INS_POINTS - 1) % MAX_INS_POINTS;
                 break;
             }
@@ -1192,24 +1206,33 @@ void INS_Point_Menu_Key_Process(void)
 
         if (key3_state == KEY_SHORT_PRESS)
         {
-            // 根据SWITCH_4的状态决定KEY3的功能
+            // 根据SWITCH_4和SWITCH_1的状态决定KEY3的功能
             if (SWITCH_4_STATUS == SWITCH_LEFT)
             {
-                // 当拨码开关在左边时，进入编辑模式
+                // 当拨码开关4在左边时，进入编辑模式
                 edit_mode = true;
                 edit_coord = true; // 默认先编辑X坐标
             }
             else if (SWITCH_4_STATUS == SWITCH_RIGHT)
             {
-                // 当拨码开关在右边时，保存当前位置
-                Save_INS_Point();
-                // 保存后自动跳转到下一个点位并调整显示
-                if (INS_Point_Index < MAX_INS_POINTS - 1)
+                // 当拨码开关4在右边时
+                if (SWITCH_1_STATUS == SWITCH_RIGHT)
                 {
-                    INS_Point_Index++; // 自动跳到下一个点位
-                    // 滚动显示逻辑
-                    if (INS_Point_Index >= start_index + visible_items)
-                        start_index = INS_Point_Index - visible_items + 1;
+                    // 当拨码开关1也在右边时，生成镜像点位
+                    Mirror_INS_Point_Generate();
+                }
+                else
+                {
+                    // 当拨码开关1在左边时，保存当前位置
+                    Save_INS_Point();
+                    // 保存后自动跳转到下一个点位并调整显示
+                    if (INS_Point_Index < MAX_INS_POINTS - 1)
+                    {
+                        INS_Point_Index++; // 自动跳到下一个点位
+                        // 滚动显示逻辑
+                        if (INS_Point_Index >= start_index + visible_items)
+                            start_index = INS_Point_Index - visible_items + 1;
+                    }
                 }
             }
             key_clear_state(KEY_3);
@@ -1217,7 +1240,7 @@ void INS_Point_Menu_Key_Process(void)
 
         if (key4_state == KEY_SHORT_PRESS)
         {
-            Save_INS_Point();
+            Save_INS_Point_Memory();
             menu_state = MENU_MAIN;
             key_clear_state(KEY_4);
         }

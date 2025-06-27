@@ -27,6 +27,7 @@ extern uint8_t NOW_GPS_Point;
 //************************************* INS 点位处理******************************************//
 extern uint8_t INS_Point_Index;                                                 // INS 数据索引
 extern uint8_t Start_INS_Point;
+extern uint8_t Back_INS_Point;
 extern uint8_t End_INS_Point;
 extern uint8_t NOW_INS_Point;
 
@@ -37,13 +38,14 @@ extern uint8_t Start_S_Point;
 extern uint8_t End_S_Point;
 extern uint8_t NOW_S_Point;
 
-extern uint8_t GPS_TO_INS_POINT;                                                // 切换导航点位
+extern uint8_t GPS_TO_INS_Point;                                                // 切换导航点位
 
 void Safety_Boundary_Check(void);
 void Speed_Management(float distance);
 
 void WGS84_to_ENU_Init(void);
 void WGS84_to_ENU(double lat, double lon, float* east, float* north);
+void Mirror_INS_Point_Generate(void);
 
 void GPS_Navigation(void);
 void GPS_ENU_Navigation(void);
