@@ -23,7 +23,7 @@ void Save_GPS_Point(void)
     if(GPS_Point_Index < MAX_GPS_POINTS)
     {
         // 1. 保存到内存
-        //多次取值求平均
+        //    多次取值求平均
         double LATSUM = 0;
         double LONSUM = 0;
         for (uint8_t j = 0; j < 10; j++)
@@ -93,6 +93,94 @@ void GPS_Points_Init(void)
             ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
+
+// 方向向量存储
+void Save_Direction_Point(void)
+{
+    if (Direction_Point_Index < 2)
+    {
+        double LATSUM = 0;
+        double LONSUM = 0;
+
+        // 1. 保存到内存
+        for (uint8_t j = 0; j < 10; j++)
+        {
+            gnss_data_parse();
+            LATSUM += NOW_location.latitude;
+            LONSUM += NOW_location.longitude;
+            system_delay_ms(100);
+        }
+        Direction_Point[Direction_Point_Index][0] = LATSUM / 10;
+        Direction_Point[Direction_Point_Index][1] = LONSUM / 10;
+
+        // 2. 同步到Flash
+        flash_buffer_clear();
+        
+        // 2.1 写入所有内存中的点位数据(包括新点位)
+        for(uint8_t i = 0; i < 2; i++)
+        {
+            double_convert lat, lon;
+            lat.value = Direction_Point[i][0];
+            lon.value = Direction_Point[i][1];
+            
+            flash_union_buffer[i * GPS_DATA_SIZE].uint8_type = i;
+            flash_union_buffer[i * GPS_DATA_SIZE + 1].uint32_type = lat.parts.high;
+            flash_union_buffer[i * GPS_DATA_SIZE + 2].uint32_type = lat.parts.low;
+            flash_union_buffer[i * GPS_DATA_SIZE + 3].uint32_type = lon.parts.high;
+            flash_union_buffer[i * GPS_DATA_SIZE + 4].uint32_type = lon.parts.low;
+        }
+        
+        // 2.2 擦除并写入Flash
+        flash_erase_page(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
+        flash_write_page_from_buffer(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
+        ips114_show_string(60, 32, "Direction Point Saved.");
+        system_delay_ms(500);
+    }
+}
+
+// 上电初始化时调用
+void Direction_Point_Init(void)
+{
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading Direction Points...");
+
+    flash_read_page_to_buffer(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
+
+    if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
+    {
+        for(uint8_t i = 0; i < 2; i++)
+        {
+            if(flash_union_buffer[i * GPS_DATA_SIZE].uint8_type == i)
+            {
+                double_convert lat, lon;
+                lat.parts.high = flash_union_buffer[i * GPS_DATA_SIZE + 1].uint32_type;
+                lat.parts.low = flash_union_buffer[i * GPS_DATA_SIZE + 2].uint32_type;
+                lon.parts.high = flash_union_buffer[i * GPS_DATA_SIZE + 3].uint32_type;
+                lon.parts.low = flash_union_buffer[i * GPS_DATA_SIZE + 4].uint32_type;
+
+                Direction_Point[i][0] = lat.value;
+                Direction_Point[i][1] = lon.value;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        Get_Start_Direction();  // 获取发车方向角度
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Direction Points Loaded.");
+        ips114_show_float(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 26, Start_Direction, 5, 1);
+        system_delay_ms(1000);  // 显示1秒
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
+    }
+    else
+    {
+        // 如果没有有效数据，初始化为默认值
+        Direction_Point[0][0] = 0.0;
+        Direction_Point[0][1] = 0.0;
+        Direction_Point[1][0] = 0.0;
+        Direction_Point[1][1] = 0.0;
+    }
+}
+
 
 //************************************INS点位处理****************************************//
 //                     | 索引 | 数据类型    | 说明                  |

@@ -8,11 +8,14 @@
 //************************************GPS点位处理****************************************//
 
 #define FLASH_GPS_DATA_INDEX            (5)                                     // 存储 GPS 数据用的页码
+#define DIRECTION_POINT_INDEX           (2)                                     // 存储发车方向点位用的页码
 #define MAX_GPS_POINTS                  (16)                                    // 最大 GPS 点位数
 #define GPS_DATA_SIZE                   (5)                                     // 5个存储单元（索引 + 纬度高低位 + 经度高低位）
 
 void Save_GPS_Point(void);
 void GPS_Points_Init(void);
+void Save_Direction_Point(void);
+void Direction_Point_Init(void);
 
 //************************************INS点位处理****************************************//
 

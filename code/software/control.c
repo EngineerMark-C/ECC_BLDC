@@ -23,6 +23,7 @@ uint8_t NOW_GPS_Point;                                                          
 
 double Direction_Point[2][2];                                                   // 两个发车方向GPS点
 float Start_Direction;                                                          // 发车方向角度
+uint8_t Direction_Point_Index = 0;                                              // 发车方向点索引
 
 uint8_t INS_Point_Index = 0;                                                    // INS 数据索引
 float INS_Point[MAX_INS_POINTS][2];                                             // INS 点位
@@ -111,6 +112,7 @@ void WGS84_to_ENU_Init(void)
     }
 }
 
+// 获取发车方向
 void Get_Start_Direction(void)
 {
     //Direction_Point[0]发车方向起点

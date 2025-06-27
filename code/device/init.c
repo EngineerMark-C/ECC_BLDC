@@ -11,6 +11,7 @@ void Init(void)
     INS_Points_Init();                                                          // 初始化 INS 点位
     WGS84_to_ENU_Init();                                                        // 初始化 WGS84 坐标转 ENU 坐标
     S_Point_Init();                                                             // 初始化 S 型走位点
+    Direction_Point_Init();                                                     // 初始化方向点
     Calculate_Safety_Boundary(Navigation_Flag);
     Encoder_Init();                                                             // 初始化编码器
     Steer_Init();                                                               // 初始化舵机
@@ -21,6 +22,6 @@ void Init(void)
     INS_Init();                                                                  // 初始化惯导系统
     // UartReceiver_Init();                                                        // 初始化 UART 接收器
     PID_init(&pid_speed, 0.0f, 200.0f, 0.0f, 0, 10000);                          // 初始化电机 PID 控制器
-    PID_init(&pid_steer, 1.0f, 0.0f, 0.0f, 0, 100);                              // 初始化舵机 PID 控制器
+    PID_init(&pid_steer, 0.5f, 0.0f, 0.0f, 0, 100);                              // 初始化舵机 PID 控制器
     // Wifiudp_Init();                                                               // 初始化 WiFi 模块
 }
