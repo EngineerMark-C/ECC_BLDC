@@ -21,7 +21,7 @@ void Init(void)
     GPS_Init();                                                                 // 初始化 GPS
     INS_Init();                                                                  // 初始化惯导系统
     // UartReceiver_Init();                                                        // 初始化 UART 接收器
-    PID_init(&pid_speed, 560.0f, 4300.0f, 0.0f, 1, 10000);                          // 初始化电机 PID 控制器
+    PID_init(&pid_speed, 550.0f, 2800.0f, 0.0f, 1, 10000);                          // 初始化电机 PID 控制器
     PID_init(&pid_steer, 0.5f, 0.0f, 0.0f, 0, 100);                              // 初始化舵机 PID 控制器
     // Wifiudp_Init();                                                               // 初始化 WiFi 模块
 }
