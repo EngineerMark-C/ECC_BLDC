@@ -21,6 +21,10 @@ uint8_t Start_GPS_Point;                                                        
 uint8_t End_GPS_Point;                                                          // 最后一个 GPS 数据索引
 uint8_t NOW_GPS_Point;                                                          // 当前 GPS 数据索引
 
+double Direction_Point[2][2];                                                   // 两个发车方向GPS点
+float Start_Direction;                                                          // 发车方向角度
+uint8_t Direction_Point_Index = 0;                                              // 发车方向点索引
+
 uint8_t INS_Point_Index = 0;                                                    // INS 数据索引
 float INS_Point[MAX_INS_POINTS][2];                                             // INS 点位
 uint8_t Start_INS_Point;                                                        // 第一个 INS 数据索引
@@ -94,7 +98,7 @@ void WGS84_to_ENU(double lat, double lon, float* east, float* north)
     // 泰勒展开近似（适用于10km范围内）
     // *east  = (float)(N * cos_lat0 * dLon);
     // *north = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
-    *east  = - (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    *east  = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
     *north = (float)(N * cos_lat0 * dLon);
 }
 
@@ -106,6 +110,15 @@ void WGS84_to_ENU_Init(void)
         WGS84_to_ENU(GPS_Point[i][0], GPS_Point[i][1], 
                     &GPS_ENU[i][0], &GPS_ENU[i][1]);
     }
+}
+
+// 获取发车方向
+void Get_Start_Direction(void)
+{
+    //Direction_Point[0]发车方向起点
+    //Direction_Point[1]发车方向终点
+    Start_Direction = (float)get_two_points_azimuth(Direction_Point[0][0], Direction_Point[0][1],
+                                            Direction_Point[1][0], Direction_Point[1][1]);
 }
 
 void Mirror_INS_Point_Generate(void)

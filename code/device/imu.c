@@ -362,6 +362,8 @@ void Imu_Update(void)
     roll = RAD_TO_ANGLE(roll);
     yaw = RAD_TO_ANGLE(yaw);
 
+    yaw += Start_Direction;
+
     // 将yaw从-180~180转换为0~360
     yaw = yaw < 0 ? yaw + 360 : yaw;
 }

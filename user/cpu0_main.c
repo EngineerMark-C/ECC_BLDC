@@ -54,18 +54,17 @@ int core0_main(void)
     while (TRUE)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
-
         Menu();                                                                 // 菜单逻辑
         system_delay_ms(100);                                                   // 将刷新间隔增加到100ms
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         // time = end_time - start_time;
         // float time_us = (float)time / 100.0f;
         // printf("所需时间: %.2f us\n", time_us);
-        printf("%f\n", yaw);
+        // printf("%f\n", yaw);
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
-        // printf("%f,%f\n", speed, target_speed);
+        printf("%f,%f\n", speed, target_speed);
         // printf("%d\n", wifi_uart_information.wifi_uart_connect_state);
         // printf("%s\n", wifi_uart_information.wifi_uart_local_ip);
         // wifi_process();                                                           // 处理接收到的数据

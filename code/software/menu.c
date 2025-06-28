@@ -23,6 +23,7 @@ typedef enum
     MENU_Camera,         // 摄像头显示状态
     MENU_Boundary,       // 边界显示状态
     MENU_PATH,           // 添加路径显示状态
+    MENU_Direction,      // 方向向量采集状态
 } MenuState;
 
 // 主菜单项定义
@@ -76,7 +77,8 @@ MainMenuItem main_menu_items[] = {
     {"S Point"},
     {"Camera"},
     {"Boundary"},
-    {"Path Display"}
+    {"Path Display"},
+    {"Direction Vector"}  // 新增方向向量菜单项
 };
 
 // 路径设置菜单项
@@ -230,6 +232,9 @@ void Display_Menu(void)
     case MENU_PATH:
         Display_Path();
         break;
+    case MENU_Direction:  // 新增方向向量显示
+        Display_Direction();
+        break;
     }
 }
 
@@ -294,6 +299,9 @@ void Menu(void)
         break;
     case MENU_PATH: // 添加路径显示菜单按键处理
         Path_Menu_Key_Process();
+        break;
+    case MENU_Direction:  // 新增方向向量按键处理
+        Direction_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -761,6 +769,45 @@ void Display_Path(void)
     Draw_UI_Info();
 }
 
+// 显示方向向量采集界面
+void Display_Direction(void)
+{
+    ips114_show_string(0, 0, "Direction Setup");
+    
+    // // 显示当前方向角度
+    ips114_show_string(0, 16, "Current Direction:");
+    ips114_show_float(150, 16, Start_Direction, 3, 2);
+    ips114_show_string(200, 16, "deg");
+
+     // 显示方向点位信息
+    for (uint8_t i = 0; i < 2; i++)
+    {
+        char point_info[32];
+        sprintf(point_info, "%sP%d: %.6f, %.6f",
+                (i == Direction_Point_Index) ? ">" : " ",
+                i,
+                Direction_Point[i][0],
+                Direction_Point[i][1]);
+         ips114_show_string(0, 32 + i * 16, point_info);
+    }
+    
+    // 显示GPS状态
+    ips114_show_string(0, 64, "GPS Status:");
+    ips114_show_string(100, 64, gnss.state ? "Valid" : "No Fix");
+    
+    // 显示当前GPS位置
+    if (gnss.state)
+    {
+        ips114_show_double(0, 80, NOW_location.latitude, 4, 8);
+        ips114_show_double(0, 96, NOW_location.longitude, 4, 8);
+    }
+    
+    // 底部提示信息
+    char buffer[32];
+    sprintf(buffer, "Index:%d KEY3:Save KEY4:Back", Direction_Point_Index);
+    ips114_show_string(0, 112, buffer);
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -835,6 +882,9 @@ void Main_Menu_Key_Process(void)
             break;
         case 13:
             menu_state = MENU_PATH;
+            break;
+        case 14:  // 新增方向向量菜单
+            menu_state = MENU_Direction;
             break;
         }
         key_clear_state(KEY_3);
@@ -1561,6 +1611,68 @@ void Path_Menu_Key_Process(void)
     }
 
     // 按键4：退出路径显示
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        // 返回主菜单
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_4);
+    }
+}
+
+// 方向向量菜单按键处理
+void Direction_Menu_Key_Process(void)
+{
+    if (key1_state == KEY_SHORT_PRESS)
+    {
+        // 向上切换方向点索引
+        if (Direction_Point_Index > 0)
+        {
+            Direction_Point_Index--;
+        }
+        key_clear_state(KEY_1);
+    }
+    
+    if (key2_state == KEY_SHORT_PRESS)
+    {
+        // 向下切换方向点索引
+        if (Direction_Point_Index < 1)
+        {
+            Direction_Point_Index++;
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        // 保存当前GPS位置作为方向点
+        if (gnss.state)  // 确保GPS有效
+        {
+            Save_Direction_Point();
+            
+            // 如果已经保存了两个点，则计算方向角度
+            if (Direction_Point_Index == 1 && 
+                Direction_Point[0][0] != 0.0 && Direction_Point[0][1] != 0.0 &&
+                Direction_Point[1][0] != 0.0 && Direction_Point[1][1] != 0.0)
+            {
+                Get_Start_Direction();
+                ips114_show_string(0, 48, "Direction Calculated!");
+                system_delay_ms(1000);
+            }
+            
+            // 自动切换到下一个点位
+            if (Direction_Point_Index < 1)
+            {
+                Direction_Point_Index++;
+            }
+        }
+        else
+        {
+            ips114_show_string(0, 48, "GPS Invalid! Wait...");
+            system_delay_ms(1000);
+        }
+        key_clear_state(KEY_3);
+    }
+    
     if (key4_state == KEY_SHORT_PRESS)
     {
         // 返回主菜单
