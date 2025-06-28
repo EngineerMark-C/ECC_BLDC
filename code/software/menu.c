@@ -23,6 +23,7 @@ typedef enum
     MENU_Camera,         // 摄像头显示状态
     MENU_Boundary,       // 边界显示状态
     MENU_PATH,           // 添加路径显示状态
+    MENU_Direction,      // 方向向量采集状态
 } MenuState;
 
 // 主菜单项定义
@@ -76,7 +77,8 @@ MainMenuItem main_menu_items[] = {
     {"S Point"},
     {"Camera"},
     {"Boundary"},
-    {"Path Display"}
+    {"Path Display"},
+    {"Direction Vector"}  // 新增方向向量菜单项
 };
 
 // 路径设置菜单项
@@ -139,12 +141,15 @@ static uint8_t need_clear = 1;           // 清屏标志
 
 static bool edit_coord = true;   // 编辑坐标选择，false=X坐标，true=Y坐标
 static float adjust_step = 0.1f; // 默认调整步长
+static uint8_t ins_display_mode = 0;  // 0: INS_Point, 1: INS_Point_Navigation_Frame
+static uint8_t s_display_mode = 0;  // 0: S_Point, 1: S_Point_Navigation_Frame
 
 // 添加全局按键状态变量声明
 static key_state_enum key1_state;
 static key_state_enum key2_state;
 static key_state_enum key3_state;
 static key_state_enum key4_state;
+static key_state_enum key5_state;
 
 void Button_Init(void)
 {
@@ -230,6 +235,9 @@ void Display_Menu(void)
     case MENU_PATH:
         Display_Path();
         break;
+    case MENU_Direction:  // 新增方向向量显示
+        Display_Direction();
+        break;
     }
 }
 
@@ -242,8 +250,9 @@ void Menu(void)
     key2_state = key_get_state(KEY_2); // 下
     key3_state = key_get_state(KEY_3); // 确认/编辑
     key4_state = key_get_state(KEY_4); // 返回
+    key5_state = key_get_state(KEY_5); // 新增按键
 
-    if (last_state != menu_state || key1_state || key2_state || key3_state || key4_state)
+    if (last_state != menu_state || key1_state || key2_state || key3_state || key4_state || key5_state)
     {
         ips114_clear(); // 状态变化时清屏
         need_clear = 1;
@@ -294,6 +303,9 @@ void Menu(void)
         break;
     case MENU_PATH: // 添加路径显示菜单按键处理
         Path_Menu_Key_Process();
+        break;
+    case MENU_Direction:  // 新增方向向量按键处理
+        Direction_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -540,10 +552,20 @@ void Display_Calibrate_Gyro(void)
 // 显示INS点位管理界面
 void Display_INS_Point(void)
 {
-    ips114_show_string(0, 0, "INS Points");
+    // 根据显示模式显示不同的标题
+    if (ins_display_mode == 0)
+    {
+        ips114_show_string(0, 0, "INS Points");
+    }
+    else
+    {
+        ips114_show_string(0, 0, "INS Nav Frame");
+    }
+    
     ips114_show_float(90, 0, position[0], 6, 2);
     ips114_show_float(150, 0, position[1], 6, 2);
     ips114_show_float(200, 0, adjust_step, 2, 1);
+    
     // 显示当前可见范围的点位（Y轴间隔16像素）
     for (uint8_t i = 0; i < visible_items; i++)
     {
@@ -552,11 +574,25 @@ void Display_INS_Point(void)
             break;
 
         char point_info[32];
-        sprintf(point_info, "%sP%d:%.3f,%.3f",
-                (point_num == INS_Point_Index) ? ">" : " ",
-                point_num,
-                INS_Point[point_num][0],
-                INS_Point[point_num][1]);
+        
+        // 根据显示模式选择不同的数据源
+        if (ins_display_mode == 0)
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == INS_Point_Index) ? ">" : " ",
+                    point_num,
+                    INS_Point[point_num][0],
+                    INS_Point[point_num][1]);
+        }
+        else
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == INS_Point_Index) ? ">" : " ",
+                    point_num,
+                    INS_Point_Navigation_Frame[point_num][0],
+                    INS_Point_Navigation_Frame[point_num][1]);
+        }
+        
         ips114_show_string(0, 16 + i * 16, point_info);
     }
 
@@ -596,8 +632,18 @@ void Display_INS_Point(void)
 // 显示 S型走位 点位管理界面
 void Display_S_Point(void)
 {
-    ips114_show_string(0, 0, "S Points");
+    // 根据显示模式显示不同的标题
+    if (s_display_mode == 0)
+    {
+        ips114_show_string(0, 0, "S Points");
+    }
+    else
+    {
+        ips114_show_string(0, 0, "S Nav Frame");
+    }
+
     ips114_show_float(200, 0, adjust_step, 2, 1);
+    
     // 显示当前可见范围的点位（Y轴间隔16像素）
     for (uint8_t i = 0; i < visible_items; i++)
     {
@@ -606,11 +652,25 @@ void Display_S_Point(void)
             break;
 
         char point_info[32];
-        sprintf(point_info, "%sP%d:%.3f,%.3f",
-                (point_num == S_Point_Index) ? ">" : " ",
-                point_num,
-                S_Point[point_num][0],
-                S_Point[point_num][1]);
+        
+        // 根据显示模式选择不同的数据源
+        if (s_display_mode == 0)
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == S_Point_Index) ? ">" : " ",
+                    point_num,
+                    S_Point[point_num][0],
+                    S_Point[point_num][1]);
+        }
+        else
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == S_Point_Index) ? ">" : " ",
+                    point_num,
+                    S_Point_Navigation_Frame[point_num][0],
+                    S_Point_Navigation_Frame[point_num][1]);
+        }
+        
         ips114_show_string(0, 16 + i * 16, point_info);
     }
 
@@ -640,6 +700,7 @@ void Display_S_Point(void)
         ips114_show_string(0, 112, buffer);
     }
 }
+
 // 显示ENU点位管理界面
 void Display_ENU_Point(void)
 {
@@ -761,6 +822,46 @@ void Display_Path(void)
     Draw_UI_Info();
 }
 
+// 显示方向向量采集界面
+void Display_Direction(void)
+{
+    ips114_show_string(0, 0, "Direction Setup");
+    ips114_show_int(200, 0, yaw_flag, 1);
+    
+    // 显示当前方向角度
+    ips114_show_string(0, 16, "Current Direction:");
+    ips114_show_float(150, 16, Start_Direction, 3, 2);
+    ips114_show_string(200, 16, "deg");
+
+     // 显示方向点位信息num
+    for (uint8_t i = 0; i < 2; i++)
+    {
+        char point_info[32];
+        sprintf(point_info, "%sP%d: %.6f, %.6f",
+                (i == Direction_Point_Index) ? ">" : " ",
+                i,
+                Direction_Point[i][0],
+                Direction_Point[i][1]);
+         ips114_show_string(0, 32 + i * 16, point_info);
+    }
+    
+    // 显示GPS状态
+    ips114_show_string(0, 64, "GPS Status:");
+    ips114_show_string(100, 64, gnss.state ? "Valid" : "No Fix");
+    
+    // 显示当前GPS位置
+    if (gnss.state)
+    {
+        ips114_show_double(0, 80, NOW_location.latitude, 4, 8);
+        ips114_show_double(0, 96, NOW_location.longitude, 4, 8);
+    }
+    
+    // 底部提示信息
+    char buffer[32];
+    sprintf(buffer, "Index:%d KEY3:Save KEY4:Back", Direction_Point_Index);
+    ips114_show_string(0, 112, buffer);
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -836,13 +937,16 @@ void Main_Menu_Key_Process(void)
         case 13:
             menu_state = MENU_PATH;
             break;
+        case 14:  // 新增方向向量菜单
+            menu_state = MENU_Direction;
+            break;
         }
         key_clear_state(KEY_3);
     }
-    if (key4_state == KEY_SHORT_PRESS)
+    if (key5_state == KEY_SHORT_PRESS)
     {
         Fire_Flag = Fire_Flag ? 0 : 1;
-        key_clear_state(KEY_4);
+        key_clear_state(KEY_5);
     }
 }
 
@@ -1244,6 +1348,13 @@ void INS_Point_Menu_Key_Process(void)
             menu_state = MENU_MAIN;
             key_clear_state(KEY_4);
         }
+
+        if (key5_state == KEY_SHORT_PRESS)
+        {
+            ins_display_mode = ins_display_mode ? 0 : 1;  // 切换显示模式
+            Vehicle_To_Navigation_INS();
+            key_clear_state(KEY_5);
+        }
     }
 }
 
@@ -1344,6 +1455,12 @@ void S_Point_Menu_Key_Process(void)
             menu_state = MENU_MAIN;
             Save_S_Point(); // 保存S点位数据
             key_clear_state(KEY_4);
+        }
+        if (key5_state == KEY_SHORT_PRESS)
+        {
+            s_display_mode = s_display_mode ? 0 : 1;  // 切换显示模式
+            Vehicle_To_Navigation_S();
+            key_clear_state(KEY_5);
         }
     }
 }
@@ -1566,5 +1683,75 @@ void Path_Menu_Key_Process(void)
         // 返回主菜单
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
+    }
+}
+
+// 方向向量菜单按键处理
+void Direction_Menu_Key_Process(void)
+{
+    if (key1_state == KEY_SHORT_PRESS)
+    {
+        // 向上切换方向点索引
+        if (Direction_Point_Index > 0)
+        {
+            Direction_Point_Index--;
+        }
+        key_clear_state(KEY_1);
+    }
+    
+    if (key2_state == KEY_SHORT_PRESS)
+    {
+        // 向下切换方向点索引
+        if (Direction_Point_Index < 1)
+        {
+            Direction_Point_Index++;
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        // 保存当前GPS位置作为方向点
+        if (gnss.state)  // 确保GPS有效
+        {
+            Save_Direction_Point();
+            
+            // 如果已经保存了两个点，则计算方向角度
+            if (Direction_Point_Index == 1 && 
+                Direction_Point[0][0] != 0.0 && Direction_Point[0][1] != 0.0 &&
+                Direction_Point[1][0] != 0.0 && Direction_Point[1][1] != 0.0)
+            {
+                Get_Start_Direction();
+                ips114_show_string(0, 48, "Direction Calculated!");
+                system_delay_ms(1000);
+            }
+            
+            // 自动切换到下一个点位
+            if (Direction_Point_Index < 1)
+            {
+                Direction_Point_Index++;
+            }
+        }
+        else
+        {
+            ips114_show_string(0, 48, "GPS Invalid! Wait...");
+            system_delay_ms(1000);
+        }
+        key_clear_state(KEY_3);
+    }
+    
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        // 返回主菜单
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_4);
+    }
+
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        // 切换方向角度显示模式
+        yaw_flag = !yaw_flag;
+        Save_Basic_Data();
+        key_clear_state(KEY_5);
     }
 }

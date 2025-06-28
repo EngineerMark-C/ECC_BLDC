@@ -40,14 +40,24 @@ struct PID {
     bool enabled;                    // 使能状态
 };
 
+// PID参数表结构
+typedef struct {
+    float max_speed;    // 最大速度阈值
+    float kp;           // 比例系数
+    float ki;           // 积分系数
+    float kd;           // 微分系数
+} PID_Params_t;
+
 extern int16_t output_speed;
 extern struct PID pid_speed;
 extern struct PID pid_steer;
+extern const PID_Params_t pid_params_table[];
 
 // PID 初始化与计算函数
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit);
 void PID_reset(struct PID *pid);
 void PID_calc(struct PID *pid, float current);
+void Update_PID_Params(float target_speed);
 
 // 应用控制函数
 void Motor_PID_Control(float target);

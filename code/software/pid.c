@@ -4,6 +4,14 @@ struct PID pid_speed;
 struct PID pid_steer;
 int16_t output_speed;
 
+// PID参数表
+const PID_Params_t pid_params_table[] = 
+{
+    {5.5f,  550.0f, 2800.0f, 0.0f},    // 低速参数
+    {12.0f, 520.0f, 3200.0f, 0.0f},    // 中速参数
+    {16.0f, 560.0f, 4300.0f, 0.0f},    // 高速参数
+};
+
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
 {
     pid->kp = kp;
@@ -41,6 +49,30 @@ void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float
     // 初始化控制模式
     pid->mode = mode; // 默认位置式PID
     pid->enabled = true;
+}
+
+void PID_set_params(struct PID *pid, float kp, float ki, float kd)
+{
+    pid->kp = kp;
+    pid->ki = ki;
+    pid->kd = kd;
+}
+
+void Update_PID_Params(float target_speed)
+{
+    // 根据目标速度选择 PID 参数
+    if (target_speed <= pid_params_table[0].max_speed)
+    {
+        PID_set_params(&pid_speed, pid_params_table[0].kp, pid_params_table[0].ki, pid_params_table[0].kd);
+    }
+    else if (target_speed > pid_params_table[0].max_speed && target_speed <= pid_params_table[1].max_speed)
+    {
+        PID_set_params(&pid_speed, pid_params_table[1].kp, pid_params_table[1].ki, pid_params_table[1].kd);
+    }
+    else
+    {
+        PID_set_params(&pid_speed, pid_params_table[2].kp, pid_params_table[2].ki, pid_params_table[2].kd);
+    }
 }
 
 // 重置 PID 控制器状态

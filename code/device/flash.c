@@ -23,7 +23,7 @@ void Save_GPS_Point(void)
     if(GPS_Point_Index < MAX_GPS_POINTS)
     {
         // 1. 保存到内存
-        //多次取值求平均
+        //    多次取值求平均
         double LATSUM = 0;
         double LONSUM = 0;
         for (uint8_t j = 0; j < 10; j++)
@@ -90,9 +90,85 @@ void GPS_Points_Init(void)
         }
         ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "GPS Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-            ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
+
+// 方向向量存储
+void Save_Direction_Point(void)
+{
+    if (Direction_Point_Index < 2)
+    {
+        double LATSUM = 0;
+        double LONSUM = 0;
+
+        // 1. 保存到内存
+        for (uint8_t j = 0; j < 10; j++)
+        {
+            gnss_data_parse();
+            LATSUM += NOW_location.latitude;
+            LONSUM += NOW_location.longitude;
+            system_delay_ms(100);
+        }
+        Direction_Point[Direction_Point_Index][0] = LATSUM / 10;
+        Direction_Point[Direction_Point_Index][1] = LONSUM / 10;
+
+        // 2. 同步到Flash
+        flash_buffer_clear();
+        
+        // 2.1 写入所有内存中的点位数据(包括新点位)
+        for(uint8_t i = 0; i < 2; i++)
+        {
+            double_convert lat, lon;
+            lat.value = Direction_Point[i][0];
+            lon.value = Direction_Point[i][1];
+            
+            flash_union_buffer[i * GPS_DATA_SIZE].uint8_type = i;
+            flash_union_buffer[i * GPS_DATA_SIZE + 1].uint32_type = lat.parts.high;
+            flash_union_buffer[i * GPS_DATA_SIZE + 2].uint32_type = lat.parts.low;
+            flash_union_buffer[i * GPS_DATA_SIZE + 3].uint32_type = lon.parts.high;
+            flash_union_buffer[i * GPS_DATA_SIZE + 4].uint32_type = lon.parts.low;
+        }
+        
+        // 2.2 擦除并写入Flash
+        flash_erase_page(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
+        flash_write_page_from_buffer(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
+        ips114_show_string(60, 32, "Direction Point Saved.");
+        system_delay_ms(500);
+    }
+}
+
+// 上电初始化时调用
+void Direction_Point_Init(void)
+{
+    flash_read_page_to_buffer(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
+    if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
+    {
+        for(uint8_t i = 0; i < 2; i++)
+        {
+            if(flash_union_buffer[i * GPS_DATA_SIZE].uint8_type == i)
+            {
+                double_convert lat, lon;
+                lat.parts.high = flash_union_buffer[i * GPS_DATA_SIZE + 1].uint32_type;
+                lat.parts.low = flash_union_buffer[i * GPS_DATA_SIZE + 2].uint32_type;
+                lon.parts.high = flash_union_buffer[i * GPS_DATA_SIZE + 3].uint32_type;
+                lon.parts.low = flash_union_buffer[i * GPS_DATA_SIZE + 4].uint32_type;
+                
+                Direction_Point[i][0] = lat.value;
+                Direction_Point[i][1] = lon.value;
+            }
+            else
+            {
+                continue;
+            }
+        }
+        Get_Start_Direction();  // 获取发车方向角度
+        ips114_show_string(CENTER_X - 50, CENTER_Y + IMAGE_HEIGHT + 10, "Direction Points Loaded.");
+        system_delay_ms(1000);  // 显示1秒
+        ips114_clear();
+    }
+}
+
 
 //************************************INS点位处理****************************************//
 //                     | 索引 | 数据类型    | 说明                  |
@@ -230,7 +306,7 @@ void S_Point_Init(void)
         }
         ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "S Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
-        ips114_clear();
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
     }
 }
 
@@ -266,6 +342,7 @@ void S_Point_Init(void)
 //                     | 26   | float      | INS_SWITCH_DISTANCE  |
 //                     | 27   | float      | SAFETY_MARGIN        |
 //                     | 28   | uint8      | Back_INS_Point       |
+//                     | 29   | uint8      | yaw_flag             |
 
 // 保存基础数据
 void Save_Basic_Data(void)
@@ -301,6 +378,7 @@ void Save_Basic_Data(void)
     flash_union_buffer[26].float_type = INS_SWITCH_DISTANCE;
     flash_union_buffer[27].float_type = SAFETY_MARGIN;
     flash_union_buffer[28].uint8_type = Back_INS_Point;
+    flash_union_buffer[29].uint8_type = yaw_flag;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
@@ -342,6 +420,7 @@ void Basic_Data_Init(void)
     INS_SWITCH_DISTANCE = flash_union_buffer[26].float_type;
     SAFETY_MARGIN = flash_union_buffer[27].float_type;
     Back_INS_Point = flash_union_buffer[28].uint8_type;
+    yaw_flag = flash_union_buffer[29].uint8_type;
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;
@@ -437,6 +516,7 @@ void Reset_All_Flash_Data(void)
     NOW_GPS_Point = 0;
     NOW_INS_Point = 0;
     NOW_S_Point = 0;
+    yaw_flag = 0;
     
     // 显示重置完成提示
     ips114_clear();

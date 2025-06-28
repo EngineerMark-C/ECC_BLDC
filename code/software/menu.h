@@ -22,6 +22,7 @@ void Display_S_Point(void);
 void Display_Camera(void);
 void Display_Boundary(void);
 void Display_Path(void);
+void Display_Direction(void);
 
 void Main_Menu_Key_Process(void);
 void Steer_Menu_Key_Process(void);
@@ -36,5 +37,6 @@ void S_Point_Menu_Key_Process(void);
 void Camera_Menu_Key_Process(void);
 void Boundary_Menu_Key_Process(void);
 void Path_Menu_Key_Process(void);
+void Direction_Menu_Key_Process(void);
 
 #endif

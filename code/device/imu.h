@@ -25,6 +25,8 @@ extern float pitch, roll, yaw;
 extern float gyro_bias[3];                                                      // 陀螺仪偏置
 extern float acc_bias[3];                                                       // 加速度计偏置
 
+extern uint8_t yaw_flag;                                                        // 是否需要将yaw角度加上发车方向
+
 void Imu_Init(void);
 void Calibrate_Gyro(void);
 void Calibrate_Acc(void);

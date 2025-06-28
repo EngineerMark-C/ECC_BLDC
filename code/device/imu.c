@@ -17,6 +17,8 @@ float gx_raw, gy_raw, gz_raw;                                                   
 float gyro_bias[3] = {0.0f, 0.0f, 0.0f}; // 陀螺仪偏置
 float acc_bias[3] = {0.0f, 0.0f, 0.0f};  // 加速度计偏置
 
+uint8_t yaw_flag = 0;                                                           // 是否需要将yaw角度加上发车方向
+
 float invSqrt(float x)
 {
     float halfx = 0.5f * x;
@@ -361,6 +363,12 @@ void Imu_Update(void)
     pitch = RAD_TO_ANGLE(pitch);
     roll = RAD_TO_ANGLE(roll);
     yaw = RAD_TO_ANGLE(yaw);
+
+
+    if (yaw_flag == 1)
+    {
+        yaw += Start_Direction;
+    }
 
     // 将yaw从-180~180转换为0~360
     yaw = yaw < 0 ? yaw + 360 : yaw;
