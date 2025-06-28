@@ -141,12 +141,15 @@ static uint8_t need_clear = 1;           // 清屏标志
 
 static bool edit_coord = true;   // 编辑坐标选择，false=X坐标，true=Y坐标
 static float adjust_step = 0.1f; // 默认调整步长
+static uint8_t ins_display_mode = 0;  // 0: INS_Point, 1: INS_Point_Navigation_Frame
+static uint8_t s_display_mode = 0;  // 0: S_Point, 1: S_Point_Navigation_Frame
 
 // 添加全局按键状态变量声明
 static key_state_enum key1_state;
 static key_state_enum key2_state;
 static key_state_enum key3_state;
 static key_state_enum key4_state;
+static key_state_enum key5_state;
 
 void Button_Init(void)
 {
@@ -247,8 +250,9 @@ void Menu(void)
     key2_state = key_get_state(KEY_2); // 下
     key3_state = key_get_state(KEY_3); // 确认/编辑
     key4_state = key_get_state(KEY_4); // 返回
+    key5_state = key_get_state(KEY_5); // 新增按键
 
-    if (last_state != menu_state || key1_state || key2_state || key3_state || key4_state)
+    if (last_state != menu_state || key1_state || key2_state || key3_state || key4_state || key5_state)
     {
         ips114_clear(); // 状态变化时清屏
         need_clear = 1;
@@ -548,10 +552,20 @@ void Display_Calibrate_Gyro(void)
 // 显示INS点位管理界面
 void Display_INS_Point(void)
 {
-    ips114_show_string(0, 0, "INS Points");
+    // 根据显示模式显示不同的标题
+    if (ins_display_mode == 0)
+    {
+        ips114_show_string(0, 0, "INS Points");
+    }
+    else
+    {
+        ips114_show_string(0, 0, "INS Nav Frame");
+    }
+    
     ips114_show_float(90, 0, position[0], 6, 2);
     ips114_show_float(150, 0, position[1], 6, 2);
     ips114_show_float(200, 0, adjust_step, 2, 1);
+    
     // 显示当前可见范围的点位（Y轴间隔16像素）
     for (uint8_t i = 0; i < visible_items; i++)
     {
@@ -560,11 +574,25 @@ void Display_INS_Point(void)
             break;
 
         char point_info[32];
-        sprintf(point_info, "%sP%d:%.3f,%.3f",
-                (point_num == INS_Point_Index) ? ">" : " ",
-                point_num,
-                INS_Point[point_num][0],
-                INS_Point[point_num][1]);
+        
+        // 根据显示模式选择不同的数据源
+        if (ins_display_mode == 0)
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == INS_Point_Index) ? ">" : " ",
+                    point_num,
+                    INS_Point[point_num][0],
+                    INS_Point[point_num][1]);
+        }
+        else
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == INS_Point_Index) ? ">" : " ",
+                    point_num,
+                    INS_Point_Navigation_Frame[point_num][0],
+                    INS_Point_Navigation_Frame[point_num][1]);
+        }
+        
         ips114_show_string(0, 16 + i * 16, point_info);
     }
 
@@ -604,8 +632,18 @@ void Display_INS_Point(void)
 // 显示 S型走位 点位管理界面
 void Display_S_Point(void)
 {
-    ips114_show_string(0, 0, "S Points");
+    // 根据显示模式显示不同的标题
+    if (s_display_mode == 0)
+    {
+        ips114_show_string(0, 0, "S Points");
+    }
+    else
+    {
+        ips114_show_string(0, 0, "S Nav Frame");
+    }
+
     ips114_show_float(200, 0, adjust_step, 2, 1);
+    
     // 显示当前可见范围的点位（Y轴间隔16像素）
     for (uint8_t i = 0; i < visible_items; i++)
     {
@@ -614,11 +652,25 @@ void Display_S_Point(void)
             break;
 
         char point_info[32];
-        sprintf(point_info, "%sP%d:%.3f,%.3f",
-                (point_num == S_Point_Index) ? ">" : " ",
-                point_num,
-                S_Point[point_num][0],
-                S_Point[point_num][1]);
+        
+        // 根据显示模式选择不同的数据源
+        if (s_display_mode == 0)
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == S_Point_Index) ? ">" : " ",
+                    point_num,
+                    S_Point[point_num][0],
+                    S_Point[point_num][1]);
+        }
+        else
+        {
+            sprintf(point_info, "%sP%d:%.3f,%.3f",
+                    (point_num == S_Point_Index) ? ">" : " ",
+                    point_num,
+                    S_Point_Navigation_Frame[point_num][0],
+                    S_Point_Navigation_Frame[point_num][1]);
+        }
+        
         ips114_show_string(0, 16 + i * 16, point_info);
     }
 
@@ -648,6 +700,7 @@ void Display_S_Point(void)
         ips114_show_string(0, 112, buffer);
     }
 }
+
 // 显示ENU点位管理界面
 void Display_ENU_Point(void)
 {
@@ -773,13 +826,14 @@ void Display_Path(void)
 void Display_Direction(void)
 {
     ips114_show_string(0, 0, "Direction Setup");
+    ips114_show_int(200, 0, yaw_flag, 1);
     
-    // // 显示当前方向角度
+    // 显示当前方向角度
     ips114_show_string(0, 16, "Current Direction:");
     ips114_show_float(150, 16, Start_Direction, 3, 2);
     ips114_show_string(200, 16, "deg");
 
-     // 显示方向点位信息
+     // 显示方向点位信息num
     for (uint8_t i = 0; i < 2; i++)
     {
         char point_info[32];
@@ -889,10 +943,10 @@ void Main_Menu_Key_Process(void)
         }
         key_clear_state(KEY_3);
     }
-    if (key4_state == KEY_SHORT_PRESS)
+    if (key5_state == KEY_SHORT_PRESS)
     {
         Fire_Flag = Fire_Flag ? 0 : 1;
-        key_clear_state(KEY_4);
+        key_clear_state(KEY_5);
     }
 }
 
@@ -1294,6 +1348,13 @@ void INS_Point_Menu_Key_Process(void)
             menu_state = MENU_MAIN;
             key_clear_state(KEY_4);
         }
+
+        if (key5_state == KEY_SHORT_PRESS)
+        {
+            ins_display_mode = ins_display_mode ? 0 : 1;  // 切换显示模式
+            Vehicle_To_Navigation_INS();
+            key_clear_state(KEY_5);
+        }
     }
 }
 
@@ -1394,6 +1455,12 @@ void S_Point_Menu_Key_Process(void)
             menu_state = MENU_MAIN;
             Save_S_Point(); // 保存S点位数据
             key_clear_state(KEY_4);
+        }
+        if (key5_state == KEY_SHORT_PRESS)
+        {
+            s_display_mode = s_display_mode ? 0 : 1;  // 切换显示模式
+            Vehicle_To_Navigation_S();
+            key_clear_state(KEY_5);
         }
     }
 }
@@ -1678,5 +1745,13 @@ void Direction_Menu_Key_Process(void)
         // 返回主菜单
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
+    }
+
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        // 切换方向角度显示模式
+        yaw_flag = !yaw_flag;
+        Save_Basic_Data();
+        key_clear_state(KEY_5);
     }
 }

@@ -27,6 +27,7 @@ uint8_t Direction_Point_Index = 0;                                              
 
 uint8_t INS_Point_Index = 0;                                                    // INS 数据索引
 float INS_Point[MAX_INS_POINTS][2];                                             // INS 点位
+float INS_Point_Navigation_Frame[MAX_INS_POINTS][2];                            // INS 点位导航坐标系
 uint8_t Start_INS_Point;                                                        // 第一个 INS 数据索引
 uint8_t Back_INS_Point;                                                         // 掉头 INS 数据索引
 uint8_t End_INS_Point;                                                          // 最后一个 INS 数据索引
@@ -35,6 +36,7 @@ uint8_t NOW_INS_Point;                                                          
 uint8_t S_Point_Index = 0;                                                      // S 型走位数据索引
 uint8_t Start_S_Point;                                                          // S 型走位开始索引
 float S_Point[MAX_INS_POINTS][2];                                               // S 型走位点
+float S_Point_Navigation_Frame[MAX_INS_POINTS][2];                              // S 型走位点导航坐标系
 uint8_t End_S_Point;                                                            // S 型走位结束索引
 uint8_t NOW_S_Point;                                                            // 当前 S 型走位索引
 
@@ -112,6 +114,41 @@ void WGS84_to_ENU_Init(void)
     }
 }
 
+// 将INS点位转换为导航坐标系
+void Vehicle_To_Navigation(float Rotation_Angle, float origin_x, float origin_y, float* process_x, float* process_y)
+{
+    // 计算旋转后的坐标
+    float cos_dir = cosf(Rotation_Angle);
+    float sin_dir = sinf(Rotation_Angle);
+
+    *process_x = origin_x * cos_dir - origin_y * sin_dir;
+    *process_y = origin_x * sin_dir + origin_y * cos_dir;
+}
+
+void Vehicle_To_Navigation_INS(void)
+{
+    // 将所有INS点位转换为导航坐标系
+    for(uint8_t i=0; i <= End_INS_Point; i++)
+    {
+        Vehicle_To_Navigation(ANGLE_TO_RAD(Start_Direction), 
+                                INS_Point[i][0], INS_Point[i][1],
+                                &INS_Point_Navigation_Frame[i][0], 
+                                &INS_Point_Navigation_Frame[i][1]);
+    }
+}
+
+void Vehicle_To_Navigation_S(void)
+{
+    // 将所有S型走位点转换为导航坐标系
+    for(uint8_t i=0; i <= End_S_Point; i++)
+    {
+        Vehicle_To_Navigation(ANGLE_TO_RAD(Start_Direction), 
+                                S_Point[i][0], S_Point[i][1],
+                                &S_Point_Navigation_Frame[i][0],
+                                &S_Point_Navigation_Frame[i][1]);
+    }
+}
+
 // 获取发车方向
 void Get_Start_Direction(void)
 {
@@ -145,6 +182,8 @@ void S_Point_Generate_All(void)
     {
         S_Point_Generate(i);
     }
+    // 将所有S型走位点转换为导航坐标系
+    Vehicle_To_Navigation_S();
 }
 
 void GPS_Point_to_Point(uint8_t i)
@@ -224,9 +263,9 @@ void GPS_ENU_Navigation(void)
 void S_Point_to_Point(uint8_t i)
 {
     // 使用平面坐标系计算（单位：米）
-    float dx = S_Point[NOW_S_Point][0] - position[0];
-    float dy = S_Point[NOW_S_Point][1] - position[1];
-    
+    float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
+    float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
+
     // 计算平面方位角（0-360度）
     float angle = RAD_TO_ANGLE(atan2f(dy, dx));
     angle = angle < 0 ? angle + 360 : angle;
@@ -264,9 +303,9 @@ void S_Point_Navigation(void)
 void INS_Point_to_Point(uint8_t i)
 {
     // 使用平面坐标系计算（单位：米）
-    float dx = INS_Point[i][0] - position[0];
-    float dy = INS_Point[i][1] - position[1];
-    
+    float dx = INS_Point_Navigation_Frame[i][0] - position[0];
+    float dy = INS_Point_Navigation_Frame[i][1] - position[1];
+
     // 计算平面方位角（0-360度）
     float angle = RAD_TO_ANGLE(atan2f(dy, dx));
     angle = angle < 0 ? angle + 360 : angle;
