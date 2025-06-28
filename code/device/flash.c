@@ -342,6 +342,7 @@ void S_Point_Init(void)
 //                     | 26   | float      | INS_SWITCH_DISTANCE  |
 //                     | 27   | float      | SAFETY_MARGIN        |
 //                     | 28   | uint8      | Back_INS_Point       |
+//                     | 29   | uint8      | yaw_flag             |
 
 // 保存基础数据
 void Save_Basic_Data(void)
@@ -377,6 +378,7 @@ void Save_Basic_Data(void)
     flash_union_buffer[26].float_type = INS_SWITCH_DISTANCE;
     flash_union_buffer[27].float_type = SAFETY_MARGIN;
     flash_union_buffer[28].uint8_type = Back_INS_Point;
+    flash_union_buffer[29].uint8_type = yaw_flag;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
@@ -418,6 +420,7 @@ void Basic_Data_Init(void)
     INS_SWITCH_DISTANCE = flash_union_buffer[26].float_type;
     SAFETY_MARGIN = flash_union_buffer[27].float_type;
     Back_INS_Point = flash_union_buffer[28].uint8_type;
+    yaw_flag = flash_union_buffer[29].uint8_type;
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;
@@ -513,6 +516,7 @@ void Reset_All_Flash_Data(void)
     NOW_GPS_Point = 0;
     NOW_INS_Point = 0;
     NOW_S_Point = 0;
+    yaw_flag = 0;
     
     // 显示重置完成提示
     ips114_clear();
