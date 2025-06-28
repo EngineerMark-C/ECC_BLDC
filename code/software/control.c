@@ -98,7 +98,7 @@ void WGS84_to_ENU(double lat, double lon, float* east, float* north)
     // 泰勒展开近似（适用于10km范围内）
     // *east  = (float)(N * cos_lat0 * dLon);
     // *north = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
-    *east  = - (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
+    *east  = (float)(N * dLat - 0.5 * N * (dLat*dLat)*sin_lat0*cos_lat0);
     *north = (float)(N * cos_lat0 * dLon);
 }
 
