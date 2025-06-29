@@ -70,7 +70,8 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
     // {
     if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
     {
-        Steer_PID_Control(target_angle);                                // 舵机 PID 控制
+        // Steer_PID_Control(target_angle);                                // 舵机 PID 控制
+        Steer_angle(target_angle);                                      // 舵机角度控制
     }
     // }
 }

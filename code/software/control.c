@@ -75,6 +75,18 @@ void Speed_Management(float distance)
     target_speed = current_target_speed;
 }
 
+void Brake(void)
+{
+    if (target_speed < MIN_SPEED)
+    {
+        target_speed = 0.0f;
+    }
+    else
+    {
+        target_speed -= 0.05f;
+    }
+}
+
 // 初始化零点坐标
 void Local_Frame_Init(double lat0, double lon0) 
 {
@@ -194,7 +206,6 @@ void GPS_Point_to_Point(uint8_t i)
     double angle = get_two_points_azimuth(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
     double distance = get_two_points_distance(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
 
-    // target_speed = 0.0f;
     target_angle = (float)angle;
     Speed_Management((float)distance);
     // ips114_show_float(0, 96, target_angle, 5, 1);
@@ -228,7 +239,7 @@ void GPS_ENU_Point_to_Point(uint8_t i)
 void GPS_Navigation(void)
 {
     if (NOW_GPS_Point > End_GPS_Point) {
-        target_speed = 0.0f;
+        Brake();
         return;
     }
     if (Start_GPS_Point < End_GPS_Point)
@@ -245,7 +256,7 @@ void GPS_Navigation(void)
 void GPS_ENU_Navigation(void)
 {
     if (NOW_GPS_Point > End_GPS_Point) {
-        target_speed = 0.0f;
+        Brake();
         return;
     }
     if (Start_GPS_Point < End_GPS_Point)
@@ -286,7 +297,7 @@ void S_Point_to_Point(uint8_t i)
 void S_Point_Navigation(void)
 {
     if (NOW_S_Point > End_S_Point) {
-        target_speed = 0.0f;
+        Brake();
         return;
     }
     if (Start_S_Point < End_S_Point)
@@ -325,7 +336,7 @@ void INS_Point_to_Point(uint8_t i)
 void INS_Navigation(void)
 {
     if (NOW_INS_Point > End_INS_Point) {
-        target_speed = 0.0f;
+        Brake();
         return;
     }
     if (Start_INS_Point < End_INS_Point)
@@ -358,7 +369,7 @@ void GPS_INS_Navigation(void)
     
     // 添加全局停车判断
     if (NOW_GPS_Point > End_GPS_Point && NOW_INS_Point > End_INS_Point) {
-        target_speed = 0.0f;
+        Brake();
         return;
     }
     
@@ -379,7 +390,7 @@ void GPS_INS_Navigation(void)
                     reach_flag = 0;  // 重置标志位
                 }
             } else {
-                target_speed = 0.0f;  // GPS阶段超出范围时停车
+                Brake();
             }
             break;
             
@@ -398,7 +409,7 @@ void GPS_INS_Navigation(void)
                     reach_flag = 0;  // 重置标志位
                 }
             } else {
-                target_speed = 0.0f;  // INS阶段超出范围时停车
+                Brake();
             }
             break;
             
@@ -411,7 +422,7 @@ void GPS_INS_Navigation(void)
                 }
                 reach_flag = 0;  // 重置标志位
             } else {
-                target_speed = 0.0f;  // 最终GPS阶段超出范围时停车
+                Brake();
             }
             break;
     }
@@ -423,7 +434,7 @@ void GPS_ENU_INS_Navigation(void)
     
     // 全局停车条件
     if (NOW_GPS_Point > End_GPS_Point && NOW_INS_Point > End_INS_Point) {
-        target_speed = 0.0f;
+        Brake();
         return;
     }
     
@@ -444,7 +455,7 @@ void GPS_ENU_INS_Navigation(void)
                     reach_flag = 0;  // 重置标志位
                 }
             } else {
-                target_speed = 0.0f;
+                Brake();
             }
             break;
             
@@ -463,7 +474,7 @@ void GPS_ENU_INS_Navigation(void)
                     reach_flag = 0;  // 重置标志位
                 }
             } else {
-                target_speed = 0.0f;
+                Brake();
             }
             break;
             
@@ -476,7 +487,7 @@ void GPS_ENU_INS_Navigation(void)
                 }
                 reach_flag = 0;  // 重置标志位
             } else {
-                target_speed = 0.0f;
+                Brake();
             }
             break;
     }

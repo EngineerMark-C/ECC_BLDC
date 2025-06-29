@@ -368,6 +368,10 @@ void Imu_Update(void)
     if (yaw_flag == 1)
     {
         yaw += Start_Direction;
+        if (yaw > 360.0f)
+        {
+            yaw -= 360.0f; // 确保yaw在0~360度范围内
+        }
     }
 
     // 将yaw从-180~180转换为0~360
