@@ -7,6 +7,10 @@
         "zf_device_imu660rb.h": "c",
         "uartreceiver.h": "c",
         "zf_device_wifi_uart.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "pathshow.h": "c",
+        "zf_common_headfile.h": "c",
+        "zf_device_dot_matrix_screen.h": "c",
+        "zf_device_tld7002.h": "c"
     }
 }
