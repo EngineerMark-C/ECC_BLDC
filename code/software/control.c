@@ -53,6 +53,7 @@ CoordinateSystem local_frame;  // 本地坐标系
 
 // 到达标志位
 uint8_t reach_flag = 0;
+uint8_t angle_flag = 0;
 
 // 速度管理函数
 void Speed_Management(float distance)
@@ -245,10 +246,15 @@ void GPS_Navigation(void)
     if (Start_GPS_Point < End_GPS_Point)
     {
         GPS_Point_to_Point(NOW_GPS_Point);
-        if (reach_flag)  // 改为检查标志位
+        if (reach_flag )
         {
-            NOW_GPS_Point++;
-            reach_flag = 0;  // 重置标志位
+            PID_enable(&pid_speed, false);
+            if (angle_flag)  // 检查角度到达标志位
+            {
+                NOW_GPS_Point++;
+                reach_flag = 0;  // 重置标志位
+                PID_enable(&pid_speed, true);
+            }
         }
     }
 }
@@ -262,10 +268,15 @@ void GPS_ENU_Navigation(void)
     if (Start_GPS_Point < End_GPS_Point)
     {
         GPS_ENU_Point_to_Point(NOW_GPS_Point);
-        if (reach_flag)  // 改为检查标志位
+        if (reach_flag)
         {
-            NOW_GPS_Point++;
-            reach_flag = 0;  // 重置标志位
+            PID_enable(&pid_speed, false);
+            if (angle_flag)  // 检查角度到达标志位
+            {
+                NOW_GPS_Point++;
+                reach_flag = 0;  // 重置标志位
+                PID_enable(&pid_speed, true);
+            }
         }
     }
 }
@@ -305,8 +316,13 @@ void S_Point_Navigation(void)
         S_Point_to_Point(NOW_S_Point);
         if (reach_flag)
         {
-            NOW_S_Point++;
-            reach_flag = 0;  // 重置标志位
+            PID_enable(&pid_speed, false);
+            if (angle_flag)  // 检查角度到达标志位
+            {
+                NOW_S_Point++;
+                reach_flag = 0;  // 重置标志位
+                PID_enable(&pid_speed, true);
+            }
         }
     }
 }
@@ -335,7 +351,8 @@ void INS_Point_to_Point(uint8_t i)
 
 void INS_Navigation(void)
 {
-    if (NOW_INS_Point > End_INS_Point) {
+    if (NOW_INS_Point > End_INS_Point)
+    {
         Brake();
         return;
     }
@@ -346,9 +363,14 @@ void INS_Navigation(void)
             S_Point_to_Point(NOW_S_Point);
             if (reach_flag)
             {
-                NOW_S_Point++;
-                NOW_INS_Point++;
-                reach_flag = 0;  // 重置标志位
+                PID_enable(&pid_speed, false);
+                if (angle_flag)  // 检查角度到达标志位
+                {
+                    NOW_S_Point++;
+                    NOW_INS_Point++;
+                    reach_flag = 0;  // 重置标志位
+                    PID_enable(&pid_speed, true);
+                }
             }
         } 
         else 
@@ -356,8 +378,13 @@ void INS_Navigation(void)
             INS_Point_to_Point(NOW_INS_Point);
             if (reach_flag)
             {
-                NOW_INS_Point++;
-                reach_flag = 0;  // 重置标志位
+                PID_enable(&pid_speed, false);
+                if (angle_flag)  // 检查角度到达标志位
+                {
+                    NOW_INS_Point++;
+                    reach_flag = 0;  // 重置标志位
+                    PID_enable(&pid_speed, true);
+                }
             }
         }
     }
@@ -368,60 +395,85 @@ void GPS_INS_Navigation(void)
     static uint8_t navigation_phase = 0;  // 0:GPS导航阶段  1:INS导航阶段  2:返回GPS导航阶段
     
     // 添加全局停车判断
-    if (NOW_GPS_Point > End_GPS_Point && NOW_INS_Point > End_INS_Point) {
+    if (NOW_GPS_Point > End_GPS_Point && NOW_INS_Point > End_INS_Point)
+    {
         Brake();
         return;
     }
     
-    switch(navigation_phase) {
+    switch(navigation_phase)
+    {
         case 0:
-            if (NOW_GPS_Point <= GPS_TO_INS_Point) {
+            if (NOW_GPS_Point <= GPS_TO_INS_Point)
+            {
                 // 继续使用GPS导航到切换点
                 GPS_Point_to_Point(NOW_GPS_Point);
-                if (reach_flag)  // 改为检查标志位
+                if (reach_flag)
                 {
+                    PID_enable(&pid_speed, false);
                     if (NOW_GPS_Point == GPS_TO_INS_Point)
                     {
                         // 到达切换点，准备切换到INS导航
                         navigation_phase = 1;
                         NOW_INS_Point = Start_INS_Point;  // 初始化INS起始点
                     }
-                    NOW_GPS_Point++;
-                    reach_flag = 0;  // 重置标志位
+                    if (angle_flag)
+                    {
+                        NOW_GPS_Point++;
+                        reach_flag = 0;  // 重置标志位
+                        PID_enable(&pid_speed, true);
+                    }
                 }
-            } else {
+            }
+            else
+            {
                 Brake();
             }
             break;
             
         case 1:
-            if (NOW_INS_Point <= End_INS_Point) {
+            if (NOW_INS_Point <= End_INS_Point)
+            {
                 INS_Point_to_Point(NOW_INS_Point);
                 if (reach_flag)
                 {
-                    NOW_INS_Point++;
-                    if (NOW_INS_Point > End_INS_Point)
+                    PID_enable(&pid_speed, false);
+                    if (angle_flag)
                     {
-                        // INS导航结束，切回GPS导航
-                        navigation_phase = 2;
-                        NOW_GPS_Point = GPS_TO_INS_Point + 1;  // 从切换点后的GPS点继续导航
+                        NOW_INS_Point++;
+                        if (NOW_INS_Point > End_INS_Point)
+                        {
+                            // INS导航结束，切回GPS导航
+                            navigation_phase = 2;
+                            NOW_GPS_Point = GPS_TO_INS_Point + 1;  // 从切换点后的GPS点继续导航
+                        }
+                        reach_flag = 0;  // 重置标志位
+                        PID_enable(&pid_speed, true);
                     }
-                    reach_flag = 0;  // 重置标志位
                 }
-            } else {
+            } else
+            {
                 Brake();
             }
             break;
             
         case 2:
-            if (NOW_GPS_Point <= End_GPS_Point) {
+            if (NOW_GPS_Point <= End_GPS_Point)
+            {
                 GPS_Point_to_Point(NOW_GPS_Point);
-                if (reach_flag)  // 改为检查标志位
+                if (reach_flag)
                 {
-                    NOW_GPS_Point = NOW_GPS_Point + 1;
+                    PID_enable(&pid_speed, false);
+                    if (angle_flag)
+                    {
+                        // 到达GPS点，继续下一个点
+                        NOW_GPS_Point++;
+                        reach_flag = 0;  // 重置标志位
+                        PID_enable(&pid_speed, true);
+                    }
                 }
-                reach_flag = 0;  // 重置标志位
-            } else {
+            } else
+            {
                 Brake();
             }
             break;
@@ -433,19 +485,25 @@ void GPS_ENU_INS_Navigation(void)
     static uint8_t navigation_phase = 0;  // 0:GPS导航阶段  1:INS导航阶段  2:返回GPS导航阶段
     
     // 全局停车条件
-    if (NOW_GPS_Point > End_GPS_Point && NOW_INS_Point > End_INS_Point) {
+    if (NOW_GPS_Point > End_GPS_Point && NOW_INS_Point > End_INS_Point)
+    {
         Brake();
         return;
     }
     
-    switch(navigation_phase) {
+    switch(navigation_phase)
+    {
         case 0:
-            if (NOW_GPS_Point <= GPS_TO_INS_Point) {
+            if (NOW_GPS_Point <= GPS_TO_INS_Point)
+            {
                 // 继续使用GPS导航到切换点
                 GPS_ENU_Point_to_Point(NOW_GPS_Point);
-                if (reach_flag)  // 改为检查标志位
+                if (reach_flag)
                 {
-                    if (NOW_GPS_Point == GPS_TO_INS_Point)
+                    PID_enable(&pid_speed, false);
+                    if (angle_flag)
+                    {
+                        if (NOW_GPS_Point == GPS_TO_INS_Point)
                     {
                         // 到达切换点，准备切换到INS导航
                         navigation_phase = 1;
@@ -453,40 +511,60 @@ void GPS_ENU_INS_Navigation(void)
                     }
                     NOW_GPS_Point++;
                     reach_flag = 0;  // 重置标志位
+                    PID_enable(&pid_speed, true);
+                    }
                 }
-            } else {
+            }
+            else
+            {
                 Brake();
             }
             break;
             
         case 1:
-            if (NOW_INS_Point <= End_INS_Point) {
+            if (NOW_INS_Point <= End_INS_Point)
+            {
                 INS_Point_to_Point(NOW_INS_Point);
                 if (reach_flag)
                 {
-                    NOW_INS_Point++;
-                    if (NOW_INS_Point > End_INS_Point)
+                    PID_enable(&pid_speed, false);
+                    if (angle_flag)
                     {
-                        // INS导航结束，切回GPS导航
-                        navigation_phase = 2;
-                        NOW_GPS_Point = GPS_TO_INS_Point + 1;  // 从切换点后的GPS点继续导航
+                        NOW_INS_Point++;
+                        if (NOW_INS_Point > End_INS_Point)
+                        {
+                            // INS导航结束，切回GPS导航
+                            navigation_phase = 2;
+                            NOW_GPS_Point = GPS_TO_INS_Point + 1;  // 从切换点后的GPS点继续导航
+                        }
+                        reach_flag = 0;  // 重置标志位
+                        PID_enable(&pid_speed, true);
                     }
-                    reach_flag = 0;  // 重置标志位
                 }
-            } else {
+            }
+            else
+            {
                 Brake();
             }
             break;
             
         case 2:
-            if (NOW_GPS_Point <= End_GPS_Point) {
+            if (NOW_GPS_Point <= End_GPS_Point)
+            {
                 GPS_ENU_Point_to_Point(NOW_GPS_Point);
-                if (reach_flag)  // 改为检查标志位
+                if (reach_flag)
                 {
-                    NOW_GPS_Point = NOW_GPS_Point + 1;
+                    PID_enable(&pid_speed, false);
+                    if (angle_flag)
+                    {
+                        NOW_GPS_Point++;
+                        reach_flag = 0;  // 重置标志位
+                        PID_enable(&pid_speed, true);
+                    }
                 }
-                reach_flag = 0;  // 重置标志位
-            } else {
+            }
+            else
+            {
                 Brake();
             }
             break;

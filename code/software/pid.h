@@ -56,6 +56,7 @@ extern const PID_Params_t pid_params_table[];
 // PID 初始化与计算函数
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit);
 void PID_reset(struct PID *pid);
+void PID_enable(struct PID *pid, bool enable);
 void PID_calc(struct PID *pid, float current);
 void Update_PID_Params(float target_speed);
 

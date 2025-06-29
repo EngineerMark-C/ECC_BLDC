@@ -48,14 +48,12 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
     encoder_data_dir = encoder_get_count(ENCODER_DIR);              // 获取编码器计数
     encoder_clear_count(ENCODER_DIR);
     Encoder_get_speed();                                            // 计算速度
-    // if (Fire_Flag == 1)
-    // {
+
     if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
     {
         Update_PID_Params(target_speed);                                // 更新 PID 参数
         Motor_PID_Control(target_speed);                                // 电机 PID 控制
     }
-    // }
 }
 
 
@@ -66,14 +64,20 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
     Imu_get_data();                                                 // 获取 IMU963RA 数据
     Imu_Update();                                                   // 四元数解算
     Update_Position_Encoder();                                      // 更新位置
-    // if (Fire_Flag == 1)
-    // {
+
     if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
     {
-        // Steer_PID_Control(target_angle);                                // 舵机 PID 控制
-        Steer_angle(target_angle);                                      // 舵机角度控制
+        Steer_PID_Control(target_angle);                                // 舵机 PID 控制
     }
-    // }
+
+    if (yaw - target_angle < 15.0f && yaw - target_angle > -15.0f)
+    {
+        angle_flag = 1;
+    }
+    else
+    {
+        angle_flag = 0;
+    }
 }
 
 IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)

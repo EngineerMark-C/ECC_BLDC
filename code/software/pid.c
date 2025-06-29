@@ -86,11 +86,18 @@ void PID_reset(struct PID *pid)
     pid->output = 0.0f;
 }
 
+void PID_enable(struct PID *pid, bool enable)
+{
+    pid->enabled = enable; // 启用或禁用 PID 控制器
+}
+
 // 统一的 PID 计算函数
 void PID_calc(struct PID *pid, float current)
 {
     if (!pid->enabled)
     {
+        pid->output = 0.0f; // 如果控制器未启用，输出为0
+        PID_reset(pid); // 重置状态
         return; // 如果控制器未启用，直接返回
     }
 
@@ -165,7 +172,7 @@ void Motor_PID_Control(float target)
 {
     pid_speed.target = target;                // 设置目标值
     PID_calc(&pid_speed, speed);              // 使用当前速度作为反馈值
-    output_speed = (int16_t)pid_speed.output; // 将PID输出转换为占空比
+    output_speed = (int16_t)pid_speed.output;
 
     // 输出限幅
     if (output_speed > DUTY_MAX)
