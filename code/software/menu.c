@@ -24,6 +24,7 @@ typedef enum
     MENU_Boundary,       // 边界显示状态
     MENU_PATH,           // 添加路径显示状态
     MENU_Direction,      // 方向向量采集状态
+    MENU_Voice_Led,      // 语音LED状态
 } MenuState;
 
 // 主菜单项定义
@@ -78,7 +79,8 @@ MainMenuItem main_menu_items[] = {
     {"Camera"},
     {"Boundary"},
     {"Path Display"},
-    {"Direction Vector"}  // 新增方向向量菜单项
+    {"Direction Vector"},
+    {"Voice LED"}
 };
 
 // 路径设置菜单项
@@ -235,8 +237,11 @@ void Display_Menu(void)
     case MENU_PATH:
         Display_Path();
         break;
-    case MENU_Direction:  // 新增方向向量显示
+    case MENU_Direction:
         Display_Direction();
+        break;
+    case MENU_Voice_Led:
+        Display_Voice_Led();
         break;
     }
 }
@@ -306,6 +311,9 @@ void Menu(void)
         break;
     case MENU_Direction:  // 新增方向向量按键处理
         Direction_Menu_Key_Process();
+        break;
+    case MENU_Voice_Led:
+        Voice_Led_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -862,6 +870,61 @@ void Display_Direction(void)
     ips114_show_string(0, 112, buffer);
 }
 
+//语音识别
+void Display_Voice_Led(void)
+{
+    ips114_show_string(0, 0, "Voice Recognition");
+    ips114_show_float(200, 0, adjust_step, 2, 1);
+    
+    // 显示语音识别状态
+    ips114_show_string(0, 16, "Status:");
+    if (audio_start_flag)
+    {
+        ips114_show_string(50, 16, "Recording...");
+    }
+    else if (voice_flag)
+    {
+        ips114_show_string(50, 16, "Processing");
+    }
+    else
+    {
+        ips114_show_string(50, 16, "Ready");
+    }
+    
+    // 显示连接状态
+    ips114_show_string(0, 32, "Server:");
+    ips114_show_string(50, 32, audio_server_link_flag ? "Connected" : "Disconnected");
+    
+    // 显示语音命令执行状态
+    ips114_show_string(0, 48, "Command:");
+    ips114_show_string(50, 48, completecommand_flag ? "Ready" : "Executing");
+    
+    // 显示已识别命令数量
+    ips114_show_string(0, 64, "Commands:");
+    ips114_show_int(70, 64, arr_index, 2);
+    
+    // 显示最大录音时间进度
+    if (audio_start_flag && asr_max_time > 0)
+    {
+        uint8_t progress = (uint8_t)((asr_max_time * 100) / (60 * 8000));
+        ips114_show_string(0, 80, "Progress:");
+        ips114_show_int(70, 80, progress, 3);
+        ips114_show_string(100, 80, "%");
+    }
+    
+    // 底部提示信息
+    if (audio_start_flag)
+    {
+        ips114_show_string(0, 96, "Recording... K3:Stop");
+        ips114_show_string(0, 112, "");
+    }
+    else
+    {
+        ips114_show_string(0, 96, "K1:Init K2:Clear K3:Start");
+        ips114_show_string(0, 112, "K4:Back K5:Execute");
+    }
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -937,14 +1000,21 @@ void Main_Menu_Key_Process(void)
         case 13:
             menu_state = MENU_PATH;
             break;
-        case 14:  // 新增方向向量菜单
+        case 14:
             menu_state = MENU_Direction;
+            break;
+        case 15:
+            menu_state = MENU_Voice_Led;
             break;
         }
         key_clear_state(KEY_3);
     }
     if (key5_state == KEY_SHORT_PRESS)
     {
+        if (Fire_Flag == 0)
+        {
+            system_delay_ms(2000);
+        }
         Fire_Flag = Fire_Flag ? 0 : 1;
         key_clear_state(KEY_5);
     }
@@ -1754,4 +1824,101 @@ void Direction_Menu_Key_Process(void)
         Save_Basic_Data();
         key_clear_state(KEY_5);
     }
+}
+
+//语音识别按键处理
+void Voice_Led_Menu_Key_Process(void)
+{
+    Update_Adjust_Step();
+    
+    // 按键1：初始化语音识别系统
+    if (key1_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag && audio_get_count == -1)
+        {
+            audio_init(); // 重新初始化语音识别系统
+            // 清空命令数组
+            arr_index = 0;
+            memset(arr, 0, sizeof(arr));
+            voice_flag = 0;
+            completecommand_flag = 1;
+        }
+        key_clear_state(KEY_1);
+    }
+    
+    // 按键2：清空已识别命令
+    if (key2_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag)
+        {
+            arr_index = 0;
+            memset(arr, 0, sizeof(arr));
+            voice_flag = 0;
+            completecommand_flag = 1;
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    // 按键3：开始/停止语音识别 (替代原来的ASR_BUTTON)
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag && audio_get_count == -1)
+        {
+            // 开始录音 - 模拟原来的按键触发逻辑
+            audio_get_count = 0;
+            audio_server_link_flag = 0;
+            audio_start_flag = 1;
+            asr_max_time = 0;
+            
+            // 清空之前的命令
+            arr_index = 0;
+            memset(arr, 0, sizeof(arr));
+            voice_flag = 0;
+            completecommand_flag = 1;
+            
+            printf("手动开始语音识别...\r\n");
+        }
+        else if (audio_start_flag && audio_server_link_flag)
+        {
+            // 停止录音 - 模拟原来的按键释放逻辑
+            audio_start_flag = 0;
+            audio_get_count = 0;
+            audio_send_data_flag = 0;
+            audio_need_net_flag = 1;
+            
+            printf("手动停止语音识别...\r\n");
+        }
+        key_clear_state(KEY_3);
+    }
+    
+    // 按键4：返回主菜单
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag) // 只有在非录音状态下才能返回
+        {
+            menu_state = MENU_MAIN;
+            dot_matrix_screen_set_brightness(0);
+        }
+        key_clear_state(KEY_4);
+    }
+    
+    // 按键5：执行已识别的语音命令
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag && voice_flag == 1 && arr_index > 0)
+        {
+            // 调用命令执行函数
+            True_complete_command();
+            
+            // 执行完成后清空命令数组
+            arr_index = 0;
+            memset(arr, 0, sizeof(arr));
+            voice_flag = 0;
+            completecommand_flag = 1;
+        }
+        key_clear_state(KEY_5);
+    }
+    
+    // 在菜单界面也要处理语音识别的循环逻辑
+    audio_loop();
 }

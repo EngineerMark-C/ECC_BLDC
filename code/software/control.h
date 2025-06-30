@@ -46,8 +46,12 @@ extern uint8_t NOW_S_Point;
 
 extern uint8_t GPS_TO_INS_Point;                                                // 切换导航点位
 
+extern uint8_t reach_flag;                                                      // 到达标志位
+extern uint8_t angle_flag;                                                      // 角度到达标志位
+
 void Safety_Boundary_Check(void);
 void Speed_Management(float distance);
+void Brake(void);
 
 void WGS84_to_ENU_Init(void);
 void WGS84_to_ENU(double lat, double lon, float* east, float* north);

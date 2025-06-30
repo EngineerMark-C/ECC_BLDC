@@ -41,5 +41,5 @@ void Steer_angle(float angle)
     while(error < -180.0f) error += 360.0f;
 
     // 设置舵机角度
-    Steer_set_angle(-error);
+    Steer_set_angle(error);
 }

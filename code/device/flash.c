@@ -246,6 +246,7 @@ void INS_Points_Init(void)
                 continue;
             }
         }
+        Vehicle_To_Navigation_INS();
         ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "INS Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
         ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
@@ -304,6 +305,7 @@ void S_Point_Init(void)
                 continue;
             }
         }
+        Vehicle_To_Navigation_S();
         ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "S Points Loaded.");
         system_delay_ms(1000);  // 显示1秒
         ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
