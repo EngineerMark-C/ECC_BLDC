@@ -1011,6 +1011,10 @@ void Main_Menu_Key_Process(void)
     }
     if (key5_state == KEY_SHORT_PRESS)
     {
+        if (Fire_Flag == 0)
+        {
+            system_delay_ms(2000);
+        }
         Fire_Flag = Fire_Flag ? 0 : 1;
         key_clear_state(KEY_5);
     }
