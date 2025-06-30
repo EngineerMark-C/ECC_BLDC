@@ -51,16 +51,18 @@ typedef struct {
 extern int16_t output_speed;
 extern struct PID pid_speed;
 extern struct PID pid_steer;
-extern const PID_Params_t pid_params_table[];
+extern const PID_Params_t speed_pid_params_table[];
+extern const PID_Params_t steer_pid_params_table[];
 
 // PID 初始化与计算函数
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit);
 void PID_reset(struct PID *pid);
 void PID_enable(struct PID *pid, bool enable);
 void PID_calc(struct PID *pid, float current);
-void Update_PID_Params(float target_speed);
 
-// 应用控制函数
+void Update_Speed_PID_Params(float target_speed);
+void Update_Steer_PID_Params(float now_speed);
+
 void Motor_PID_Control(float target);
 void Steer_PID_Control(float target);
 

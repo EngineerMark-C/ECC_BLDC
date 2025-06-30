@@ -5,11 +5,18 @@ struct PID pid_steer;
 int16_t output_speed;
 
 // PID参数表
-const PID_Params_t pid_params_table[] = 
+const PID_Params_t speed_pid_params_table[] = 
 {
     {5.5f,  550.0f, 2800.0f, 0.0f},    // 低速参数
     {12.0f, 520.0f, 3200.0f, 0.0f},    // 中速参数
     {16.0f, 560.0f, 4300.0f, 0.0f},    // 高速参数
+};
+
+const PID_Params_t steer_pid_params_table[] = 
+{
+    {3.0f, 0.7f, 0.0f, 0.0f},           // 舵机PID参数
+    {10.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
+    {15.0f, 0.1f, 0.0f, 0.0f},          // 舵机PID参数
 };
 
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
@@ -58,20 +65,37 @@ void PID_set_params(struct PID *pid, float kp, float ki, float kd)
     pid->kd = kd;
 }
 
-void Update_PID_Params(float target_speed)
+void Update_Speed_PID_Params(float target_speed)
 {
     // 根据目标速度选择 PID 参数
-    if (target_speed <= pid_params_table[0].max_speed)
+    if (target_speed <= speed_pid_params_table[0].max_speed)
     {
-        PID_set_params(&pid_speed, pid_params_table[0].kp, pid_params_table[0].ki, pid_params_table[0].kd);
+        PID_set_params(&pid_speed, speed_pid_params_table[0].kp, speed_pid_params_table[0].ki, speed_pid_params_table[0].kd);
     }
-    else if (target_speed > pid_params_table[0].max_speed && target_speed <= pid_params_table[1].max_speed)
+    else if (target_speed > speed_pid_params_table[0].max_speed && target_speed <= speed_pid_params_table[1].max_speed)
     {
-        PID_set_params(&pid_speed, pid_params_table[1].kp, pid_params_table[1].ki, pid_params_table[1].kd);
+        PID_set_params(&pid_speed, speed_pid_params_table[1].kp, speed_pid_params_table[1].ki, speed_pid_params_table[1].kd);
     }
     else
     {
-        PID_set_params(&pid_speed, pid_params_table[2].kp, pid_params_table[2].ki, pid_params_table[2].kd);
+        PID_set_params(&pid_speed, speed_pid_params_table[2].kp, speed_pid_params_table[2].ki, speed_pid_params_table[2].kd);
+    }
+}
+
+void Update_Steer_PID_Params(float now_speed)
+{
+    // 根据当前速度选择舵机 PID 参数
+    if (now_speed <= steer_pid_params_table[0].max_speed)
+    {
+        PID_set_params(&pid_steer, steer_pid_params_table[0].kp, steer_pid_params_table[0].ki, steer_pid_params_table[0].kd);
+    }
+    else if (now_speed > steer_pid_params_table[0].max_speed && now_speed <= steer_pid_params_table[1].max_speed)
+    {
+        PID_set_params(&pid_steer, steer_pid_params_table[1].kp, steer_pid_params_table[1].ki, steer_pid_params_table[1].kd);
+    }
+    else
+    {
+        PID_set_params(&pid_steer, steer_pid_params_table[2].kp, steer_pid_params_table[2].ki, steer_pid_params_table[2].kd);
     }
 }
 

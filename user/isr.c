@@ -51,7 +51,7 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 
     if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
     {
-        Update_PID_Params(target_speed);                                // 更新 PID 参数
+        Update_Speed_PID_Params(target_speed);                          // 更新 PID 参数
         Motor_PID_Control(target_speed);                                // 电机 PID 控制
     }
     timer_10ms_flag = 1; // 设置定时器标志位，10ms 定时器中断
@@ -68,6 +68,7 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
 
     if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
     {
+        Update_Steer_PID_Params(speed);                                // 更新舵机 PID 参数
         Steer_PID_Control(target_angle);                                // 舵机 PID 控制
     }
 
