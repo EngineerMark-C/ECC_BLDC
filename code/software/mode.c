@@ -30,6 +30,6 @@ void Navigation_Mode_Switch(void)
     if (Fire_Flag == 0)
     {
         //Remote_Control();                               // 遥控逻辑
-        Brake();
+        Soft_Brake();
     }
 }

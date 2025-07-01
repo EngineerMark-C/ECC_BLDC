@@ -51,7 +51,8 @@ extern uint8_t angle_flag;                                                      
 
 void Safety_Boundary_Check(void);
 void Speed_Management(float distance);
-void Brake(void);
+void Hard_Brake(void);
+void Soft_Brake(void);
 
 void WGS84_to_ENU_Init(void);
 void WGS84_to_ENU(double lat, double lon, float* east, float* north);

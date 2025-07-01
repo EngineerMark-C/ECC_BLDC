@@ -268,12 +268,12 @@ void Safety_Boundary_Check(void)
     if(position[0] < SAFETY_X_MIN || position[0] > SAFETY_X_MAX) 
     {
         Fire_Flag = 0;
-        Brake();
+        Hard_Brake();
     }
     // 检查北向坐标
     if(position[1] < SAFETY_Y_MIN || position[1] > SAFETY_Y_MAX) 
     {
         Fire_Flag = 0;
-        Brake();
+        Hard_Brake();
     }
 }
