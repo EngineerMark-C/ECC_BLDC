@@ -41,6 +41,9 @@ float S_Point_Navigation_Frame[MAX_INS_POINTS][2];                              
 uint8_t End_S_Point;                                                            // S 型走位结束索引
 uint8_t NOW_S_Point;                                                            // 当前 S 型走位索引
 
+float next_s_angle = 0.0f;                                                      // 下一个S型走位角度
+float now_s_distance = 0.0f;                                                    // 当前S型走位距离
+
 uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
 
 typedef struct {
@@ -79,7 +82,7 @@ void Speed_Management(float distance)
 
 void Hard_Brake(void)
 {
-    if (target_speed < MIN_SPEED)
+    if (speed < MIN_SPEED)
     {
         target_speed = 0.0f;
     }
@@ -91,7 +94,7 @@ void Hard_Brake(void)
 
 void Soft_Brake(void)
 {
-    if (target_speed > Brake_Threshold)
+    if (speed > Brake_Threshold)
     {
         target_speed -= 0.05f;  // 减速幅度
     }
@@ -293,6 +296,41 @@ void GPS_ENU_Navigation(void)
     }
 }
 
+void Caculate_Next_S_Point_Angle(uint8_t i)
+{
+    // 计算下一个 S 型走位点
+    if (i < End_S_Point) 
+    {
+        float dx = S_Point_Navigation_Frame[i+1][0] - S_Point_Navigation_Frame[i][0];
+        float dy = S_Point_Navigation_Frame[i+1][1] - S_Point_Navigation_Frame[i][1];
+
+        float angle = RAD_TO_ANGLE(atan2f(dy, dx));
+        angle = angle < 0 ? angle + 360 : angle;
+
+        next_s_angle = angle;
+    }
+    else 
+    {
+        next_s_angle = target_angle;
+    }
+}
+
+void Caculate_Now_S_Point_Distance(uint8_t i)
+{
+    float dx, dy;
+    if (i == 0) 
+    {
+        dx = S_Point_Navigation_Frame[i][0];
+        dy = S_Point_Navigation_Frame[i][1];
+    }
+    else 
+    {
+        dx = S_Point_Navigation_Frame[i][0] - S_Point_Navigation_Frame[i-1][0];
+        dy = S_Point_Navigation_Frame[i][1] - S_Point_Navigation_Frame[i-1][1];
+    }
+    now_s_distance = sqrtf(dx*dx + dy*dy);
+}
+
 // S 型走位导航
 void S_Point_to_Point(uint8_t i)
 {
@@ -300,14 +338,37 @@ void S_Point_to_Point(uint8_t i)
     float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
     float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
 
-    // 计算平面方位角（0-360度）
-    float angle = RAD_TO_ANGLE(atan2f(dy, dx));
-    angle = angle < 0 ? angle + 360 : angle;
+    // 计算到当前目标点的角度
+    float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+    current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
     
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
+    
+    // 如果不是最后一个点，则进行角度混合
+    if (i < End_S_Point) 
+    {
+        Caculate_Next_S_Point_Angle(i);
+        
+        // 根据距离计算权重，距离越近，下一个点的角度权重越大
+        float weight = 1.0f - (distance / now_s_distance);
+        weight = fmaxf(0.0f, fminf(1.0f, weight));  // 限制在 0-1 范围内
+        
+        float angle_diff = next_s_angle - current_angle;
+        
+        // 混合角度
+        target_angle = current_angle + angle_diff * weight;
+        
+        // 确保角度在 0-360 范围内
+        if (target_angle < 0) target_angle += 360.0f;
+        if (target_angle >= 360.0f) target_angle -= 360.0f;
+    }
+    else 
+    {
+        // 最后一个点，直接使用当前目标点角度
+        target_angle = current_angle;
+    }
 
-    target_angle = angle;
     Speed_Management(distance);
     
     if (distance < INS_SWITCH_DISTANCE)
