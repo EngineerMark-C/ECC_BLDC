@@ -42,10 +42,11 @@ uint8_t End_S_Point;                                                            
 uint8_t NOW_S_Point;                                                            // 当前 S 型走位索引
 
 float next_target_angle = 0.0f;                                                 // 下一个目标角度
+float now_target_angle = 0.0f;                                                  // 当前目标角度
 
 float next_s_angle = 0.0f;                                                      // 下一个S型走位角度
 float now_s_distance = 0.0f;                                                    // 当前S型走位距离
-float now_s_angle = 0.0f;                                                      // 当前S型走位角度
+float now_s_angle = 0.0f;                                                       // 当前S型走位角度
 
 uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
 
@@ -224,17 +225,30 @@ void Caculate_Next_Target_Angle(uint8_t i)
     }
 }
 
+void Caculate_Now_Target_Angle(uint8_t i)
+{
+    double angle;
+
+    // 不会有 i == 0 的情况
+
+    angle = get_two_points_azimuth(GPS_Point[i-1][0], GPS_Point[i-1][1], GPS_Point[i][0], GPS_Point[i][1]);
+    now_target_angle = (float)angle;
+}
+
 void GPS_Point_to_Point(uint8_t i)
 {
     // char str[20];
     // sprintf(str, "go to %d", i);
     // ips114_show_string(0, 112, str);
-    double angle = get_two_points_azimuth(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
+    // double angle = get_two_points_azimuth(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
     double distance = get_two_points_distance(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
 
     Caculate_Next_Target_Angle(NOW_GPS_Point);
-    
-    target_angle = (float)angle;
+    Caculate_Now_Target_Angle(NOW_GPS_Point);
+
+    // target_angle = (float)angle;
+    target_angle = now_target_angle;
+
     Speed_Management((float)distance);
     // ips114_show_float(0, 96, target_angle, 5, 1);
     // ips114_show_float(90, 96, (float)distance, 5, 1);
@@ -351,8 +365,8 @@ void S_Point_to_Point(uint8_t i)
     float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
 
     // 计算到当前目标点的角度
-    float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
-    current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
+    // float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+    // current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
     
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
@@ -378,6 +392,9 @@ void S_Point_to_Point(uint8_t i)
     }
     else 
     {
+        // 计算到当前目标点的角度
+        float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+        current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
         // 最后一个点，直接使用当前目标点角度
         target_angle = current_angle;
     }

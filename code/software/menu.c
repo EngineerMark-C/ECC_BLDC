@@ -1132,6 +1132,7 @@ void GPS_INS_Path_Menu_Key_Process(void)
             {
             case 0:
                 Start_GPS_Point = (Start_GPS_Point + 1) % MAX_GPS_POINTS;
+                Start_GPS_Point = Start_GPS_Point ? Start_GPS_Point : 1;        // 确保起始点不为0
                 break;
             case 1:
                 End_GPS_Point = (End_GPS_Point + 1) % MAX_GPS_POINTS;
