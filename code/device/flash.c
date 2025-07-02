@@ -424,6 +424,7 @@ void Basic_Data_Init(void)
     Back_INS_Point = flash_union_buffer[28].uint8_type;
     yaw_flag = flash_union_buffer[29].uint8_type;
 
+    target_speed = 0.0f;
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;
     NOW_S_Point = Start_S_Point;
@@ -487,7 +488,7 @@ void Reset_All_Flash_Data(void)
     // 重置基本参数为默认值
     Start_GPS_Point = 0;
     End_GPS_Point = 0;
-    target_speed = 1.0f;  // 默认目标速度
+    target_speed = 0.0f;  // 默认目标速度
     gyro_bias[0] = 0.0f;
     gyro_bias[1] = 0.0f;
     gyro_bias[2] = 0.0f;

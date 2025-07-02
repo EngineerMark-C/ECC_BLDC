@@ -72,7 +72,7 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
         Steer_PID_Control(target_angle);                                // 舵机 PID 控制
     }
 
-    if (yaw - target_angle < 15.0f && yaw - target_angle > -15.0f)
+    if (fabs(next_target_angle -yaw) < 25.0f)
     {
         angle_flag = 1;
     }
