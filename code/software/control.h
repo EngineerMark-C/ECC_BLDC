@@ -44,6 +44,8 @@ extern uint8_t Start_S_Point;
 extern uint8_t End_S_Point;
 extern uint8_t NOW_S_Point;
 
+extern float next_target_angle;                                                // 下一个目标角度
+
 extern uint8_t GPS_TO_INS_Point;                                                // 切换导航点位
 
 extern uint8_t reach_flag;                                                      // 到达标志位

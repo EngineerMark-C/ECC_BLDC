@@ -14,9 +14,9 @@ const PID_Params_t speed_pid_params_table[] =
 
 const PID_Params_t steer_pid_params_table[] = 
 {
-    {3.0f, 0.7f, 0.0f, 0.0f},           // 舵机PID参数
+    {3.0f, 0.6f, 0.0f, 0.0f},           // 舵机PID参数
     {10.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
-    {15.0f, 0.1f, 0.0f, 0.0f},          // 舵机PID参数
+    {15.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
 };
 
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
