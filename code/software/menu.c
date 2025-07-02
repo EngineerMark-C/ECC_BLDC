@@ -730,7 +730,14 @@ void Display_ENU_Point(void)
     }
     // 底部提示信息
     char buffer[32];
-    sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
+    if (SWITCH_1_STATUS == SWITCH_RIGHT)
+    {
+        sprintf(buffer, "Idx:%02d KEY3:Correct KEY4:Back", GPS_Point_Index);
+    }
+    else
+    {
+        sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
+    }
     ips114_show_string(0, 112, buffer);
 }
 
@@ -1561,19 +1568,24 @@ void ENU_Point_Menu_Key_Process(void)
     }
     if (key3_state == KEY_SHORT_PRESS)
     {
-        Save_GPS_Point();
-        // 保存后自动跳转到下一个点位并调整显示
-        if (GPS_Point_Index < MAX_GPS_POINTS - 1)
+        if (SWITCH_1_STATUS == SWITCH_RIGHT)
         {
-            GPS_Point_Index++; // 自动跳到下一个点位
-            // 滚动显示逻辑
-            if (GPS_Point_Index >= start_index + visible_items)
-                start_index = GPS_Point_Index - visible_items + 1;
+            // 当拨码开关1在右边时，执行GPS矫正功能
+            GPS_Drift_Correction();
         }
-        // GPS_Point_Index = (GPS_Point_Index + 1) % MAX_GPS_POINTS;
-        // // 滚动显示逻辑
-        // if(GPS_Point_Index >= start_index + visible_items || GPS_Point_Index < start_index)
-        //     start_index = (GPS_Point_Index / visible_items) * visible_items;
+        else
+        {
+            // 当拨码开关1在左边时，保存GPS点位
+            Save_GPS_Point();
+            // 保存后自动跳转到下一个点位并调整显示
+            if (GPS_Point_Index < MAX_GPS_POINTS - 1)
+            {
+                GPS_Point_Index++; // 自动跳到下一个点位
+                // 滚动显示逻辑
+                if (GPS_Point_Index >= start_index + visible_items)
+                    start_index = GPS_Point_Index - visible_items + 1;
+            }
+        }
         key_clear_state(KEY_3);
     }
     if (key4_state == KEY_SHORT_PRESS)

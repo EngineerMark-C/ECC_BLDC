@@ -14,6 +14,8 @@
 
 void Save_GPS_Point(void);
 void GPS_Points_Init(void);
+void GPS_Drift_Correction(void);
+
 void Save_Direction_Point(void);
 void Direction_Point_Init(void);
 

@@ -61,6 +61,90 @@ void Save_GPS_Point(void)
     }
 }
 
+void GPS_Drift_Correction(void)
+{
+    ips114_show_string(60, 16, "GPS Drift Correcting...");
+    
+    // 保存原始基准点位置
+    double original_lat = GPS_Point[0][0];
+    double original_lon = GPS_Point[0][1];
+    
+    // 获取当前基准点的新位置（多次采样求平均）
+    double current_lat_sum = 0;
+    double current_lon_sum = 0;
+    
+    for(uint8_t j = 0; j < 15; j++)  // 增加采样次数提高精度
+    {
+        gnss_data_parse();
+        current_lat_sum += NOW_location.latitude;
+        current_lon_sum += NOW_location.longitude;
+        system_delay_ms(100);
+    }
+    
+    double current_lat = current_lat_sum / 15;
+    double current_lon = current_lon_sum / 15;
+    
+    // 计算漂移量
+    double drift_lat = current_lat - original_lat;
+    double drift_lon = current_lon - original_lon;
+    
+    // 显示漂移信息
+    ips114_show_string(60, 32, "Drift calculated.");
+    char drift_info[32];
+    sprintf(drift_info, "Lat:%.6f Lon:%.6f", drift_lat, drift_lon);
+    ips114_show_string(10, 48, drift_info);
+    system_delay_ms(1500);
+    
+    // 检查漂移是否在合理范围内（防止异常数据）
+    double max_drift = 0.001;  // 最大允许漂移约100米
+    if(fabs(drift_lat) > max_drift || fabs(drift_lon) > max_drift)
+    {
+        ips114_show_string(60, 64, "Drift too large!");
+        system_delay_ms(1000);
+        return;
+    }
+    
+    // 对所有GPS点位进行漂移校正
+    for(uint8_t i = 0; i < MAX_GPS_POINTS; i++)
+    {
+        // 跳过未设置的点位
+        if(GPS_Point[i][0] == 0.0 && GPS_Point[i][1] == 0.0)
+            continue;
+            
+        // 应用漂移校正
+        GPS_Point[i][0] += drift_lat;
+        GPS_Point[i][1] += drift_lon;
+        
+        // 同时更新ENU坐标
+        WGS84_to_ENU(GPS_Point[i][0], GPS_Point[i][1], &GPS_ENU[i][0], &GPS_ENU[i][1]);
+    }
+    
+    // 同步校正后的数据到Flash
+    flash_buffer_clear();
+    
+    // 写入所有校正后的点位数据
+    for(uint8_t i = 0; i < MAX_GPS_POINTS; i++)
+    {
+        double_convert lat, lon;
+        lat.value = GPS_Point[i][0];
+        lon.value = GPS_Point[i][1];
+        
+        flash_union_buffer[i * GPS_DATA_SIZE].uint8_type = i;
+        flash_union_buffer[i * GPS_DATA_SIZE + 1].uint32_type = lat.parts.high;
+        flash_union_buffer[i * GPS_DATA_SIZE + 2].uint32_type = lat.parts.low;
+        flash_union_buffer[i * GPS_DATA_SIZE + 3].uint32_type = lon.parts.high;
+        flash_union_buffer[i * GPS_DATA_SIZE + 4].uint32_type = lon.parts.low;
+    }
+    
+    // 擦除并写入Flash
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
+    flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
+    
+    ips114_show_string(60, 64, "Correction Complete!");
+    system_delay_ms(1000);
+    ips114_clear();
+}
+
 // 上电初始化时调用
 void GPS_Points_Init(void)
 {
