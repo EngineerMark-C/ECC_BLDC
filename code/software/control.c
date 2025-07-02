@@ -200,6 +200,10 @@ void S_Point_Generate_All(void)
 {
     for(uint8_t i=0; i < End_S_Point; i++)
     {
+        if (i == Back_INS_Point || i == Back_INS_Point + 1) 
+        {
+            return;
+        }
         S_Point_Generate(i);
     }
     // 将所有S型走位点转换为导航坐标系
@@ -389,7 +393,8 @@ void S_Point_to_Point(uint8_t i)
 // S 型走位导航
 void S_Point_Navigation(void)
 {
-    if (NOW_S_Point > End_S_Point) {
+    if (NOW_S_Point > End_S_Point)
+    {
         Brake();
         return;
     }
