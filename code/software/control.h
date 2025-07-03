@@ -7,7 +7,6 @@ extern float target_angle;
 //************************************** 速度管理 ******************************************//
 extern float MAX_SPEED;
 extern float MIN_SPEED;
-extern float APPROACH_SPEED;
 extern float BRAKING_DISTANCE;
 extern float GPS_SWITCH_DISTANCE;                                                // GPS 切换距离
 extern float INS_SWITCH_DISTANCE;                                                // INS 切换距离

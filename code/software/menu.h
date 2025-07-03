@@ -25,6 +25,7 @@ void Display_Boundary(void);
 void Display_Path(void);
 void Display_Direction(void);
 void Display_Voice_Led(void);
+void Display_Test_Mode_Menu(void);
 
 void Main_Menu_Key_Process(void);
 void Steer_Menu_Key_Process(void);
@@ -41,5 +42,6 @@ void Boundary_Menu_Key_Process(void);
 void Path_Menu_Key_Process(void);
 void Direction_Menu_Key_Process(void);
 void Voice_Led_Menu_Key_Process(void);
+void Test_Mode_Key_Process(void);
 
 #endif

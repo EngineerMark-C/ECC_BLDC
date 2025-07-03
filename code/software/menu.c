@@ -4,6 +4,7 @@
 #define NAV_MODE_COUNT (sizeof(nav_mode_names) / sizeof(nav_mode_names[0]))
 #define GPS_INS_PATH_MENU_COUNT (sizeof(gps_ins_path_menu) / sizeof(GPSINSPathMenuItem))
 #define Motor_MENU_ITEMS_COUNT (sizeof(motor_menu) / sizeof(MotorMenuItem))
+#define TEST_MODE_COUNT (sizeof(test_mode_names) / sizeof(test_mode_names[0]))
 
 // 定义菜单状态
 typedef enum
@@ -25,6 +26,7 @@ typedef enum
     MENU_PATH,           // 添加路径显示状态
     MENU_Direction,      // 方向向量采集状态
     MENU_Voice_Led,      // 语音LED状态
+    MENU_TEST_MODE,      // 测试模式选择状态
 } MenuState;
 
 // 主菜单项定义
@@ -80,7 +82,8 @@ MainMenuItem main_menu_items[] = {
     {"Boundary"},
     {"Path Display"},
     {"Direction Vector"},
-    {"Voice LED"}
+    {"Voice LED"},
+    {"Test Mode"}
 };
 
 // 路径设置菜单项
@@ -116,7 +119,6 @@ SteerMenuItem steer_menu = {
 MotorMenuItem motor_menu[] = {
     {"MAX_SPEED", &MAX_SPEED},
     {"MIN_SPEED", &MIN_SPEED},
-    {"APPROACH_SPEED", &APPROACH_SPEED},
     {"BRAKING_DISTANCE", &BRAKING_DISTANCE},
     {"S_Distance", &S_Distance},
     {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
@@ -130,6 +132,15 @@ const char *nav_mode_names[] = {
     "INS Navigation",
     "GPS-INS Navigation",
     "GPS-ENU-INS Navigation"};
+
+// 测试模式名称数组
+const char *test_mode_names[] = {
+    "No Test",
+    "Test 1",
+    "Test 2", 
+    "Test 3",
+    "Test 4"
+};
 
 // 菜单全局变量
 static uint8_t current_item = 0;         // 当前选中的菜单项
@@ -243,6 +254,9 @@ void Display_Menu(void)
     case MENU_Voice_Led:
         Display_Voice_Led();
         break;
+    case MENU_TEST_MODE:
+        Display_Test_Mode_Menu();
+        break;
     }
 }
 
@@ -314,6 +328,9 @@ void Menu(void)
         break;
     case MENU_Voice_Led:
         Voice_Led_Menu_Key_Process();
+        break;
+    case MENU_TEST_MODE:
+        Test_Mode_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -932,6 +949,30 @@ void Display_Voice_Led(void)
     }
 }
 
+void Display_Test_Mode_Menu(void)
+{
+    ips114_show_string(0, 0, "Select Test Mode");
+    
+    // 显示当前test_flag值
+    char buf[32];
+    sprintf(buf, "Current: %d", (uint8_t)test_flag);
+    ips114_show_string(120, 0, buf);
+
+    // 显示所有测试模式选项
+    for (uint8_t i = 0; i < TEST_MODE_COUNT; i++)
+    {
+        char buffer[32];
+        sprintf(buffer, "%s%s",
+                (i == (uint8_t)test_flag) ? "> " : "  ",
+                test_mode_names[i]);
+        ips114_show_string(0, 16 + i * 16, buffer);
+    }
+    
+    // 底部提示信息
+    ips114_show_string(0, 96, "KEY1:Up  KEY2:Down");
+    ips114_show_string(0, 112, "KEY3:Select  KEY4:Back");
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -1013,6 +1054,9 @@ void Main_Menu_Key_Process(void)
         case 15:
             menu_state = MENU_Voice_Led;
             break;
+            case 16:
+                menu_state = MENU_TEST_MODE;
+                break;
         }
         key_clear_state(KEY_3);
     }
@@ -1934,4 +1978,59 @@ void Voice_Led_Menu_Key_Process(void)
     
     // 在菜单界面也要处理语音识别的循环逻辑
     audio_loop();
+}
+
+// 新增：测试模式菜单按键处理函数
+void Test_Mode_Key_Process(void)
+{
+    if (key1_state == KEY_SHORT_PRESS)
+    {
+        // 向上选择测试模式
+        if ((uint8_t)test_flag > 0)
+        {
+            test_flag = (TestFlag)((uint8_t)test_flag - 1);
+        }
+        else
+        {
+            test_flag = (TestFlag)(TEST_MODE_COUNT - 1); // 循环到最后一个
+        }
+        key_clear_state(KEY_1);
+    }
+    
+    if (key2_state == KEY_SHORT_PRESS)
+    {
+        // 向下选择测试模式
+        if ((uint8_t)test_flag < TEST_MODE_COUNT - 1)
+        {
+            test_flag = (TestFlag)((uint8_t)test_flag + 1);
+        }
+        else
+        {
+            test_flag = NO_TEST; // 循环到第一个
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        // 确认选择并保存
+        Save_Basic_Data(); // 保存test_flag到Flash
+        
+        // 显示切换成功信息
+        char success_msg[32];
+        sprintf(success_msg, "Switched to %s", test_mode_names[(uint8_t)test_flag]);
+        ips114_show_string(50, 80, success_msg);
+        ips114_show_string(50, 96, "Please Press Reset");
+        system_delay_ms(1500);
+        
+        // 返回主菜单
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_3);
+    }
+    
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_4);
+    }
 }

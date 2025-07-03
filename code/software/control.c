@@ -1,11 +1,10 @@
 #include "init.h"
 
-float target_speed;
-float target_angle;
+float target_speed = 0.0f;                                                      // 目标速度
+float target_angle = 0.0f;                                                      // 目标角度
 
 float MAX_SPEED;                                                                // 最大速度
 float MIN_SPEED;                                                                // 最小速度
-float APPROACH_SPEED;                                                           // 靠近速度
 float BRAKING_DISTANCE;                                                         // 开始减速距离
 float Brake_Threshold = 6.0f;                                                   // 刹车阈值
 
