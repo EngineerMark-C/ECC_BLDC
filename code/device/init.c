@@ -16,6 +16,7 @@ void Init(void)
     INS_Init();                                                                 // 初始化惯导系统
     PID_init(&pid_speed, 550.0f, 2800.0f, 0.0f, 1, 10000);                      // 初始化电机 PID 控制器
     PID_init(&pid_steer, 0.5f, 0.0f, 0.0f, 0, 100);                             // 初始化舵机 PID 控制器
+    ips114_clear();                                                             // 清除 IPS 显示屏
     //Camera_Init();                                                              // 初始化摄像头
     // UartReceiver_Init();                                                       // 初始化 UART 接收器
     // Wifiudp_Init();                                                            // 初始化 WiFi 模块

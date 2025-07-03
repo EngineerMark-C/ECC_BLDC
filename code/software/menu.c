@@ -906,7 +906,7 @@ void Display_Voice_Led(void)
     {
         ips114_show_string(50, 16, "Recording...");
     }
-    else if (voice_flag)
+    else if (voice_recognition_flag)
     {
         ips114_show_string(50, 16, "Processing");
     }
@@ -921,11 +921,11 @@ void Display_Voice_Led(void)
     
     // 显示语音命令执行状态
     ips114_show_string(0, 48, "Command:");
-    ips114_show_string(50, 48, completecommand_flag ? "Ready" : "Executing");
+    ips114_show_string(50, 48, command_complete_flag ? "Ready" : "Executing");
     
     // 显示已识别命令数量
     ips114_show_string(0, 64, "Commands:");
-    ips114_show_int(70, 64, arr_index, 2);
+    ips114_show_int(70, 64, command_buffer_index, 2);
     
     // 显示最大录音时间进度
     if (audio_start_flag && asr_max_time > 0)
@@ -1895,10 +1895,10 @@ void Voice_Led_Menu_Key_Process(void)
         {
             audio_init(); // 重新初始化语音识别系统
             // 清空命令数组
-            arr_index = 0;
-            memset(arr, 0, sizeof(arr));
-            voice_flag = 0;
-            completecommand_flag = 1;
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
         }
         key_clear_state(KEY_1);
     }
@@ -1908,10 +1908,10 @@ void Voice_Led_Menu_Key_Process(void)
     {
         if (!audio_start_flag)
         {
-            arr_index = 0;
-            memset(arr, 0, sizeof(arr));
-            voice_flag = 0;
-            completecommand_flag = 1;
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
         }
         key_clear_state(KEY_2);
     }
@@ -1928,10 +1928,10 @@ void Voice_Led_Menu_Key_Process(void)
             asr_max_time = 0;
             
             // 清空之前的命令
-            arr_index = 0;
-            memset(arr, 0, sizeof(arr));
-            voice_flag = 0;
-            completecommand_flag = 1;
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
             
             printf("手动开始语音识别...\r\n");
         }
@@ -1962,25 +1962,24 @@ void Voice_Led_Menu_Key_Process(void)
     // 按键5：执行已识别的语音命令
     if (key5_state == KEY_SHORT_PRESS)
     {
-        if (!audio_start_flag && voice_flag == 1 && arr_index > 0)
+        if (!audio_start_flag && voice_recognition_flag == 1 && command_buffer_index > 0)
         {
             // 调用命令执行函数
-            True_complete_command();
+            Execute_Complete_Command();
             
             // 执行完成后清空命令数组
-            arr_index = 0;
-            memset(arr, 0, sizeof(arr));
-            voice_flag = 0;
-            completecommand_flag = 1;
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
         }
         key_clear_state(KEY_5);
     }
     
-    // 在菜单界面也要处理语音识别的循环逻辑
     audio_loop();
 }
 
-// 新增：测试模式菜单按键处理函数
+
 void Test_Mode_Key_Process(void)
 {
     if (key1_state == KEY_SHORT_PRESS)
