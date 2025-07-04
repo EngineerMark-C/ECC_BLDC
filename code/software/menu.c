@@ -1,6 +1,5 @@
 #include "init.h"
 
-#define MAIN_MENU_ITEMS_COUNT (sizeof(main_menu_items) / sizeof(MainMenuItem))
 #define NAV_MODE_COUNT (sizeof(nav_mode_names) / sizeof(nav_mode_names[0]))
 #define GPS_INS_PATH_MENU_COUNT (sizeof(gps_ins_path_menu) / sizeof(GPSINSPathMenuItem))
 #define Motor_MENU_ITEMS_COUNT (sizeof(motor_menu) / sizeof(MotorMenuItem))
@@ -26,13 +25,14 @@ typedef enum
     MENU_PATH,           // 添加路径显示状态
     MENU_Direction,      // 方向向量采集状态
     MENU_Voice_Led,      // 语音LED状态
-    MENU_TEST_MODE,      // 测试模式选择状态
+    MENU_TEST_MODE,      // 科目模式选择状态
 } MenuState;
 
 // 主菜单项定义
 typedef struct
 {
     const char *name;
+    uint8_t menu_index;
 } MainMenuItem;
 
 // 舵机菜单项定义
@@ -65,25 +65,97 @@ typedef struct
     float *num;
 } BoundaryMenuItem;
 
-// 主菜单项
-MainMenuItem main_menu_items[] = {
-    {"Calibrate Gyro"},
-    {"GPS Point"},
-    {"ENU Point"},
-    {"INS Point"},
-    {"GPS Path Setup"},
-    {"Speed Manage"},
-    {"GPS Info"},
-    {"Speed & IMU"},
-    {"Steer Control"},
-    {"Navigation Mode"},
-    {"S Point"},
-    {"Camera"},
-    {"Boundary"},
-    {"Path Display"},
-    {"Direction Vector"},
-    {"Voice LED"},
-    {"Test Mode"}
+// 全部菜单项（NO_TEST模式）
+MainMenuItem all_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Steer Control", 9},
+    {"Navigation Mode", 10},
+    {"S Point", 11},
+    {"Camera", 12},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Voice LED", 16},
+    {"Test Mode", 17}
+};
+
+// TEST__1模式菜单项
+MainMenuItem test1_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
+};
+
+// TEST__2模式菜单项
+MainMenuItem test2_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"S Point", 11},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
+};
+
+// TEST__3模式菜单项
+MainMenuItem test3_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"Camera", 12},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
+};
+
+// TEST__4模式菜单项
+MainMenuItem test4_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"Voice LED", 16},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"Camera", 12},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
 };
 
 // 路径设置菜单项
@@ -133,7 +205,7 @@ const char *nav_mode_names[] = {
     "GPS-INS Navigation",
     "GPS-ENU-INS Navigation"};
 
-// 测试模式名称数组
+// 科目模式名称数组
 const char *test_mode_names[] = {
     "No Test",
     "Test 1",
@@ -141,6 +213,9 @@ const char *test_mode_names[] = {
     "Test 3",
     "Test 4"
 };
+
+// 当前使用的菜单项指针
+MainMenuItem *main_menu_items = all_menu_items;
 
 // 菜单全局变量
 static uint8_t current_item = 0;         // 当前选中的菜单项
@@ -151,6 +226,7 @@ static const uint8_t visible_items = 6;  // 一屏显示6个条目（16px/item�
 uint8_t Camera_Choose = 0;               // 摄像头选择
 static MenuState last_state = MENU_MAIN; // 记录上次菜单状态
 static uint8_t need_clear = 1;           // 清屏标志
+static uint8_t current_menu_count = 0;   // 当前菜单项数量
 
 static bool edit_coord = true;   // 编辑坐标选择，false=X坐标，true=Y坐标
 static float adjust_step = 0.1f; // 默认调整步长
@@ -163,6 +239,42 @@ static key_state_enum key2_state;
 static key_state_enum key3_state;
 static key_state_enum key4_state;
 static key_state_enum key5_state;
+
+// 根据科目模式更新菜单配置
+void Update_Menu_For_Test_Mode(void)
+{
+    switch(test_flag)
+    {
+        case NO_TEST:
+            main_menu_items = all_menu_items;
+            current_menu_count = sizeof(all_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__1:
+            main_menu_items = test1_menu_items;
+            current_menu_count = sizeof(test1_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__2:
+            main_menu_items = test2_menu_items;
+            current_menu_count = sizeof(test2_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__3:
+            main_menu_items = test3_menu_items;
+            current_menu_count = sizeof(test3_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__4:
+            main_menu_items = test4_menu_items;
+            current_menu_count = sizeof(test4_menu_items) / sizeof(MainMenuItem);
+            break;
+        default:
+            main_menu_items = all_menu_items;
+            current_menu_count = sizeof(all_menu_items) / sizeof(MainMenuItem);
+            break;
+    }
+    
+    // 重置菜单索引，防止越界
+    current_item = 0;
+    start_index = 0;
+}
 
 void Button_Init(void)
 {
@@ -320,10 +432,10 @@ void Menu(void)
     case MENU_Boundary:
         Boundary_Menu_Key_Process();
         break;
-    case MENU_PATH: // 添加路径显示菜单按键处理
+    case MENU_PATH:
         Path_Menu_Key_Process();
         break;
-    case MENU_Direction:  // 新增方向向量按键处理
+    case MENU_Direction:
         Direction_Menu_Key_Process();
         break;
     case MENU_Voice_Led:
@@ -367,7 +479,7 @@ void Display_Main_Menu(void)
     for (uint8_t i = 0; i < visible_items; i++)
     {
         uint8_t item_num = start_index + i;
-        if (item_num >= MAIN_MENU_ITEMS_COUNT)
+        if (item_num >= current_menu_count)
             break;
 
         char buffer[32];
@@ -379,7 +491,7 @@ void Display_Main_Menu(void)
     // 底部提示信息
     char buffer[32];
     sprintf(buffer, "Page:%02d/%02d", start_index / visible_items + 1,
-            (MAIN_MENU_ITEMS_COUNT + visible_items - 1) / visible_items);
+            (current_menu_count + visible_items - 1) / visible_items);
     ips114_show_string(0, 112, buffer);
     ips114_show_int(90, 112, Fire_Flag, 2);
 }
@@ -958,7 +1070,7 @@ void Display_Test_Mode_Menu(void)
     sprintf(buf, "Current: %d", (uint8_t)test_flag);
     ips114_show_string(120, 0, buf);
 
-    // 显示所有测试模式选项
+    // 显示所有科目模式选项
     for (uint8_t i = 0; i < TEST_MODE_COUNT; i++)
     {
         char buffer[32];
@@ -979,7 +1091,7 @@ void Main_Menu_Key_Process(void)
     if (key1_state == KEY_SHORT_PRESS)
     {
         // 修改后的上键循环逻辑
-        current_item = (current_item == 0) ? (MAIN_MENU_ITEMS_COUNT - 1) : (current_item - 1);
+        current_item = (current_item == 0) ? (current_menu_count - 1) : (current_item - 1);
         // 更新显示起始索引
         if (current_item < start_index)
             start_index = (current_item / visible_items) * visible_items;
@@ -988,7 +1100,7 @@ void Main_Menu_Key_Process(void)
     if (key2_state == KEY_SHORT_PRESS)
     {
         // 修改后的下键循环逻辑
-        current_item = (current_item == MAIN_MENU_ITEMS_COUNT - 1) ? 0 : (current_item + 1);
+        current_item = (current_item == current_menu_count - 1) ? 0 : (current_item + 1);
         // 更新显示起始索引
         if (current_item >= start_index + visible_items || current_item < start_index)
             start_index = (current_item / visible_items) * visible_items;
@@ -996,67 +1108,67 @@ void Main_Menu_Key_Process(void)
     }
     if (key3_state == KEY_SHORT_PRESS)
     {
-        // 进入选中的子菜单
-        switch (current_item)
+        // 根据menu_index进入对应的子菜单
+        uint8_t menu_index = main_menu_items[current_item].menu_index;
+        switch (menu_index)
         {
-        case 0:
+        case 1:
             menu_state = MENU_Calibrate_Gyro;
             break;
-        case 1:
+        case 2:
             menu_state = MENU_GPS_Point;
             start_index = 0;
             break;
-        case 2:
+        case 3:
             menu_state = MENU_ENU_Point;
             start_index = 0;
             break;
-        case 3:
+        case 4:
             menu_state = MENU_INS_Point;
             start_index = 0;
             break;
-        case 4:
+        case 5:
             menu_state = MENU_GPS_PATH;
             break;
-        case 5:
+        case 6:
             menu_state = MENU_SPEED_MANAGE;
             current_item = 0;
             break;
-        case 6:
+        case 7:
             menu_state = MENU_GPS_INFO;
             break;
-        case 7:
+        case 8:
             menu_state = MENU_SPEED_IMU;
             break;
-        case 8:
+        case 9:
             menu_state = MENU_STEER;
             break;
-        case 9:
-            menu_state = MENU_NAV_MODE;
-            ;
-            break;
         case 10:
+            menu_state = MENU_NAV_MODE;
+            break;
+        case 11:
             menu_state = MENU_S_Point;
             start_index = 0;
             break;
-        case 11:
+        case 12:
             menu_state = MENU_Camera;
             break;
-        case 12:
+        case 13:
             menu_state = MENU_Boundary;
             current_item = 0;
             break;
-        case 13:
+        case 14:
             menu_state = MENU_PATH;
             break;
-        case 14:
+        case 15:
             menu_state = MENU_Direction;
             break;
-        case 15:
+        case 16:
             menu_state = MENU_Voice_Led;
             break;
-            case 16:
-                menu_state = MENU_TEST_MODE;
-                break;
+        case 17:
+            menu_state = MENU_TEST_MODE;
+            break;
         }
         key_clear_state(KEY_3);
     }
@@ -1984,7 +2096,7 @@ void Test_Mode_Key_Process(void)
 {
     if (key1_state == KEY_SHORT_PRESS)
     {
-        // 向上选择测试模式
+        // 向上选择
         if ((uint8_t)test_flag > 0)
         {
             test_flag = (TestFlag)((uint8_t)test_flag - 1);
@@ -1998,7 +2110,7 @@ void Test_Mode_Key_Process(void)
     
     if (key2_state == KEY_SHORT_PRESS)
     {
-        // 向下选择测试模式
+        // 向下选择
         if ((uint8_t)test_flag < TEST_MODE_COUNT - 1)
         {
             test_flag = (TestFlag)((uint8_t)test_flag + 1);

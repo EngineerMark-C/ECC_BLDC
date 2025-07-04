@@ -5,6 +5,7 @@ extern const char *nav_mode_names[];
 #define LINE_CHAR_LIMIT                 30
 
 void Button_Init(void);
+void Update_Menu_For_Test_Mode(void);
 void Menu(void);
 
 void Display_Menu(void);

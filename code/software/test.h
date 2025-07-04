@@ -12,6 +12,7 @@ typedef enum
 
 extern TestFlag test_flag;
 
+void Speed_Management_For_Test3(float distance);
 
 
 #endif
