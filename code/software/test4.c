@@ -13,6 +13,7 @@ uint8_t timer_10ms_flag = 0;
 uint8_t command_complete_flag = 1;
 uint8_t voice_recognition_flag = 0;
 
+// static float start_x = 0.0f;          // 记录开始时的X坐标
 // static float start_yaw = 0.0f;        // 记录开始时的偏航角
 // static float total_rotated = 0.0f;    // 记录总的旋转角度
 // static float last_yaw = 0.0f;         // 上次的偏航角
@@ -255,7 +256,10 @@ void Handle_Open_Fog_Light(void)
  */
 void Handle_Move_Forward_10M(void)
 {
-
+    target_speed = 2.0f;  // 设置目标速度为2.0 m/s
+    delay_ms(5000);
+    target_speed = 0.0f;  // 停止运动
+    command_complete_flag = 1;
     delay_ms(1000);
 }
 
@@ -264,7 +268,10 @@ void Handle_Move_Forward_10M(void)
  */
 void Handle_Move_Backward_10M(void)
 {
-
+    target_speed = -2.0f;
+    delay_ms(5000);
+    target_speed = 0.0f;
+    command_complete_flag = 1;
     delay_ms(1000);
 }
 
@@ -273,7 +280,21 @@ void Handle_Move_Backward_10M(void)
  */
 void Handle_Snake_Forward_10M(void)
 {
+    target_speed = 2.0f;
 
+    target_angle = 30.0f;
+    delay_ms(1000);
+    target_angle = -30.0f;
+    delay_ms(1000);
+    target_angle = 30.0f;
+    delay_ms(1000);
+    target_angle = -30.0f;
+    delay_ms(1000);
+    target_angle = 30.0f;
+    delay_ms(1000);
+
+    target_speed = 0.0f;
+    command_complete_flag = 1;
     delay_ms(1000);
 }
 
@@ -282,7 +303,21 @@ void Handle_Snake_Forward_10M(void)
  */
 void Handle_Snake_Backward_10M(void)
 {
+    target_speed = -2.0f;
 
+    target_angle = 30.0f;
+    delay_ms(1000);
+    target_angle = -30.0f;
+    delay_ms(1000);
+    target_angle = 30.0f;
+    delay_ms(1000);
+    target_angle = -30.0f;
+    delay_ms(1000);
+    target_angle = 30.0f;
+    delay_ms(1000);
+
+    target_speed = 0.0f;
+    command_complete_flag = 1;
     delay_ms(1000);
 }
 
@@ -292,6 +327,19 @@ void Handle_Snake_Backward_10M(void)
 void Handle_Turn_Counterclock(void)
 {
     printf("执行命令: 逆时针转一圈\n");
+    target_speed = 2.0f;
+
+    target_angle = 270.0f;
+    delay_ms(1000);
+    target_angle = 180.0f;
+    delay_ms(1000);
+    target_angle = 90.0f;
+    delay_ms(1000);
+    target_angle = 0.0f;
+    delay_ms(1000);
+
+    target_speed = 0.0f;
+    command_complete_flag = 1;
 
     delay_ms(1000);
 }
@@ -302,6 +350,19 @@ void Handle_Turn_Counterclock(void)
 void Handle_Turn_Clockwise(void)
 {
     printf("执行命令: 顺时针转一圈\n");
+    target_speed = 2.0f;
+
+    target_angle = 90.0f;
+    delay_ms(1000);
+    target_angle = 180.0f;
+    delay_ms(1000);
+    target_angle = 270.0f;
+    delay_ms(1000);
+    target_angle = 360.0f;
+    delay_ms(1000);
+
+    target_speed = 0.0f;
+    command_complete_flag = 1;
 
     delay_ms(1000);
 }

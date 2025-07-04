@@ -1271,7 +1271,7 @@ void GPS_INS_Path_Menu_Key_Process(void)
         if (key4_state == KEY_SHORT_PRESS)
         {
             menu_state = MENU_MAIN;
-            Save_Basic_Data();
+            Save_Test_Data();
             key_clear_state(KEY_4);
         }
     }
@@ -1333,7 +1333,7 @@ void Speed_Manage_Menu_Key_Process(void)
         if (key4_state == KEY_SHORT_PRESS)
         {
             menu_state = MENU_MAIN;
-            Save_Basic_Data();
+            Save_Test_Data();
             key_clear_state(KEY_4);
         }
     }
@@ -1640,7 +1640,7 @@ void ENU_Point_Menu_Key_Process(void)
     }
 }
 
-// 新增导航模式菜单按键处理函数
+// 导航模式菜单按键处理函数
 void Nav_Mode_Key_Process(void)
 {
     if (key1_state == KEY_SHORT_PRESS)
@@ -1666,7 +1666,7 @@ void Nav_Mode_Key_Process(void)
     if (key3_state == KEY_SHORT_PRESS)
     {
         menu_state = MENU_MAIN;
-        Save_Basic_Data();
+        Save_Test_Data();
         Calculate_Safety_Boundary(Navigation_Flag);
         key_clear_state(KEY_3);
     }
@@ -1745,7 +1745,7 @@ void Boundary_Menu_Key_Process(void)
     if (key4_state == KEY_SHORT_PRESS)
     {
         menu_state = MENU_MAIN;
-        Save_Basic_Data();
+        Save_Test_Data();
         key_clear_state(KEY_4);
     }
 }

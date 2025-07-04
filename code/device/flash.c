@@ -163,8 +163,8 @@ void Save_GPS_Point_Memory(void)
 
 void GPS_Drift_Correction(void)
 {
-    ips114_show_string(60, 16, "GPS Drift Correcting...");
-    
+    ips114_show_string(30, 16, "GPS Drift Correcting...");
+
     // 保存原始基准点位置
     double original_lat = GPS_Point[0][0];
     double original_lon = GPS_Point[0][1];
