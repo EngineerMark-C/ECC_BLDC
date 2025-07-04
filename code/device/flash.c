@@ -107,7 +107,7 @@ void Save_GPS_Point(void)
         // 2.2 擦除并写入Flash
         flash_erase_page(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
         flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
-        ips114_show_string(60, 32, "GPS Point Saved.");
+        ips114_show_string(60, CENTER_Y, "GPS Point Saved.");
         system_delay_ms(500);
     }
 }
@@ -156,7 +156,7 @@ void Save_GPS_Point_Memory(void)
         // 擦除并写入Flash
         flash_erase_page(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
         flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_GPS_DATA_INDEX);
-        ips114_show_string(30, 32, "GPS Point Memory Saved.");
+        ips114_show_string(30, CENTER_Y, "GPS Point Memory Saved.");
         system_delay_ms(500);
         ips114_clear();
 }
@@ -365,7 +365,7 @@ void Save_Direction_Point(void)
         // 2.2 擦除并写入Flash
         flash_erase_page(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
         flash_write_page_from_buffer(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
-        ips114_show_string(60, 32, "Direction Point Saved.");
+        ips114_show_string(60, CENTER_Y, "Direction Point Saved.");
         system_delay_ms(500);
     }
 }
@@ -463,7 +463,7 @@ void Save_INS_Point(void)
         // 2.2 擦除并写入Flash
         flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
         flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
-        ips114_show_string(60, 32, "INS Point Saved.");
+        ips114_show_string(60, CENTER_Y, "INS Point Saved.");
         system_delay_ms(500);
     }
 }
@@ -512,7 +512,7 @@ void Save_INS_Point_Memory(void)
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
     flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
-    ips114_show_string(30, 32, "INS Point Memory Saved.");
+    ips114_show_string(30, CENTER_Y, "INS Point Memory Saved.");
     system_delay_ms(500);
 }
 
@@ -594,7 +594,7 @@ void Save_S_Point(void)
         // 擦除并写入Flash
         flash_erase_page(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
         flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_S_DATA_INDEX);
-        ips114_show_string(60, 32, "S Point Saved.");
+        ips114_show_string(60, CENTER_Y, "S Point Saved.");
         system_delay_ms(500);
     }
 }
@@ -657,7 +657,7 @@ void Save_Basic_Data(void)
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
     flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
-    ips114_show_string(80, 32, "Saved.");
+    ips114_show_string(80, CENTER_Y, "Saved.");
     system_delay_ms(500);
 }
 
@@ -772,7 +772,7 @@ void Save_Test_Data(void)
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
     flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
-    ips114_show_string(60, 32, "Test Data Saved.");
+    ips114_show_string(60, CENTER_Y, "Test Data Saved.");
     system_delay_ms(500);
 }
 
@@ -868,7 +868,7 @@ void Save_All_Flash_Data(void)
     Save_INS_Point_Memory();
     Save_S_Point();
     Save_Direction_Point();
-    ips114_show_string(60, 32, "All Data Saved.");
+    ips114_show_string(60, CENTER_Y, "All Data Saved.");
     system_delay_ms(500);
     ips114_clear();
 }   
@@ -889,7 +889,7 @@ void Save_All_Flash_Data(void)
  */
 void Reset_All_Flash_Data(void)
 {
-    ips114_show_string(60, 32, "Resetting Flash...");
+    ips114_show_string(60, CENTER_Y, "Resetting Flash...");
     system_delay_ms(500);
     
     // 清空缓冲区，将所有数据设为0
@@ -919,7 +919,7 @@ void Reset_All_Flash_Data(void)
     flash_erase_page(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
     flash_write_page_from_buffer(FLASH_SECTION_INDEX, DIRECTION_POINT_INDEX);
 
-    ips114_show_string(60, 48, "Flash Reset Complete.");
+    ips114_show_string(60, CENTER_Y + 16, "Flash Reset Complete.");
     system_delay_ms(1000);
     ips114_clear();
 }

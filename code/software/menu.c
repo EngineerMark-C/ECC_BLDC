@@ -493,7 +493,7 @@ void Display_Main_Menu(void)
     sprintf(buffer, "Page:%02d/%02d", start_index / visible_items + 1,
             (current_menu_count + visible_items - 1) / visible_items);
     ips114_show_string(0, 112, buffer);
-    ips114_show_int(90, 112, Fire_Flag, 2);
+    ips114_show_int(200, 112, Fire_Flag, 2);
 }
 
 // 显示舵机调节界面
