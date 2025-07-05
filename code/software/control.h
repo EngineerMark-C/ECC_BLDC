@@ -56,6 +56,7 @@ void Brake(void);
 
 void WGS84_to_ENU_Init(void);
 void WGS84_to_ENU(double lat, double lon, float* east, float* north);
+void ENU_To_INS_Points(void);
 void Vehicle_To_Navigation_INS(void);
 void Vehicle_To_Navigation_S(void);
 

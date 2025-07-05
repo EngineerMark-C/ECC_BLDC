@@ -861,7 +861,7 @@ void Display_ENU_Point(void)
     char buffer[32];
     if (SWITCH_1_STATUS == SWITCH_RIGHT)
     {
-        sprintf(buffer, "Idx:%02d KEY3:Correct KEY4:Back", GPS_Point_Index);
+        sprintf(buffer, "Idx:%02d KEY3:Correct KEY5:2INS", GPS_Point_Index);
     }
     else
     {
@@ -1744,6 +1744,15 @@ void ENU_Point_Menu_Key_Process(void)
     {
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
+    }
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        // 当SWITCH_1_STATUS == SWITCH_RIGHT时，执行ENU_To_INS_Points转换
+        if (SWITCH_1_STATUS == SWITCH_RIGHT)
+        {
+            ENU_To_INS_Points();
+        }
+        key_clear_state(KEY_5);
     }
 }
 

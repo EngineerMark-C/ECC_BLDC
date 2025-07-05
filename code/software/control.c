@@ -248,6 +248,20 @@ void Caculate_Next_ENU_Angle(uint8_t i)
     }
 }
 
+// 将ENU点位传递给INS点位
+void ENU_To_INS_Points(void)
+{
+    for (uint8_t i = 0; i <= End_GPS_Point; i++)
+    {
+        // 将ENU点位传递给INS点位
+        INS_Point[i][0] = GPS_ENU[i][0];
+        INS_Point[i][1] = GPS_ENU[i][1];
+    }
+    Save_INS_Point_Memory();
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "ENU Points to INS.");
+    system_delay_ms(500);
+}
+
 // 有待优化
 void GPS_Point_to_Point(uint8_t i)
 {
