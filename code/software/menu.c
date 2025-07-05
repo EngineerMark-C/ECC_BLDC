@@ -1263,10 +1263,6 @@ void GPS_Point_Menu_Key_Process(void)
             if (GPS_Point_Index >= start_index + visible_items)
                 start_index = GPS_Point_Index - visible_items + 1;
         }
-        // GPS_Point_Index = (GPS_Point_Index + 1) % MAX_GPS_POINTS;
-        // // 滚动显示逻辑
-        // if(GPS_Point_Index >= start_index + visible_items || GPS_Point_Index < start_index)
-        //     start_index = (GPS_Point_Index / visible_items) * visible_items;
         key_clear_state(KEY_3);
     }
     if (key4_state == KEY_SHORT_PRESS)
@@ -1556,7 +1552,6 @@ void INS_Point_Menu_Key_Process(void)
                 // 当拨码开关4在右边时
                 if (SWITCH_1_STATUS == SWITCH_RIGHT)
                 {
-                    // 当拨码开关1也在右边时，生成镜像点位
                     Mirror_INS_Point_Generate();
                 }
                 else

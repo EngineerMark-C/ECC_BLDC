@@ -41,11 +41,9 @@ uint8_t End_S_Point;                                                            
 uint8_t NOW_S_Point;                                                            // 当前 S 型走位索引
 
 float next_target_angle = 0.0f;                                                 // 下一个目标角度
-float now_target_angle = 0.0f;                                                  // 当前目标角度
 
 float next_s_angle = 0.0f;                                                      // 下一个S型走位角度
 float now_s_distance = 0.0f;                                                    // 当前S型走位距离
-float now_s_angle = 0.0f;                                                       // 当前S型走位角度
 
 uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
 
@@ -233,56 +231,41 @@ void Caculate_Next_GPS_Angle(uint8_t i)
     }
 }
 
-void Caculate_Now_Target_Angle(uint8_t i)
+void Caculate_Next_ENU_Angle(uint8_t i)
 {
-    double angle;
-
-    // 不会有 i == 0 的情况
-
-    angle = get_two_points_azimuth(GPS_Point[i-1][0], GPS_Point[i-1][1], GPS_Point[i][0], GPS_Point[i][1]);
-    now_target_angle = (float)angle;
+    // 计算下一个目标角度
+    if (i < End_GPS_Point)
+    {
+        float dx = GPS_ENU[i+1][0] - GPS_ENU[i][0];
+        float dy = GPS_ENU[i+1][1] - GPS_ENU[i][1];
+        float next_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+        next_angle = next_angle < 0 ? next_angle + 360 : next_angle;
+        next_target_angle = next_angle;
+    }
+    else
+    {
+        next_target_angle = target_angle;
+    }
 }
 
+// 有待优化
 void GPS_Point_to_Point(uint8_t i)
 {
-    // char str[20];
-    // sprintf(str, "go to %d", i);
-    // ips114_show_string(0, 112, str);
     double angle = get_two_points_azimuth(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
     double distance = get_two_points_distance(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
 
-    Caculate_Next_GPS_Angle(NOW_GPS_Point);
-    // Caculate_Now_Target_Angle(NOW_GPS_Point);
+    if (NOW_GPS_Point < End_GPS_Point) 
+    {
+        // 计算下一个目标角度
+        Caculate_Next_GPS_Angle(i);
+    }
 
     if (reach_flag !=1)
     {
-    target_angle = (float)angle;
-    // target_angle = now_target_angle;
-    
-    Speed_Management((float)distance);
+        target_angle = (float)angle;
+        Speed_Management((float)distance);
     }
-    // ips114_show_float(0, 96, target_angle, 5, 1);
-    // ips114_show_float(90, 96, (float)distance, 5, 1);
-    if (distance < GPS_SWITCH_DISTANCE)
-    {
-        reach_flag = 1;
-    }
-}
 
-void GPS_ENU_Point_to_Point(uint8_t i)
-{
-    // 使用平面坐标系计算
-    float dx = GPS_ENU[i][0] - position[0];  // 东向差值
-    float dy = GPS_ENU[i][1] - position[1];  // 北向差值
-    
-    float angle = RAD_TO_ANGLE(atan2f(dy, dx));
-    angle = angle < 0 ? angle + 360 : angle;
-    float distance = sqrtf(dx*dx + dy*dy);
-
-    target_angle = angle;
-    Speed_Management(distance);
-    
-    // 修改到达判断条件
     if (distance < GPS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
@@ -291,7 +274,8 @@ void GPS_ENU_Point_to_Point(uint8_t i)
 
 void GPS_Navigation(void)
 {
-    if (NOW_GPS_Point > End_GPS_Point) {
+    if (NOW_GPS_Point > End_GPS_Point)
+    {
         Brake();
         return;
     }
@@ -311,6 +295,34 @@ void GPS_Navigation(void)
     }
 }
 
+void GPS_ENU_Point_to_Point(uint8_t i)
+{
+    // 使用平面坐标系计算
+    float dx = GPS_ENU[i][0] - position[0];  // 东向差值
+    float dy = GPS_ENU[i][1] - position[1];  // 北向差值
+
+
+    if (i < End_GPS_Point) 
+    {
+        Caculate_Next_ENU_Angle(i);
+    }
+
+    float angle = RAD_TO_ANGLE(atan2f(dy, dx));
+    angle = angle < 0 ? angle + 360 : angle;
+    float distance = sqrtf(dx*dx + dy*dy);
+
+    if (reach_flag !=1)
+    {
+    target_angle = (float)angle;    
+    Speed_Management((float)distance);
+    }
+    // 修改到达判断条件
+    if (distance < GPS_SWITCH_DISTANCE)
+    {
+        reach_flag = 1;
+    }
+}
+
 void GPS_ENU_Navigation(void)
 {
     if (NOW_GPS_Point > End_GPS_Point) {
@@ -322,6 +334,7 @@ void GPS_ENU_Navigation(void)
         GPS_ENU_Point_to_Point(NOW_GPS_Point);
         if (reach_flag)
         {
+            target_angle = next_target_angle;
             target_speed = MIN_SPEED;
             if (angle_flag)  // 检查角度到达标志位
             {
@@ -351,7 +364,7 @@ void Caculate_Next_S_Point_Angle(uint8_t i)
     }
 }
 
-void Caculate_Now_S_Point_Distance_Angle(uint8_t i)
+void Caculate_Now_S_Point_Distance(uint8_t i)
 {
     float dx, dy;
     if (i == 0) 
@@ -365,78 +378,96 @@ void Caculate_Now_S_Point_Distance_Angle(uint8_t i)
         dy = S_Point_Navigation_Frame[i][1] - S_Point_Navigation_Frame[i-1][1];
     }
     now_s_distance = sqrtf(dx*dx + dy*dy);
-    // now_s_angle = RAD_TO_ANGLE(atan2f(dy, dx));
-    // now_s_angle = now_s_angle < 0 ? now_s_angle + 360 : now_s_angle;
+}
+
+void Caculate_Next_INS_Point_Angle(uint8_t i)
+{
+    // 计算下一个 INS 点位的角度
+    if (i < End_INS_Point) 
+    {
+        float dx = INS_Point_Navigation_Frame[i+1][0] - INS_Point_Navigation_Frame[i][0];
+        float dy = INS_Point_Navigation_Frame[i+1][1] - INS_Point_Navigation_Frame[i][1];
+
+        float next_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+        next_angle = next_angle < 0 ? next_angle + 360 : next_angle;
+
+        next_target_angle = next_angle;
+    }
+    else 
+    {
+        next_target_angle = target_angle;
+    }
 }
 
 //S 型走位导航
+//void S_Point_to_Point(uint8_t i)
+//{
+//    // 使用平面坐标系计算（单位：米）
+//    float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
+//    float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
+//
+//    // 计算到当前目标点的角度
+//    float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+//    current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
+//
+//    // 计算欧几里得距离
+//    float distance = sqrtf(dx*dx + dy*dy);
+//    // 如果不是最后一个点，则进行角度混合
+//    if (i < End_S_Point)
+//    {
+//        Caculate_Next_S_Point_Angle(i);
+//        // Caculate_Now_S_Point_Distance(i);
+//
+//        // 根据距离计算权重，距离越近，下一个点的角度权重越大
+//        float weight = 1.0f - (distance / now_s_distance);
+//        weight = fmaxf(0.0f, fminf(1.0f, weight));  // 限制在 0-1 范围内
+//
+//        float angle_diff = next_target_angle - current_angle;
+//
+//        // 混合角度
+//        target_angle = current_angle + angle_diff * weight;
+//
+//        // 确保角度在 0-360 范围内
+//        if (target_angle < 0) target_angle += 360.0f;
+//        if (target_angle >= 360.0f) target_angle -= 360.0f;
+//    }
+//    else
+//    {
+//        target_angle = current_angle;
+//    }
+//    Speed_Management(distance);
+//
+//    if (distance < INS_SWITCH_DISTANCE)
+//    {
+//        reach_flag = 1;
+//    }
+//}
+
 void S_Point_to_Point(uint8_t i)
 {
     // 使用平面坐标系计算（单位：米）
     float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
     float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
-
     // 计算到当前目标点的角度
     float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+
     current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
-    
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
-    Caculate_Next_S_Point_Angle(i);
-    // 如果不是最后一个点，则进行角度混合
-    if (i < End_S_Point) 
+    if (i < End_INS_Point) 
     {
-        Caculate_Next_S_Point_Angle(i);
-        Caculate_Now_S_Point_Distance_Angle(i);
-        
-        // 根据距离计算权重，距离越近，下一个点的角度权重越大
-        float weight = 1.0f - (distance / now_s_distance);
-        weight = fmaxf(0.0f, fminf(1.0f, weight));  // 限制在 0-1 范围内
-        
-        float angle_diff = next_target_angle - current_angle;
-        
-        // 混合角度
-        target_angle = current_angle + angle_diff * weight;
-        
-        // 确保角度在 0-360 范围内
-        if (target_angle < 0) target_angle += 360.0f;
-        if (target_angle >= 360.0f) target_angle -= 360.0f;
+        Caculate_Next_INS_Point_Angle(i);
     }
-    else 
+    if (reach_flag != 1)
     {
         target_angle = current_angle;
+        Speed_Management(distance);
     }
-    Speed_Management(distance);
-    
     if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }
 }
-
-// void S_Point_to_Point(uint8_t i)
-// {
-//     // 使用平面坐标系计算（单位：米）
-//     float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
-//     float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
-
-//     // 计算到当前目标点的角度
-//     float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
-//     current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
-    
-//     // 计算欧几里得距离
-//     float distance = sqrtf(dx*dx + dy*dy);
-//     Caculate_Next_S_Point_Angle(i);
-
-//     target_angle = current_angle;
-
-//     Speed_Management(distance);
-    
-//     if (distance < INS_SWITCH_DISTANCE)
-//     {
-//         reach_flag = 1;
-//     }
-// }
 
 void INS_Point_to_Point(uint8_t i)
 {
@@ -448,12 +479,18 @@ void INS_Point_to_Point(uint8_t i)
     float angle = RAD_TO_ANGLE(atan2f(dy, dx));
     angle = angle < 0 ? angle + 360 : angle;
     
+    if (i < End_INS_Point) 
+    {
+        Caculate_Next_INS_Point_Angle(i);
+    }
+
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
-
-    target_angle = angle;
-    Speed_Management(distance);
-
+    if (reach_flag != 1)
+    {
+        target_angle = angle;
+        Speed_Management(distance);
+    }
     if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
@@ -469,12 +506,13 @@ void INS_Navigation(void)
     }
     if (Start_INS_Point < End_INS_Point)
     {
-        if (NOW_S_Point == NOW_INS_Point && NOW_S_Point < End_S_Point) 
+        if (NOW_S_Point == NOW_INS_Point && NOW_S_Point < End_S_Point && NOW_S_Point != Back_INS_Point) 
         {
             S_Point_to_Point(NOW_S_Point);
             if (reach_flag)
             {
                 target_speed = MIN_SPEED;
+                target_angle = next_target_angle;
                 if (angle_flag)  // 检查角度到达标志位
                 {
                     NOW_S_Point++;
@@ -483,12 +521,28 @@ void INS_Navigation(void)
                 }
             }
         } 
-        else 
+        else if (NOW_S_Point == Back_INS_Point) 
         {
             INS_Point_to_Point(NOW_INS_Point);
             if (reach_flag)
             {
                 target_speed = MIN_SPEED;
+                target_angle = next_target_angle;
+                if (angle_flag)  // 检查角度到达标志位
+                {
+                    NOW_S_Point++;
+                    NOW_INS_Point++;
+                    reach_flag = 0;  // 重置标志位
+                }
+            }
+        }
+        else
+        {
+            INS_Point_to_Point(NOW_INS_Point);
+            if (reach_flag)
+            {
+                target_speed = MIN_SPEED;
+                target_angle = next_target_angle;
                 if (angle_flag)  // 检查角度到达标志位
                 {
                     NOW_INS_Point++;

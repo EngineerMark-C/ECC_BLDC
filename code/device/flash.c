@@ -677,7 +677,7 @@ void Basic_Data_Init(void)
     acc_bias[2] = flash_union_buffer[8].float_type;
 
     // 第一次烧录确保初始化赋初值
-    // test_flag = 4;
+    // test_flag = 3;
     // yaw_flag = 0;
     // Camera_Threshold = 64;
     // gyro_bias[0] = 0.0f;

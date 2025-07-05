@@ -38,8 +38,6 @@ void Handle_Open_Low_Beam(void);
 void Handle_Open_High_Beam(void);
 void Handle_Open_Fog_Light(void);
 
-void Test4_Navigation(void);
-
 // 运动控制命令实现
 void Handle_Move_Forward_10M(void);
 void Handle_Move_Backward_10M(void);
