@@ -62,6 +62,7 @@ void Vehicle_To_Navigation_S(void);
 
 void Mirror_INS_Point_Generate(void);
 void Get_Start_Direction(void);
+void INS_Point_Y_Zero(void);
 
 void GPS_Navigation(void);
 void GPS_ENU_Navigation(void);

@@ -413,6 +413,15 @@ void Caculate_Next_INS_Point_Angle(uint8_t i)
     }
 }
 
+void INS_Point_Y_Zero(void)
+{
+    // 将 INS 点位的 Y 坐标归零
+    for (uint8_t i = 0; i <= End_INS_Point; i++)
+    {
+        INS_Point[i][1] = 0.0f;
+    }
+}
+
 //S 型走位导航
 //void S_Point_to_Point(uint8_t i)
 //{

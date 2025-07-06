@@ -755,7 +755,7 @@ void Display_INS_Point(void)
         {
             if (SWITCH_1_STATUS == SWITCH_RIGHT)
             {
-                sprintf(buffer, "Idx:%02d K3:Mirror K4:Back", INS_Point_Index);
+                sprintf(buffer, "Idx:%02d K3:Mirror K5:Y0", INS_Point_Index);
             }
             else
             {
@@ -1580,8 +1580,15 @@ void INS_Point_Menu_Key_Process(void)
 
         if (key5_state == KEY_SHORT_PRESS)
         {
+            if (SWITCH_4_STATUS == SWITCH_RIGHT && SWITCH_1_STATUS == SWITCH_RIGHT)
+            {
+                INS_Point_Y_Zero();
+            }
+            else
+            {
             ins_display_mode = ins_display_mode ? 0 : 1;  // 切换显示模式
             Vehicle_To_Navigation_INS();
+            }
             key_clear_state(KEY_5);
         }
     }
