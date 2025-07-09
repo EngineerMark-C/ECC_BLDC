@@ -24,6 +24,10 @@
 #include "boundary.h"
 #include "image.h"
 
+#include "test.h"
+#include "test4.h"
+#include "asr_audio.h"
+
 void Init(void);
 
 #endif

@@ -267,13 +267,13 @@ void Safety_Boundary_Check(void)
     // 检查东向坐标
     if(position[0] < SAFETY_X_MIN || position[0] > SAFETY_X_MAX) 
     {
-        target_speed = 0.0f;
         Fire_Flag = 0;
+        Brake();
     }
     // 检查北向坐标
     if(position[1] < SAFETY_Y_MIN || position[1] > SAFETY_Y_MAX) 
     {
-        target_speed = 0.0f;
         Fire_Flag = 0;
+        Brake();
     }
 }

@@ -15,4 +15,4 @@ extern NavigationFlag Navigation_Flag;
 
 void Navigation_Mode_Switch(void);
 
-#endif
+    #endif

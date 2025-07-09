@@ -48,6 +48,7 @@ int core0_main(void)
     debug_init();                                                               // 初始化默认调试串口
     cpu_wait_event_ready();                                                     // 等待所有核心初始化完毕
     Init();                                                                     // 初始化函数
+    Update_Menu_For_Test_Mode();                                                // 更新菜单配置（根据科目模式）
     // Reset_All_Flash_Data();                                                    // 重置所有Flash数据区域
     // target_speed = 2.0f;                                                       // 目标速度
     // icm42688_init();                                                           // 初始化 ICM42688

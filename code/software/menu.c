@@ -1,9 +1,9 @@
 #include "init.h"
 
-#define MAIN_MENU_ITEMS_COUNT (sizeof(main_menu_items) / sizeof(MainMenuItem))
 #define NAV_MODE_COUNT (sizeof(nav_mode_names) / sizeof(nav_mode_names[0]))
 #define GPS_INS_PATH_MENU_COUNT (sizeof(gps_ins_path_menu) / sizeof(GPSINSPathMenuItem))
 #define Motor_MENU_ITEMS_COUNT (sizeof(motor_menu) / sizeof(MotorMenuItem))
+#define TEST_MODE_COUNT (sizeof(test_mode_names) / sizeof(test_mode_names[0]))
 
 // 定义菜单状态
 typedef enum
@@ -24,12 +24,15 @@ typedef enum
     MENU_Boundary,       // 边界显示状态
     MENU_PATH,           // 添加路径显示状态
     MENU_Direction,      // 方向向量采集状态
+    MENU_Voice_Led,      // 语音LED状态
+    MENU_TEST_MODE,      // 科目模式选择状态
 } MenuState;
 
 // 主菜单项定义
 typedef struct
 {
     const char *name;
+    uint8_t menu_index;
 } MainMenuItem;
 
 // 舵机菜单项定义
@@ -62,23 +65,97 @@ typedef struct
     float *num;
 } BoundaryMenuItem;
 
-// 主菜单项
-MainMenuItem main_menu_items[] = {
-    {"Calibrate Gyro"},
-    {"GPS Point"},
-    {"ENU Point"},
-    {"INS Point"},
-    {"GPS Path Setup"},
-    {"Speed Manage"},
-    {"GPS Info"},
-    {"Speed & IMU"},
-    {"Steer Control"},
-    {"Navigation Mode"},
-    {"S Point"},
-    {"Camera"},
-    {"Boundary"},
-    {"Path Display"},
-    {"Direction Vector"}  // 新增方向向量菜单项
+// 全部菜单项（NO_TEST模式）
+MainMenuItem all_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Steer Control", 9},
+    {"Navigation Mode", 10},
+    {"S Point", 11},
+    {"Camera", 12},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Voice LED", 16},
+    {"Test Mode", 17}
+};
+
+// TEST__1模式菜单项
+MainMenuItem test1_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
+};
+
+// TEST__2模式菜单项
+MainMenuItem test2_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"S Point", 11},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
+};
+
+// TEST__3模式菜单项
+MainMenuItem test3_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"Camera", 12},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
+};
+
+// TEST__4模式菜单项
+MainMenuItem test4_menu_items[] = {
+    {"Calibrate Gyro", 1},
+    {"Voice LED", 16},
+    {"GPS Point", 2},
+    {"ENU Point", 3},
+    {"INS Point", 4},
+    {"GPS Path Setup", 5},
+    {"Speed Manage", 6},
+    {"GPS Info", 7},
+    {"Speed & IMU", 8},
+    {"Navigation Mode", 10},
+    {"Camera", 12},
+    {"Boundary", 13},
+    {"Path Display", 14},
+    {"Direction Vector", 15},
+    {"Test Mode", 17}
 };
 
 // 路径设置菜单项
@@ -114,8 +191,10 @@ SteerMenuItem steer_menu = {
 MotorMenuItem motor_menu[] = {
     {"MAX_SPEED", &MAX_SPEED},
     {"MIN_SPEED", &MIN_SPEED},
-    {"APPROACH_SPEED", &APPROACH_SPEED},
     {"BRAKING_DISTANCE", &BRAKING_DISTANCE},
+    {"S_MAX_SPEED", &S_MAX_SPEED},
+    {"S_MIN_SPEED", &S_MIN_SPEED},
+    {"S_BRAKING_DISTANCE", &S_BRAKING_DISTANCE},
     {"S_Distance", &S_Distance},
     {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
     {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE}
@@ -129,6 +208,18 @@ const char *nav_mode_names[] = {
     "GPS-INS Navigation",
     "GPS-ENU-INS Navigation"};
 
+// 科目模式名称数组
+const char *test_mode_names[] = {
+    "No Test",
+    "Test 1",
+    "Test 2", 
+    "Test 3",
+    "Test 4"
+};
+
+// 当前使用的菜单项指针
+MainMenuItem *main_menu_items = all_menu_items;
+
 // 菜单全局变量
 static uint8_t current_item = 0;         // 当前选中的菜单项
 static MenuState menu_state = MENU_MAIN; // 当前菜单状态
@@ -138,6 +229,7 @@ static const uint8_t visible_items = 6;  // 一屏显示6个条目（16px/item�
 uint8_t Camera_Choose = 0;               // 摄像头选择
 static MenuState last_state = MENU_MAIN; // 记录上次菜单状态
 static uint8_t need_clear = 1;           // 清屏标志
+static uint8_t current_menu_count = 0;   // 当前菜单项数量
 
 static bool edit_coord = true;   // 编辑坐标选择，false=X坐标，true=Y坐标
 static float adjust_step = 0.1f; // 默认调整步长
@@ -150,6 +242,42 @@ static key_state_enum key2_state;
 static key_state_enum key3_state;
 static key_state_enum key4_state;
 static key_state_enum key5_state;
+
+// 根据科目模式更新菜单配置
+void Update_Menu_For_Test_Mode(void)
+{
+    switch(test_flag)
+    {
+        case NO_TEST:
+            main_menu_items = all_menu_items;
+            current_menu_count = sizeof(all_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__1:
+            main_menu_items = test1_menu_items;
+            current_menu_count = sizeof(test1_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__2:
+            main_menu_items = test2_menu_items;
+            current_menu_count = sizeof(test2_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__3:
+            main_menu_items = test3_menu_items;
+            current_menu_count = sizeof(test3_menu_items) / sizeof(MainMenuItem);
+            break;
+        case TEST__4:
+            main_menu_items = test4_menu_items;
+            current_menu_count = sizeof(test4_menu_items) / sizeof(MainMenuItem);
+            break;
+        default:
+            main_menu_items = all_menu_items;
+            current_menu_count = sizeof(all_menu_items) / sizeof(MainMenuItem);
+            break;
+    }
+    
+    // 重置菜单索引，防止越界
+    current_item = 0;
+    start_index = 0;
+}
 
 void Button_Init(void)
 {
@@ -235,8 +363,14 @@ void Display_Menu(void)
     case MENU_PATH:
         Display_Path();
         break;
-    case MENU_Direction:  // 新增方向向量显示
+    case MENU_Direction:
         Display_Direction();
+        break;
+    case MENU_Voice_Led:
+        Display_Voice_Led();
+        break;
+    case MENU_TEST_MODE:
+        Display_Test_Mode_Menu();
         break;
     }
 }
@@ -301,11 +435,17 @@ void Menu(void)
     case MENU_Boundary:
         Boundary_Menu_Key_Process();
         break;
-    case MENU_PATH: // 添加路径显示菜单按键处理
+    case MENU_PATH:
         Path_Menu_Key_Process();
         break;
-    case MENU_Direction:  // 新增方向向量按键处理
+    case MENU_Direction:
         Direction_Menu_Key_Process();
+        break;
+    case MENU_Voice_Led:
+        Voice_Led_Menu_Key_Process();
+        break;
+    case MENU_TEST_MODE:
+        Test_Mode_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -342,7 +482,7 @@ void Display_Main_Menu(void)
     for (uint8_t i = 0; i < visible_items; i++)
     {
         uint8_t item_num = start_index + i;
-        if (item_num >= MAIN_MENU_ITEMS_COUNT)
+        if (item_num >= current_menu_count)
             break;
 
         char buffer[32];
@@ -354,9 +494,9 @@ void Display_Main_Menu(void)
     // 底部提示信息
     char buffer[32];
     sprintf(buffer, "Page:%02d/%02d", start_index / visible_items + 1,
-            (MAIN_MENU_ITEMS_COUNT + visible_items - 1) / visible_items);
+            (current_menu_count + visible_items - 1) / visible_items);
     ips114_show_string(0, 112, buffer);
-    ips114_show_int(90, 112, Fire_Flag, 2);
+    ips114_show_int(200, 112, Fire_Flag, 2);
 }
 
 // 显示舵机调节界面
@@ -618,7 +758,7 @@ void Display_INS_Point(void)
         {
             if (SWITCH_1_STATUS == SWITCH_RIGHT)
             {
-                sprintf(buffer, "Idx:%02d K3:Mirror K4:Back", INS_Point_Index);
+                sprintf(buffer, "Idx:%02d K3:Mirror K5:Y0", INS_Point_Index);
             }
             else
             {
@@ -722,7 +862,14 @@ void Display_ENU_Point(void)
     }
     // 底部提示信息
     char buffer[32];
-    sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
+    if (SWITCH_1_STATUS == SWITCH_RIGHT)
+    {
+        sprintf(buffer, "Idx:%02d KEY3:Correct KEY5:2INS", GPS_Point_Index);
+    }
+    else
+    {
+        sprintf(buffer, "Idx:%02d KEY3:Save KEY4:Back", GPS_Point_Index);
+    }
     ips114_show_string(0, 112, buffer);
 }
 
@@ -862,13 +1009,91 @@ void Display_Direction(void)
     ips114_show_string(0, 112, buffer);
 }
 
+//语音识别
+void Display_Voice_Led(void)
+{
+    ips114_show_string(0, 0, "Voice Recognition");
+    
+    // 显示语音识别状态
+    ips114_show_string(0, 16, "Status:");
+    if (audio_start_flag)
+    {
+        ips114_show_string(50, 16, "Recording...");
+    }
+    else if (voice_recognition_flag)
+    {
+        ips114_show_string(50, 16, "Processing");
+    }
+    else
+    {
+        ips114_show_string(50, 16, "Ready");
+    }
+    
+    // 显示连接状态
+    ips114_show_string(0, 32, "Server:");
+    ips114_show_string(50, 32, audio_server_link_flag ? "Connected" : "Disconnected");
+    
+    // 显示语音命令执行状态
+    ips114_show_string(0, 48, "Command:");
+    ips114_show_string(50, 48, command_complete_flag ? "Ready" : "Executing");
+    
+    // 显示已识别命令数量
+    ips114_show_string(0, 64, "Commands:");
+    ips114_show_int(70, 64, command_buffer_index, 2);
+    
+    // 显示最大录音时间进度
+    if (audio_start_flag && asr_max_time > 0)
+    {
+        uint8_t progress = (uint8_t)((asr_max_time * 100) / (60 * 8000));
+        ips114_show_string(0, 80, "Progress:");
+        ips114_show_int(70, 80, progress, 3);
+        ips114_show_string(100, 80, "%");
+    }
+    
+    // 底部提示信息
+    if (audio_start_flag)
+    {
+        ips114_show_string(0, 96, "Recording... K3:Stop");
+        ips114_show_string(0, 112, "");
+    }
+    else
+    {
+        ips114_show_string(0, 96, "K1:Init K2:Clear K3:Start");
+        ips114_show_string(0, 112, "K4:Back K5:Execute");
+    }
+}
+
+void Display_Test_Mode_Menu(void)
+{
+    ips114_show_string(0, 0, "Select Test Mode");
+    
+    // 显示当前test_flag值
+    char buf[32];
+    sprintf(buf, "Current: %d", (uint8_t)test_flag);
+    ips114_show_string(120, 0, buf);
+
+    // 显示所有科目模式选项
+    for (uint8_t i = 0; i < TEST_MODE_COUNT; i++)
+    {
+        char buffer[32];
+        sprintf(buffer, "%s%s",
+                (i == (uint8_t)test_flag) ? "> " : "  ",
+                test_mode_names[i]);
+        ips114_show_string(0, 16 + i * 16, buffer);
+    }
+    
+    // 底部提示信息
+    ips114_show_string(0, 96, "KEY1:Up  KEY2:Down");
+    ips114_show_string(0, 112, "KEY3:Select  KEY4:Back");
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
     if (key1_state == KEY_SHORT_PRESS)
     {
         // 修改后的上键循环逻辑
-        current_item = (current_item == 0) ? (MAIN_MENU_ITEMS_COUNT - 1) : (current_item - 1);
+        current_item = (current_item == 0) ? (current_menu_count - 1) : (current_item - 1);
         // 更新显示起始索引
         if (current_item < start_index)
             start_index = (current_item / visible_items) * visible_items;
@@ -877,7 +1102,7 @@ void Main_Menu_Key_Process(void)
     if (key2_state == KEY_SHORT_PRESS)
     {
         // 修改后的下键循环逻辑
-        current_item = (current_item == MAIN_MENU_ITEMS_COUNT - 1) ? 0 : (current_item + 1);
+        current_item = (current_item == current_menu_count - 1) ? 0 : (current_item + 1);
         // 更新显示起始索引
         if (current_item >= start_index + visible_items || current_item < start_index)
             start_index = (current_item / visible_items) * visible_items;
@@ -885,66 +1110,76 @@ void Main_Menu_Key_Process(void)
     }
     if (key3_state == KEY_SHORT_PRESS)
     {
-        // 进入选中的子菜单
-        switch (current_item)
+        // 根据menu_index进入对应的子菜单
+        uint8_t menu_index = main_menu_items[current_item].menu_index;
+        switch (menu_index)
         {
-        case 0:
+        case 1:
             menu_state = MENU_Calibrate_Gyro;
             break;
-        case 1:
+        case 2:
             menu_state = MENU_GPS_Point;
             start_index = 0;
             break;
-        case 2:
+        case 3:
             menu_state = MENU_ENU_Point;
             start_index = 0;
             break;
-        case 3:
+        case 4:
             menu_state = MENU_INS_Point;
             start_index = 0;
             break;
-        case 4:
+        case 5:
             menu_state = MENU_GPS_PATH;
             break;
-        case 5:
+        case 6:
             menu_state = MENU_SPEED_MANAGE;
             current_item = 0;
             break;
-        case 6:
+        case 7:
             menu_state = MENU_GPS_INFO;
             break;
-        case 7:
+        case 8:
             menu_state = MENU_SPEED_IMU;
             break;
-        case 8:
+        case 9:
             menu_state = MENU_STEER;
             break;
-        case 9:
-            menu_state = MENU_NAV_MODE;
-            ;
-            break;
         case 10:
+            menu_state = MENU_NAV_MODE;
+            break;
+        case 11:
             menu_state = MENU_S_Point;
             start_index = 0;
             break;
-        case 11:
+        case 12:
             menu_state = MENU_Camera;
             break;
-        case 12:
+        case 13:
             menu_state = MENU_Boundary;
             current_item = 0;
             break;
-        case 13:
+        case 14:
             menu_state = MENU_PATH;
             break;
-        case 14:  // 新增方向向量菜单
+        case 15:
             menu_state = MENU_Direction;
+            break;
+        case 16:
+            menu_state = MENU_Voice_Led;
+            break;
+        case 17:
+            menu_state = MENU_TEST_MODE;
             break;
         }
         key_clear_state(KEY_3);
     }
     if (key5_state == KEY_SHORT_PRESS)
     {
+        if (Fire_Flag == 0)
+        {
+            system_delay_ms(2000);
+        }
         Fire_Flag = Fire_Flag ? 0 : 1;
         key_clear_state(KEY_5);
     }
@@ -1030,10 +1265,6 @@ void GPS_Point_Menu_Key_Process(void)
             if (GPS_Point_Index >= start_index + visible_items)
                 start_index = GPS_Point_Index - visible_items + 1;
         }
-        // GPS_Point_Index = (GPS_Point_Index + 1) % MAX_GPS_POINTS;
-        // // 滚动显示逻辑
-        // if(GPS_Point_Index >= start_index + visible_items || GPS_Point_Index < start_index)
-        //     start_index = (GPS_Point_Index / visible_items) * visible_items;
         key_clear_state(KEY_3);
     }
     if (key4_state == KEY_SHORT_PRESS)
@@ -1055,6 +1286,7 @@ void GPS_INS_Path_Menu_Key_Process(void)
             {
             case 0:
                 Start_GPS_Point = (Start_GPS_Point + 1) % MAX_GPS_POINTS;
+                Start_GPS_Point = Start_GPS_Point ? Start_GPS_Point : 1;        // 确保起始点不为0
                 break;
             case 1:
                 End_GPS_Point = (End_GPS_Point + 1) % MAX_GPS_POINTS;
@@ -1149,7 +1381,7 @@ void GPS_INS_Path_Menu_Key_Process(void)
         if (key4_state == KEY_SHORT_PRESS)
         {
             menu_state = MENU_MAIN;
-            Save_Basic_Data();
+            Save_Test_Data();
             key_clear_state(KEY_4);
         }
     }
@@ -1211,7 +1443,7 @@ void Speed_Manage_Menu_Key_Process(void)
         if (key4_state == KEY_SHORT_PRESS)
         {
             menu_state = MENU_MAIN;
-            Save_Basic_Data();
+            Save_Test_Data();
             key_clear_state(KEY_4);
         }
     }
@@ -1322,7 +1554,6 @@ void INS_Point_Menu_Key_Process(void)
                 // 当拨码开关4在右边时
                 if (SWITCH_1_STATUS == SWITCH_RIGHT)
                 {
-                    // 当拨码开关1也在右边时，生成镜像点位
                     Mirror_INS_Point_Generate();
                 }
                 else
@@ -1351,8 +1582,15 @@ void INS_Point_Menu_Key_Process(void)
 
         if (key5_state == KEY_SHORT_PRESS)
         {
+            if (SWITCH_4_STATUS == SWITCH_RIGHT && SWITCH_1_STATUS == SWITCH_RIGHT)
+            {
+                INS_Point_Y_Zero();
+            }
+            else
+            {
             ins_display_mode = ins_display_mode ? 0 : 1;  // 切换显示模式
             Vehicle_To_Navigation_INS();
+            }
             key_clear_state(KEY_5);
         }
     }
@@ -1491,19 +1729,24 @@ void ENU_Point_Menu_Key_Process(void)
     }
     if (key3_state == KEY_SHORT_PRESS)
     {
-        Save_GPS_Point();
-        // 保存后自动跳转到下一个点位并调整显示
-        if (GPS_Point_Index < MAX_GPS_POINTS - 1)
+        if (SWITCH_1_STATUS == SWITCH_RIGHT)
         {
-            GPS_Point_Index++; // 自动跳到下一个点位
-            // 滚动显示逻辑
-            if (GPS_Point_Index >= start_index + visible_items)
-                start_index = GPS_Point_Index - visible_items + 1;
+            // 当拨码开关1在右边时，执行GPS矫正功能
+            GPS_Drift_Correction();
         }
-        // GPS_Point_Index = (GPS_Point_Index + 1) % MAX_GPS_POINTS;
-        // // 滚动显示逻辑
-        // if(GPS_Point_Index >= start_index + visible_items || GPS_Point_Index < start_index)
-        //     start_index = (GPS_Point_Index / visible_items) * visible_items;
+        else
+        {
+            // 当拨码开关1在左边时，保存GPS点位
+            Save_GPS_Point();
+            // 保存后自动跳转到下一个点位并调整显示
+            if (GPS_Point_Index < MAX_GPS_POINTS - 1)
+            {
+                GPS_Point_Index++; // 自动跳到下一个点位
+                // 滚动显示逻辑
+                if (GPS_Point_Index >= start_index + visible_items)
+                    start_index = GPS_Point_Index - visible_items + 1;
+            }
+        }
         key_clear_state(KEY_3);
     }
     if (key4_state == KEY_SHORT_PRESS)
@@ -1511,9 +1754,18 @@ void ENU_Point_Menu_Key_Process(void)
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
     }
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        // 当SWITCH_1_STATUS == SWITCH_RIGHT时，执行ENU_To_INS_Points转换
+        if (SWITCH_1_STATUS == SWITCH_RIGHT)
+        {
+            ENU_To_INS_Points();
+        }
+        key_clear_state(KEY_5);
+    }
 }
 
-// 新增导航模式菜单按键处理函数
+// 导航模式菜单按键处理函数
 void Nav_Mode_Key_Process(void)
 {
     if (key1_state == KEY_SHORT_PRESS)
@@ -1539,7 +1791,7 @@ void Nav_Mode_Key_Process(void)
     if (key3_state == KEY_SHORT_PRESS)
     {
         menu_state = MENU_MAIN;
-        Save_Basic_Data();
+        Save_Test_Data();
         Calculate_Safety_Boundary(Navigation_Flag);
         key_clear_state(KEY_3);
     }
@@ -1618,7 +1870,7 @@ void Boundary_Menu_Key_Process(void)
     if (key4_state == KEY_SHORT_PRESS)
     {
         menu_state = MENU_MAIN;
-        Save_Basic_Data();
+        Save_Test_Data();
         key_clear_state(KEY_4);
     }
 }
@@ -1753,5 +2005,154 @@ void Direction_Menu_Key_Process(void)
         yaw_flag = !yaw_flag;
         Save_Basic_Data();
         key_clear_state(KEY_5);
+    }
+}
+
+//语音识别按键处理
+void Voice_Led_Menu_Key_Process(void)
+{
+    // 按键1：初始化语音识别系统
+    if (key1_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag && audio_get_count == -1)
+        {
+            audio_init(); // 重新初始化语音识别系统
+            // 清空命令数组
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
+        }
+        key_clear_state(KEY_1);
+    }
+    
+    // 按键2：清空已识别命令
+    if (key2_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag)
+        {
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    // 按键3：开始/停止语音识别 (替代原来的ASR_BUTTON)
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag && audio_get_count == -1)
+        {
+            // 开始录音 - 模拟原来的按键触发逻辑
+            audio_get_count = 0;
+            audio_server_link_flag = 0;
+            audio_start_flag = 1;
+            asr_max_time = 0;
+            
+            // 清空之前的命令
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
+            
+            printf("手动开始语音识别...\r\n");
+        }
+        else if (audio_start_flag && audio_server_link_flag)
+        {
+            // 停止录音 - 模拟原来的按键释放逻辑
+            audio_start_flag = 0;
+            audio_get_count = 0;
+            audio_send_data_flag = 0;
+            audio_need_net_flag = 1;
+            
+            printf("手动停止语音识别...\r\n");
+        }
+        key_clear_state(KEY_3);
+    }
+    
+    // 按键4：返回主菜单
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag) // 只有在非录音状态下才能返回
+        {
+            menu_state = MENU_MAIN;
+            dot_matrix_screen_set_brightness(0);
+        }
+        key_clear_state(KEY_4);
+    }
+    
+    // 按键5：执行已识别的语音命令
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        if (!audio_start_flag && voice_recognition_flag == 1 && command_buffer_index > 0)
+        {
+            // 调用命令执行函数
+            Execute_Complete_Command();
+            
+            // 执行完成后清空命令数组
+            command_buffer_index = 0;
+            memset(command_buffer, 0, sizeof(command_buffer));
+            voice_recognition_flag = 0;
+            command_complete_flag = 1;
+        }
+        key_clear_state(KEY_5);
+    }
+    
+    audio_loop();
+}
+
+
+void Test_Mode_Key_Process(void)
+{
+    if (key1_state == KEY_SHORT_PRESS)
+    {
+        // 向上选择
+        if ((uint8_t)test_flag > 0)
+        {
+            test_flag = (TestFlag)((uint8_t)test_flag - 1);
+        }
+        else
+        {
+            test_flag = (TestFlag)(TEST_MODE_COUNT - 1); // 循环到最后一个
+        }
+        key_clear_state(KEY_1);
+    }
+    
+    if (key2_state == KEY_SHORT_PRESS)
+    {
+        // 向下选择
+        if ((uint8_t)test_flag < TEST_MODE_COUNT - 1)
+        {
+            test_flag = (TestFlag)((uint8_t)test_flag + 1);
+        }
+        else
+        {
+            test_flag = NO_TEST; // 循环到第一个
+        }
+        key_clear_state(KEY_2);
+    }
+    
+    if (key3_state == KEY_SHORT_PRESS)
+    {
+        // 确认选择并保存
+        Save_Basic_Data(); // 保存test_flag到Flash
+        
+        // 显示切换成功信息
+        char success_msg[32];
+        sprintf(success_msg, "Switched to %s", test_mode_names[(uint8_t)test_flag]);
+        ips114_show_string(50, 80, success_msg);
+        ips114_show_string(50, 96, "Please Press Reset");
+        system_delay_ms(1500);
+        
+        // 返回主菜单
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_3);
+    }
+    
+    if (key4_state == KEY_SHORT_PRESS)
+    {
+        menu_state = MENU_MAIN;
+        key_clear_state(KEY_4);
     }
 }
