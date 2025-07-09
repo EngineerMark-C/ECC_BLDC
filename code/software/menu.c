@@ -192,6 +192,9 @@ MotorMenuItem motor_menu[] = {
     {"MAX_SPEED", &MAX_SPEED},
     {"MIN_SPEED", &MIN_SPEED},
     {"BRAKING_DISTANCE", &BRAKING_DISTANCE},
+    {"S_MAX_SPEED", &S_MAX_SPEED},
+    {"S_MIN_SPEED", &S_MIN_SPEED},
+    {"S_BRAKING_DISTANCE", &S_BRAKING_DISTANCE},
     {"S_Distance", &S_Distance},
     {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
     {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE}
@@ -1010,7 +1013,6 @@ void Display_Direction(void)
 void Display_Voice_Led(void)
 {
     ips114_show_string(0, 0, "Voice Recognition");
-    ips114_show_float(200, 0, adjust_step, 2, 1);
     
     // 显示语音识别状态
     ips114_show_string(0, 16, "Status:");
@@ -2009,8 +2011,6 @@ void Direction_Menu_Key_Process(void)
 //语音识别按键处理
 void Voice_Led_Menu_Key_Process(void)
 {
-    Update_Adjust_Step();
-    
     // 按键1：初始化语音识别系统
     if (key1_state == KEY_SHORT_PRESS)
     {

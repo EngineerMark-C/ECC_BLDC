@@ -715,6 +715,9 @@ void Basic_Data_Init(void)
 //                     | 17  | float      | MAX_SPEED           |
 //                     | 18  | float      | MIN_SPEED           |
 //                     | 19  | float      | BRAKING_DISTANCE    |
+//                     | 20  | float      | S_MAX_SPEED         |
+//                     | 21  | float      | S_MIN_SPEED         |
+//                     | 22  | float      | S_BRAKING_DISTANCE  |
 
 
 // 保存科目数据
@@ -768,6 +771,9 @@ void Save_Test_Data(void)
     flash_union_buffer[offset + 17].float_type = MAX_SPEED;
     flash_union_buffer[offset + 18].float_type = MIN_SPEED;
     flash_union_buffer[offset + 19].float_type = BRAKING_DISTANCE;
+    flash_union_buffer[offset + 20].float_type = S_MAX_SPEED;
+    flash_union_buffer[offset + 21].float_type = S_MIN_SPEED;
+    flash_union_buffer[offset + 22].float_type = S_BRAKING_DISTANCE;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
@@ -825,6 +831,9 @@ void Test_Data_Init(void)
     MAX_SPEED = flash_union_buffer[offset + 17].float_type;
     MIN_SPEED = flash_union_buffer[offset + 18].float_type;
     BRAKING_DISTANCE = flash_union_buffer[offset + 19].float_type;
+    S_MAX_SPEED = flash_union_buffer[offset + 20].float_type;
+    S_MIN_SPEED = flash_union_buffer[offset + 21].float_type;
+    S_BRAKING_DISTANCE = flash_union_buffer[offset + 22].float_type;
 
     // 第一次烧录确保过初始化赋初值
     // Start_GPS_Point = 1;

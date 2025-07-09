@@ -8,13 +8,16 @@ extern float target_angle;
 extern float MAX_SPEED;
 extern float MIN_SPEED;
 extern float BRAKING_DISTANCE;
-extern float GPS_SWITCH_DISTANCE;                                                // GPS 切换距离
-extern float INS_SWITCH_DISTANCE;                                                // INS 切换距离
+extern float S_MAX_SPEED;
+extern float S_MIN_SPEED;
+extern float S_BRAKING_DISTANCE;
+extern float GPS_SWITCH_DISTANCE;                                               // GPS 切换距离
+extern float INS_SWITCH_DISTANCE;                                               // INS 切换距离
 
 //************************************** 点位数据 *******************************************//
 extern double GPS_Point[MAX_GPS_POINTS][2];                                     // GPS 数据
 extern float INS_Point[MAX_INS_POINTS][2];                                      // INS 点位
-extern float GPS_ENU[MAX_GPS_POINTS][2];                                        // ENU点位
+extern float GPS_ENU[MAX_GPS_POINTS][2];                                        // ENU 点位
 extern float S_Point[MAX_INS_POINTS][2];                                        // S 型走位点位
 extern float S_Point_Navigation_Frame[MAX_INS_POINTS][2];                       // S 型走位点导航坐标系
 extern float INS_Point_Navigation_Frame[MAX_INS_POINTS][2];                     // INS 点位 导航坐标系
@@ -25,9 +28,9 @@ extern uint8_t Start_GPS_Point;
 extern uint8_t End_GPS_Point;
 extern uint8_t NOW_GPS_Point;
 
-extern double Direction_Point[2][2];                                          // 两个发车方向GPS点
-extern float Start_Direction;                                                  // 发车方向角度
-extern uint8_t Direction_Point_Index;                                          // 发车方向点索引
+extern double Direction_Point[2][2];                                            // 两个发车方向GPS点
+extern float Start_Direction;                                                   // 发车方向角度
+extern uint8_t Direction_Point_Index;                                           // 发车方向点索引
 
 //************************************* INS 点位处理******************************************//
 extern uint8_t INS_Point_Index;                                                 // INS 数据索引
@@ -38,12 +41,12 @@ extern uint8_t NOW_INS_Point;
 
 //************************************* S型 点位处理******************************************//
 extern float S_Distance;
-extern uint8_t S_Point_Index;                                                  // S 型走位数据索引
+extern uint8_t S_Point_Index;                                                   // S 型走位数据索引
 extern uint8_t Start_S_Point;
 extern uint8_t End_S_Point;
 extern uint8_t NOW_S_Point;
 
-extern float next_target_angle;                                                // 下一个目标角度
+extern float next_target_angle;                                                 // 下一个目标角度
 
 extern uint8_t GPS_TO_INS_Point;                                                // 切换导航点位
 

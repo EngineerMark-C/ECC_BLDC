@@ -8,6 +8,10 @@ float MIN_SPEED;                                                                
 float BRAKING_DISTANCE;                                                         // 开始减速距离
 float Brake_Threshold = 6.0f;                                                   // 刹车阈值
 
+float S_MAX_SPEED;                                                              // S 型走位最大速度
+float S_MIN_SPEED;                                                              // S 型走位最小速度
+float S_BRAKING_DISTANCE;                                                       // S 型走位制动距离
+
 float GPS_SWITCH_DISTANCE;                                                      // GPS 切换距离
 float INS_SWITCH_DISTANCE;                                                      // INS 切换距离
 
@@ -42,7 +46,6 @@ uint8_t NOW_S_Point;                                                            
 
 float next_target_angle = 0.0f;                                                 // 下一个目标角度
 
-float next_s_angle = 0.0f;                                                      // 下一个S型走位角度
 float now_s_distance = 0.0f;                                                    // 当前S型走位距离
 
 uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
@@ -77,6 +80,28 @@ void Speed_Management(float distance)
 
         // 确保不低于最小速度
         current_target_speed = fmaxf(current_target_speed, MIN_SPEED);
+    }
+    target_speed = current_target_speed;
+}
+
+// S 型走位速度管理函数
+void Speed_Management_For_S(float distance)
+{
+    float current_target_speed;
+
+    // 动态速度曲线：距离越近速度越慢
+    if(distance > S_BRAKING_DISTANCE)
+    {
+        current_target_speed = S_MAX_SPEED;
+    } 
+    else 
+    {
+        // 线性减速区间
+        // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
+        current_target_speed = S_MIN_SPEED + (S_MAX_SPEED - S_MIN_SPEED) * (distance / S_BRAKING_DISTANCE) * 0.6f;
+
+        // 确保不低于最小速度
+        current_target_speed = fmaxf(current_target_speed, S_MIN_SPEED);
     }
     target_speed = current_target_speed;
 }
@@ -422,49 +447,53 @@ void INS_Point_Y_Zero(void)
     }
 }
 
-//S 型走位导航
-//void S_Point_to_Point(uint8_t i)
-//{
-//    // 使用平面坐标系计算（单位：米）
-//    float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
-//    float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
-//
-//    // 计算到当前目标点的角度
-//    float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
-//    current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
-//
-//    // 计算欧几里得距离
-//    float distance = sqrtf(dx*dx + dy*dy);
-//    // 如果不是最后一个点，则进行角度混合
-//    if (i < End_S_Point)
-//    {
-//        Caculate_Next_S_Point_Angle(i);
-//        // Caculate_Now_S_Point_Distance(i);
-//
-//        // 根据距离计算权重，距离越近，下一个点的角度权重越大
-//        float weight = 1.0f - (distance / now_s_distance);
-//        weight = fmaxf(0.0f, fminf(1.0f, weight));  // 限制在 0-1 范围内
-//
-//        float angle_diff = next_target_angle - current_angle;
-//
-//        // 混合角度
-//        target_angle = current_angle + angle_diff * weight;
-//
-//        // 确保角度在 0-360 范围内
-//        if (target_angle < 0) target_angle += 360.0f;
-//        if (target_angle >= 360.0f) target_angle -= 360.0f;
-//    }
-//    else
-//    {
-//        target_angle = current_angle;
-//    }
-//    Speed_Management(distance);
-//
-//    if (distance < INS_SWITCH_DISTANCE)
-//    {
-//        reach_flag = 1;
-//    }
-//}
+// void S_Point_to_Point(uint8_t i)
+// {
+//     // 使用平面坐标系计算（单位：米）
+//     float dx = S_Point_Navigation_Frame[NOW_S_Point][0] - position[0];
+//     float dy = S_Point_Navigation_Frame[NOW_S_Point][1] - position[1];
+
+//     // 计算到当前目标点的角度
+//     float current_angle = RAD_TO_ANGLE(atan2f(dy, dx));
+//     current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
+    
+//     // 计算欧几里得距离
+//     float distance = sqrtf(dx*dx + dy*dy);
+    
+//     // 如果不是最后一个点，则进行角度混合
+//     if (i < End_S_Point) 
+//     {
+//         Caculate_Next_S_Point_Angle(i);
+//         Caculate_Now_S_Point_Distance(i);
+//         // 根据距离计算权重，距离越近，下一个点的角度权重越大
+//         float weight = 1.0f - (distance / now_s_distance);
+//         weight = fmaxf(0.0f, fminf(1.0f, weight));  // 限制在 0-1 范围内
+        
+//         float angle_diff = next_target_angle - current_angle;
+        
+//         // 混合角度
+//         current_angle = current_angle + angle_diff * weight;
+        
+//         // 确保角度在 0-360 范围内
+//         if (current_angle < 0) current_angle += 360.0f;
+//         if (current_angle >= 360.0f) current_angle -= 360.0f;
+//     }
+//     else 
+//     {
+//         // 最后一个点，直接使用当前目标点角度
+//         current_angle = current_angle;
+//     }
+
+//     if (reach_flag != 1)
+//     {
+//         target_angle = current_angle;
+//         Speed_Management(distance);
+//     }
+//     if (distance < INS_SWITCH_DISTANCE)
+//     {
+//         reach_flag = 1;
+//     }
+// }
 
 void S_Point_to_Point(uint8_t i)
 {
@@ -477,9 +506,9 @@ void S_Point_to_Point(uint8_t i)
     current_angle = current_angle < 0 ? current_angle + 360 : current_angle;
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
-    if (i < End_INS_Point) 
+    if (i < End_S_Point) 
     {
-        Caculate_Next_INS_Point_Angle(i);
+        Caculate_Next_S_Point_Angle(i);
     }
     if (reach_flag != 1)
     {
@@ -506,7 +535,6 @@ void INS_Point_to_Point(uint8_t i)
     {
         Caculate_Next_INS_Point_Angle(i);
     }
-
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
     if (reach_flag != 1)
