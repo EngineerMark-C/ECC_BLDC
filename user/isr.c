@@ -43,15 +43,15 @@
 // **************************** PIT中断函数 ****************************
 IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 {
-    interrupt_global_enable(0);                                     // 开启中断嵌套
+    interrupt_global_enable(0);                                                 // 开启中断嵌套
     pit_clear_flag(CCU60_CH0);
-    encoder_data_dir = encoder_get_count(ENCODER_DIR);              // 获取编码器计数
+    encoder_data_dir = encoder_get_count(ENCODER_DIR);                          // 获取编码器计数
     encoder_clear_count(ENCODER_DIR);
-    Encoder_get_speed();                                            // 计算速度
+    Encoder_get_speed();                                                        // 计算速度
 
-    if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
+    if (SWITCH_4_STATUS == SWITCH_LEFT)                                         // 如果拨码开关4拨向左侧
     {
-        Update_Speed_PID_Params(target_speed);                          // 更新 PID 参数
+        Update_Speed_PID_Params(target_speed);                                  // 更新 PID 参数
         Motor_PID_Control(target_speed);                                // 电机 PID 控制
     }
     timer_10ms_flag = 1; // 设置定时器标志位，10ms 定时器中断
@@ -60,17 +60,17 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 
 IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
 {
-    interrupt_global_enable(0);                                     // 开启中断嵌套
+    interrupt_global_enable(0);                                                 // 开启中断嵌套
     pit_clear_flag(CCU60_CH1);
-    Imu_get_data();                                                 // 获取 IMU963RA 数据
-    Imu_Update();                                                   // 四元数解算
-    Update_Position_Encoder();                                      // 更新位置
+    Imu_get_data();                                                             // 获取 IMU963RA 数据
+    Imu_Update();                                                               // 四元数解算
+    Update_Position_Encoder();                                                  // 更新位置
 
-    if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
+    if (SWITCH_4_STATUS == SWITCH_LEFT)                                         // 如果拨码开关4拨向左侧
     {
-        Update_Steer_PID_Params(speed);                                // 更新舵机 PID 参数
+        Update_Steer_PID_Params(speed);                                         // 更新舵机 PID 参数
 
-        Steer_PID_Control(target_angle);                                // 舵机 PID 控制
+        Steer_PID_Control(target_angle);                                        // 舵机 PID 控制
     }
     angle_flag = (fabs(next_target_angle - yaw) < 24.0f) ? 1 : 0;
     // if (fabs(next_target_angle -yaw) < 25.0f)
@@ -87,11 +87,16 @@ IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
 {
     interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU61_CH0);
-    Get_Now_Location();                                             // 获取当前位置
+    //Get_Now_Location();                                             // 获取当前位置
+    // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
     if (test_flag != TEST__4)
     {
         Navigation_Mode_Switch();                                   // 导航模式切换
     }
+    // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
+    // uint32 time = end_time - start_time;
+    // float time_us = (float)time / 100.0f;
+    // printf("所需时间: %.2f us\n", time_us);
 }
 
 IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)

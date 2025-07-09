@@ -99,7 +99,7 @@ void Speed_Management_For_S(float distance)
         // 线性减速区间
         // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
         current_target_speed = S_MIN_SPEED + (S_MAX_SPEED - S_MIN_SPEED) * (distance / S_BRAKING_DISTANCE) * 0.6f;
-
+        // current_target_speed = S_MIN_SPEED + (S_MAX_SPEED - S_MIN_SPEED) * (distance / (S_BRAKING_DISTANCE - INS_SWITCH_DISTANCE)) * 0.6f;
         // 确保不低于最小速度
         current_target_speed = fmaxf(current_target_speed, S_MIN_SPEED);
     }
@@ -513,7 +513,14 @@ void S_Point_to_Point(uint8_t i)
     if (reach_flag != 1)
     {
         target_angle = current_angle;
-        Speed_Management(distance);
+        if ( i == Start_S_Point || i == Back_INS_Point || i == Back_INS_Point+1 || i == End_S_Point)   // Back_INS_Point- 1 ? End_S_Point
+        {
+            Speed_Management(distance);
+        }
+        else
+        {
+            Speed_Management_For_S(distance);
+        }
     }
     if (distance < INS_SWITCH_DISTANCE)
     {

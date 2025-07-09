@@ -1,6 +1,6 @@
 #include "init.h"
 
-uint8_t Camera_Threshold = 128;                                          // 默认二值化阈值为128
+uint8_t Camera_Threshold;                                          // 默认二值化阈值为128
 // uint8_t BinarizedImage[MT9V03X_H][MT9V03X_W];                           // 二值化后的图像数组
 // int16_t WhiteRegionCenter = 0;                                           // 白色区域中心位置
 // int16_t LastValidCenter = MT9V03X_W / 2;                                // 上一次有效的中心位置
