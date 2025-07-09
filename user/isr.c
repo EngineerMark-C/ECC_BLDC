@@ -69,17 +69,18 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
     if (SWITCH_4_STATUS == SWITCH_LEFT)            // 如果拨码开关4拨向左侧
     {
         Update_Steer_PID_Params(speed);                                // 更新舵机 PID 参数
+
         Steer_PID_Control(target_angle);                                // 舵机 PID 控制
     }
-
-    if (fabs(next_target_angle -yaw) < 25.0f)
-    {
-        angle_flag = 1;
-    }
-    else
-    {
-        angle_flag = 0;
-    }
+    angle_flag = (fabs(next_target_angle - yaw) < 24.0f) ? 1 : 0;
+    // if (fabs(next_target_angle -yaw) < 25.0f)
+    // {
+    //     angle_flag = 1;
+    // }
+    // else
+    // {
+    //     angle_flag = 0;
+    // }
 }
 
 IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
@@ -87,7 +88,10 @@ IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
     interrupt_global_enable(0);                                     // 开启中断嵌套
     pit_clear_flag(CCU61_CH0);
     Get_Now_Location();                                             // 获取当前位置
-    Navigation_Mode_Switch();                                       // 导航模式切换
+    if (test_flag != TEST__4)
+    {
+        Navigation_Mode_Switch();                                   // 导航模式切换
+    }
 }
 
 IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)
@@ -114,7 +118,6 @@ IFX_INTERRUPT(exti_ch0_ch4_isr, 0, EXTI_CH0_CH4_INT_PRIO)
         exti_flag_clear(ERU_CH4_REQ13_P15_5);
 
         dot_matrix_screen_scan();
-
 
     }
 }

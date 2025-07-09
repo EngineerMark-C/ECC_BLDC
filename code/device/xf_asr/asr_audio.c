@@ -113,7 +113,7 @@ void extract_content_fields(const char* input)
                     strcat(result, words[i]);
                 }
                 printf("识别结果: %s\n", result);
-                recognize_command(result);  // 调用 recognize_command 函数处理命令
+                Recognize_Voice_Command(result);  // 调用 Recognize_Voice_Command 函数处理命令
                 instruction_start = word_count;
             }
         }
@@ -136,7 +136,7 @@ void extract_content_fields(const char* input)
             strcat(result, words[i]);
         }
         printf("最后一个result = %s\n", result);
-        recognize_command(result);  // 调用 recognize_command 函数处理命令
+        Recognize_Voice_Command(result);  // 调用 Recognize_Voice_Command 函数处理命令
     }
     // 清空words数组
     //memset(words, 0, sizeof(words[0][0]) * MAX_WORDS * MAX_WORD_LENGTH);
@@ -329,7 +329,7 @@ void audio_loop()
         }
         pit_enable(ASR_PIT);
         printf("\r\n语音识别完成，可再次按下按键开始识别\r\n");
-        voice_flag = 1;
+        voice_recognition_flag = 1;
         audio_get_count = -1;
         audio_need_net_flag = 0;
     }

@@ -549,10 +549,10 @@ void Boot_Animation(void)
     // 显示图像
     show_boot_animation(CENTER_X, CENTER_Y);
     
-    // 显示欢迎文字
-    ips114_show_string(CENTER_X , CENTER_Y + IMAGE_HEIGHT + 10, "Welcome!");
-    // 延时等待
-    system_delay_ms(500);
+    // // 显示欢迎文字
+    // ips114_show_string(CENTER_X , CENTER_Y + IMAGE_HEIGHT + 10, "Welcome!");
+    // // 延时等待
+    // system_delay_ms(500);
 
-    ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
+    // ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 16);
 }
