@@ -15,8 +15,9 @@ typedef union {
 // 3. 初始化 GPS 点位
 // 4. 初始化 ENU 点位
 // 5. 初始化 INS 点位
-// 6. 初始化 S 型走位点
-// 7. 初始化发车方向
+// 6. 初始化 test3元素数据
+// 7. 初始化 S 型走位点
+// 8. 初始化 发车方向
 
 void Flash_Init(void)
 {
@@ -26,6 +27,7 @@ void Flash_Init(void)
     GPS_Points_Init();
     WGS84_to_ENU_Init();
     INS_Points_Init();
+    Test3Element_Init();
     S_Point_Init();
     ips114_show_string(CENTER_X , CENTER_Y + IMAGE_HEIGHT + 10, "Welcome!");
 
@@ -622,7 +624,58 @@ void S_Point_Init(void)
         }
         Vehicle_To_Navigation_S();
         ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "S Points Loaded.");
-        system_delay_ms(1000);  // 显示1秒
+        system_delay_ms(500);  // 显示0.5秒
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 26);
+    }
+}
+
+//************************************Test3Element数据处理****************************************//
+//                     | 索引 | 数据类型    | 说明                           |
+//                     |------|-----------|-------------------------------|
+//                     | 0    | uint8     | Test3Element[0].Point_Index   |   坡道
+//                     | 1    | float     | Test3Element[0].Through_Speed |   坡道
+//                     | 2    | uint8     | Test3Element[1].Point_Index   |   草地
+//                     | 3    | float     | Test3Element[1].Through_Speed |   草地
+//                     | 4    | uint8     | Test3Element[2].Point_Index   |   颠簸
+//                     | 5    | float     | Test3Element[2].Through_Speed |   颠簸
+//                     | 6    | uint8     | Test3Element[3].Point_Index   |   狭路
+//                     | 7    | float     | Test3Element[3].Through_Speed |   狭路
+
+// 保存 Test3Element 数据
+void Save_Test3Element(void)
+{
+    flash_buffer_clear();
+    
+    // 写入Test3Element数据
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        flash_union_buffer[i * TEST3_ELEMENT_SIZE].uint8_type = Test3Element[i].Point_Index;
+        flash_union_buffer[i * TEST3_ELEMENT_SIZE + 1].float_type = Test3Element[i].Through_Speed;
+    }
+    
+    // 擦除并写入Flash
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_TEST_DATA_INDEX);
+    flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_TEST_DATA_INDEX);
+    ips114_show_string(60, CENTER_Y, "Element Saved.");
+    system_delay_ms(500);
+}
+
+// 上电初始化时调用
+void Test3Element_Init(void)
+{
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading Element...");
+
+    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_TEST_DATA_INDEX);
+
+    if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
+    {
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            Test3Element[i].Point_Index = flash_union_buffer[i * TEST3_ELEMENT_SIZE].uint8_type;
+            Test3Element[i].Through_Speed = flash_union_buffer[i * TEST3_ELEMENT_SIZE + 1].float_type;
+        }
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Element Loaded.");
+        system_delay_ms(500);  // 显示0.5秒
         ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 26);
     }
 }

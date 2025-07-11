@@ -4,6 +4,8 @@
 #define GPS_INS_PATH_MENU_COUNT (sizeof(gps_ins_path_menu) / sizeof(GPSINSPathMenuItem))
 #define Motor_MENU_ITEMS_COUNT (sizeof(motor_menu) / sizeof(MotorMenuItem))
 #define TEST_MODE_COUNT (sizeof(test_mode_names) / sizeof(test_mode_names[0]))
+#define TEST3_MENU_ITEMS_COUNT (sizeof(test3_menu) / sizeof(Test3MenuItem))
+
 
 // 定义菜单状态
 typedef enum
@@ -26,6 +28,7 @@ typedef enum
     MENU_Direction,      // 方向向量采集状态
     MENU_Voice_Led,      // 语音LED状态
     MENU_TEST_MODE,      // 科目模式选择状态
+    MENU_TEST3_Element,  // 科目三元素数据编辑状态
 } MenuState;
 
 // 主菜单项定义
@@ -59,11 +62,20 @@ typedef struct
     uint8_t *num;
 } GPSINSPathMenuItem;
 
+// 边界编辑菜单项定义
 typedef struct
 {
     const char *name;
     float *num;
 } BoundaryMenuItem;
+
+// 科目三菜单项定义
+typedef struct
+{
+    const char *name;
+    uint8_t *index;
+    float *speed;
+} Test3MenuItem;
 
 // 全部菜单项（NO_TEST模式）
 MainMenuItem all_menu_items[] = {
@@ -128,6 +140,7 @@ MainMenuItem test3_menu_items[] = {
     {"ENU Point", 3},
     {"INS Point", 4},
     {"GPS Path Setup", 5},
+    {"Test3 Element", 18},
     {"Speed Manage", 6},
     {"GPS Info", 7},
     {"Speed & IMU", 8},
@@ -206,7 +219,16 @@ const char *nav_mode_names[] = {
     "GPS-ENU Navigation",
     "INS Navigation",
     "GPS-INS Navigation",
-    "GPS-ENU-INS Navigation"};
+    "GPS-ENU-INS Navigation"
+};
+
+// 科目三元素数据
+Test3MenuItem test3_menu[] = {
+    {"Ramp Point", &Test3Element[0].Point_Index, &Test3Element[0].Through_Speed},
+    {"Grass Point", &Test3Element[1].Point_Index, &Test3Element[1].Through_Speed},
+    {"Bump Point", &Test3Element[2].Point_Index, &Test3Element[2].Through_Speed},
+    {"Narrow Point", &Test3Element[3].Point_Index, &Test3Element[3].Through_Speed}
+};
 
 // 科目模式名称数组
 const char *test_mode_names[] = {
@@ -372,6 +394,9 @@ void Display_Menu(void)
     case MENU_TEST_MODE:
         Display_Test_Mode_Menu();
         break;
+    case MENU_TEST3_Element:
+        Display_Test3_Element_Menu();
+        break;
     }
 }
 
@@ -446,6 +471,9 @@ void Menu(void)
         break;
     case MENU_TEST_MODE:
         Test_Mode_Key_Process();
+        break;
+    case MENU_TEST3_Element:
+        Test3_Element_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -1087,6 +1115,41 @@ void Display_Test_Mode_Menu(void)
     ips114_show_string(0, 112, "KEY3:Select  KEY4:Back");
 }
 
+void Display_Test3_Element_Menu(void)
+{
+    ips114_show_string(0, 0, "Test3 Element");
+    ips114_show_float(200, 0, adjust_step, 2, 1);
+    
+    // 显示当前可见范围的菜单项（Y轴间隔16像素）
+    for (uint8_t i = 0; i < visible_items && i < TEST3_MENU_ITEMS_COUNT; i++)
+    {
+        uint8_t item_num = start_index + i;
+        if (item_num >= TEST3_MENU_ITEMS_COUNT)
+            break;
+
+        char buffer[32];
+        sprintf(buffer, "%s%s: %d, Speed: %.1f",
+                (item_num == current_item) ? "> " : "  ",
+                test3_menu[item_num].name,
+                *test3_menu[item_num].index,
+                *test3_menu[item_num].speed);
+        ips114_show_string(0, 16 + i * 16, buffer);
+    }
+    
+    // 底部提示信息
+    if (edit_mode)
+    {
+        ips114_show_string(0, 96, "K1:+ K2:- K3:Switch K4:Exit");
+        char edit_info[32];
+        sprintf(edit_info, "Editing: %s", edit_coord ? "Index" : "Speed");
+        ips114_show_string(0, 112, edit_info);
+    }
+    else
+    {
+        ips114_show_string(0, 112, "K1:+ K2:- K3:Edit K4:Exit");
+    }
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -1170,6 +1233,10 @@ void Main_Menu_Key_Process(void)
             break;
         case 17:
             menu_state = MENU_TEST_MODE;
+            break;
+        case 18:
+            menu_state = MENU_TEST3_Element;
+            current_item = 0;
             break;
         }
         key_clear_state(KEY_3);
@@ -2154,5 +2221,93 @@ void Test_Mode_Key_Process(void)
     {
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
+    }
+}
+
+void Test3_Element_Menu_Key_Process(void)
+{
+    Update_Adjust_Step();
+
+    if (edit_mode)
+    {
+        // 编辑模式处理
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (!edit_coord)
+            {
+                *test3_menu[current_item].speed += adjust_step;
+            }
+            else
+            {
+                *test3_menu[current_item].index += adjust_step;
+            }
+            key_clear_state(KEY_1);
+        }
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (!edit_coord)
+            {
+                *test3_menu[current_item].speed -= adjust_step;
+            }
+            else
+            {
+                *test3_menu[current_item].index -= adjust_step;
+            }
+            key_clear_state(KEY_2);
+        }
+        if (key3_state == KEY_SHORT_PRESS)
+        {
+            // 切换编辑项目
+            edit_coord = !edit_coord;
+            key_clear_state(KEY_3);
+        }
+        
+        if (key4_state == KEY_SHORT_PRESS)
+        {
+            // 退出编辑模式
+            edit_mode = false;
+            key_clear_state(KEY_4);
+        }
+    }
+    else
+    {
+        // 非编辑模式处理
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (current_item > 0)
+            {
+                current_item--;
+                if (current_item < start_index)
+                    start_index = current_item;
+            }
+            key_clear_state(KEY_1);
+        }
+        
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (current_item < TEST3_MENU_ITEMS_COUNT - 1)
+            {
+                current_item++;
+                if (current_item >= start_index + visible_items)
+                    start_index = current_item - visible_items + 1;
+            }
+            key_clear_state(KEY_2);
+        }
+        
+        if (key3_state == KEY_SHORT_PRESS)
+        {
+            // 进入编辑模式
+            edit_mode = true;
+            edit_coord = false; // 默认先编辑Point_Index
+            key_clear_state(KEY_3);
+        }
+        
+        if (key4_state == KEY_SHORT_PRESS)
+        {
+            // 返回主菜单
+            Save_Test3Element();
+            menu_state = MENU_MAIN;
+            key_clear_state(KEY_4);
+        }
     }
 }
