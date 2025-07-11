@@ -12,6 +12,7 @@
         "zf_common_headfile.h": "c",
         "zf_device_dot_matrix_screen.h": "c",
         "zf_device_tld7002.h": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "zf_device_ips114.h": "c"
     }
 }

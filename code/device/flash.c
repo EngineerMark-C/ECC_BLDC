@@ -692,6 +692,7 @@ void Test3Element_Init(void)
 //                     | 6    | float     | acc_bias[0]         |
 //                     | 7    | float     | acc_bias[1]         |
 //                     | 8    | float     | acc_bias[2]         |
+//                     | 9    | uint8     | Camera_Exposure     |
 
 // 保存基础数据
 void Save_Basic_Data(void)
@@ -706,6 +707,7 @@ void Save_Basic_Data(void)
     flash_union_buffer[6].float_type = acc_bias[0];
     flash_union_buffer[7].float_type = acc_bias[1];
     flash_union_buffer[8].float_type = acc_bias[2];
+    flash_union_buffer[9].uint8_type = Camera_Exposure;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
@@ -728,6 +730,7 @@ void Basic_Data_Init(void)
     acc_bias[0] = flash_union_buffer[6].float_type;
     acc_bias[1] = flash_union_buffer[7].float_type;
     acc_bias[2] = flash_union_buffer[8].float_type;
+    Camera_Exposure = flash_union_buffer[9].uint8_type;
 
     // 第一次烧录确保初始化赋初值
     // test_flag = 3;
@@ -739,6 +742,7 @@ void Basic_Data_Init(void)
     // acc_bias[0] = 0.0f;
     // acc_bias[1] = 0.0f;
     // acc_bias[2] = 0.0f;
+    // Camera_Exposure = 64;
 
     ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Basic Data Loaded.");
     system_delay_ms(500);

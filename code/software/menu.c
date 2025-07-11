@@ -935,16 +935,58 @@ void Display_Camera(void)
         }
         else if (Camera_Choose == 1)
         {
-            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 188, 120, Camera_Threshold); // 显示二值化图像
+            // ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 188, 120, Camera_Threshold); // 显示二值化图像
+            Camera_Show_Line_Detection(0, 0, MT9V03X_W, MT9V03X_H, Camera_Threshold);
         }
         mt9v03x_finish_flag = 0;
     }
     // 显示相机类型和阈值
     char buffer[32];
-    sprintf(buffer, "Mode:%s Thres:%d",
-            Camera_Choose ? "Binary" : "Normal",
+    if (Camera_Choose == 0)
+    {
+        sprintf(buffer, "Mode:%s Expos:%d","Normal",
+            Camera_Exposure);
+    }
+    else
+    {
+        sprintf(buffer, "Mode:%s Thres:%d","Binary",
             Camera_Threshold);
+    }
     ips114_show_string(0, 112, buffer);
+
+    ips114_show_string(200, 16, Camera_Is_Line_Detected() ? "Yes" : "No");
+
+    ips114_show_int(200, 32, Camera_Get_Line_Direction(), 2);
+    // 显示方向含义
+    char dir_text[1];
+    int8_t direction = Camera_Get_Line_Direction();
+    if (direction == -1)
+        sprintf(dir_text, "L");
+    else if (direction == 0)
+        sprintf(dir_text, "C");
+    else if (direction == 1)
+        sprintf(dir_text, "R");
+    else
+        sprintf(dir_text, "N");
+    ips114_show_string(200, 48, dir_text);
+
+    if (Camera_Is_Line_Detected())
+    {
+
+        ips114_show_int(200, 64, Camera_Get_Line_Position(), 3);
+        
+        ips114_show_int(200, 80, MT9V03X_W / 2, 3);
+        
+        // 显示偏移量
+        int16_t offset = Camera_Get_Line_Position() - (MT9V03X_W / 2);
+        ips114_show_int(200, 96, offset, 3);
+    }
+    else
+    {
+        ips114_show_string(200, 64, "Pos");
+        ips114_show_string(200, 80, "Mid");
+        ips114_show_string(200, 96, "Off");
+    }
 }
 
 // 边界编辑界面
@@ -1873,7 +1915,6 @@ void Nav_Mode_Key_Process(void)
 void Camera_Menu_Key_Process(void)
 {
     Update_Adjust_Step();
-    // 按键3：切换显示模式（原始/二值化）
     if (key3_state == KEY_SHORT_PRESS)
     {
         Camera_Choose = Camera_Choose ? 0 : 1;
@@ -1896,6 +1937,27 @@ void Camera_Menu_Key_Process(void)
             {
                 Camera_Threshold += (uint8_t)adjust_step;
             }
+            key_clear_state(KEY_2);
+        }
+    }
+    if (Camera_Choose == 0)
+    {
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (Camera_Exposure > 0)
+            {
+                Camera_Exposure -= (uint8_t)adjust_step;
+            }
+            mt9v03x_set_exposure_time(Camera_Exposure);
+            key_clear_state(KEY_1);
+        }
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (Camera_Exposure < 255)
+            {
+                Camera_Exposure += (uint8_t)adjust_step;
+            }
+            mt9v03x_set_exposure_time(Camera_Exposure);
             key_clear_state(KEY_2);
         }
     }

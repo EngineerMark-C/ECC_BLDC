@@ -1,182 +1,197 @@
 #include "init.h"
 
-uint8_t Camera_Threshold;                                          // 默认二值化阈值为128
-// uint8_t BinarizedImage[MT9V03X_H][MT9V03X_W];                           // 二值化后的图像数组
-// int16_t WhiteRegionCenter = 0;                                           // 白色区域中心位置
-// int16_t LastValidCenter = MT9V03X_W / 2;                                // 上一次有效的中心位置
-// int16_t MotorSpeed = 1000;                                              // 电机速度，可调整
+uint8_t Camera_Threshold;                                          // 二值化阈值
+uint8_t Camera_Exposure;                                           // 曝光时间
+uint8_t Camera_Image[MT9V03X_H][MT9V03X_W];                        // 摄像头图像数据
 
-// // 长方形检测的结构体
-// typedef struct {
-//     int16_t left;       // 左边界
-//     int16_t right;      // 右边界
-//     int16_t top;        // 上边界
-//     int16_t bottom;     // 下边界
-//     int16_t center_x;   // 中心x坐标
-//     int16_t center_y;   // 中心y坐标
-//     float angle;        // 长边方向角度
-// } Rectangle_t; 
+// 白线检测相关变量
+int16_t Line_Center_Position = -1;                                // 白线中心位置 (-1表示未检测到)
+uint8_t Line_Detected = 0;                                        // 线条检测标志
+int8_t Line_Direction = 0;                                        // 线条方向: -1左偏, 0居中, 1右偏
 
-// Rectangle_t WhiteRectangle = {0};
+line_info_t Line_Info[MT9V03X_H];                                 // 每行的白线信息
 
 void Camera_Init(void)
 {
     // 初始化摄像头
     mt9v03x_init();
+    mt9v03x_set_exposure_time(Camera_Exposure);
 }
 
-// /**
-//  * @brief 对图像进行二值化处理
-//  * @param threshold 二值化阈值
-//  */
-// void Camera_BinarizeImage(uint8_t threshold)
-// {
-//     uint8_t i, j;
-    
-//     // 遍历整个图像并进行二值化
-//     for(i = 0; i < MT9V03X_H; i++)
-//     {
-//         for(j = 0; j < MT9V03X_W; j++)
-//         {
-//             if(mt9v03x_image[i][j] > threshold)
-//                 BinarizedImage[i][j] = 255;  // 白色
-//             else
-//                 BinarizedImage[i][j] = 0;    // 黑色
-//         }
-//     }
-// }
+/**
+ * @brief 复制摄像头图像数据到处理缓冲区
+ */
+void Camera_Copy_Image(void)
+{
+    for(int row = 0; row < MT9V03X_H; row++)
+    {
+        for(int col = 0; col < MT9V03X_W; col++)
+        {
+            Camera_Image[row][col] = mt9v03x_image[row][col];
+        }
+    }
+}
 
-// /**
-//  * @brief 检测白色长方形区域
-//  * @return 是否成功检测到长方形
-//  */
-// uint8_t Camera_DetectWhiteRectangle(void)
-// {
-//     int16_t i, j;
-//     int16_t left = MT9V03X_W, right = 0, top = MT9V03X_H, bottom = 0;
-//     uint8_t found = 0;
-    
-//     // 扫描整个图像找到白色区域的边界
-//     for(i = 0; i < MT9V03X_H; i++)
-//     {
-//         for(j = 0; j < MT9V03X_W; j++)
-//         {
-//             if(BinarizedImage[i][j] == 255)
-//             {
-//                 found = 1;
-                
-//                 // 更新边界
-//                 if(j < left) left = j;
-//                 if(j > right) right = j;
-//                 if(i < top) top = i;
-//                 if(i > bottom) bottom = i;
-//             }
-//         }
-//     }
-    
-//     if(!found) return 0;
-    
-//     // 保存长方形信息
-//     WhiteRectangle.left = left;
-//     WhiteRectangle.right = right;
-//     WhiteRectangle.top = top;
-//     WhiteRectangle.bottom = bottom;
-    
-//     // 计算中心点
-//     WhiteRectangle.center_x = (left + right) / 2;
-//     WhiteRectangle.center_y = (top + bottom) / 2;
-    
-//     // 计算长边方向角度（相对于垂直方向）
-//     int16_t width = right - left;
-//     int16_t height = bottom - top;
-    
-//     // 由于长方形高大于宽，角度将基于长边计算
-//     if(height > width)
-//     {
-//         // 长边垂直，车应沿垂直方向行驶
-//         WhiteRectangle.angle = 0;
-//     }
-//     else
-//     {
-//         // 长边水平，车应沿水平方向行驶
-//         WhiteRectangle.angle = 90;
-//     }
-    
-//     return 1;
-// }
+/**
+ * @brief 对图像进行二值化处理
+ * @param threshold 二值化阈值
+ */
+void Camera_Binarization(uint8_t threshold)
+{
+    for(int row = 0; row < MT9V03X_H; row++)
+    {
+        for(int col = 0; col < MT9V03X_W; col++)
+        {
+            if(Camera_Image[row][col] > threshold)
+                Camera_Image[row][col] = 255;  // 白色
+            else
+                Camera_Image[row][col] = 0;    // 黑色
+        }
+    }
+}
 
-// /**
-//  * @brief 分析图像并控制车辆方向
-//  */
-// void Camera_ProcessImage(void)
-// {
-//     // 对图像进行二值化处理
-//     Camera_BinarizeImage(Camera_Threshold);
+/**
+ * @brief 在指定行寻找白线边界
+ * @param row 扫描行
+ * @param left_edge 返回左边界位置
+ * @param right_edge 返回右边界位置
+ * @return 是否找到白线
+ */
+uint8_t Find_Line_Edges(int row, int *left_edge, int *right_edge)
+{
+    int left = -1, right = -1;
     
-//     // 检测白色长方形
-//     if(Camera_DetectWhiteRectangle())
-//     {
-//         // 计算车辆中心与长方形中心的横向偏差
-//         int16_t center_error = WhiteRectangle.center_x - (MT9V03X_W / 2);
+    // 从左往右扫描找左边界
+    for(int col = 0; col < MT9V03X_W; col++)
+    {
+        if(Camera_Image[row][col] == 255)
+        {
+            left = col;
+            break;
+        }
+    }
+    
+    // 从右往左扫描找右边界
+    for(int col = MT9V03X_W - 1; col >= 0; col--)
+    {
+        if(Camera_Image[row][col] == 255)
+        {
+            right = col;
+            break;
+        }
+    }
+    
+    // 检查是否找到有效的白线
+    if(left != -1 && right != -1 && (right - left) > 10)  // 最小宽度阈值
+    {
+        *left_edge = left;
+        *right_edge = right;
+        return 1;
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief 白线检测和位置计算
+ */
+void Camera_Line_Detection(void)
+{
+    // 先复制图像数据
+    Camera_Copy_Image();
+    
+    // 进行二值化
+    Camera_Binarization(Camera_Threshold);
+    
+    int valid_lines = 0;
+    int total_center = 0;
+    int screen_center = MT9V03X_W / 2;  // 屏幕中心位置 (94)
+    
+    // 初始化线条信息
+    for(int i = 0; i < MT9V03X_H; i++)
+    {
+        Line_Info[i].valid = 0;
+    }
+    
+    // 遍历每一行寻找白线
+    for(int row = 0; row < MT9V03X_H - 5; row++)
+    {
+        int left_edge, right_edge;
         
-//         // 控制转向，使车辆对准长方形中心
-//         Control_SetDirection(center_error, WhiteRectangle.angle);
+        if(Find_Line_Edges(row, &left_edge, &right_edge))
+        {
+            int line_center = (left_edge + right_edge) / 2;
+            total_center += line_center;
+            valid_lines++;
+            
+            // 保存线条信息用于显示
+            Line_Info[row].left_edge = left_edge;
+            Line_Info[row].right_edge = right_edge;
+            Line_Info[row].center = line_center;
+            Line_Info[row].valid = 1;
+        }
+    }
+    
+    // 判断是否检测到白线
+    if(valid_lines >= 20)  // 至少20行检测到白线才认为有效
+    {
+        Line_Detected = 1;
+        Line_Center_Position = total_center / valid_lines;
         
-//         // 更新最后有效的中心位置
-//         LastValidCenter = WhiteRectangle.center_x;
-//     }
-//     else
-//     {
-//         // 未检测到长方形，使用上次有效的中心位置继续前进
-//         int16_t center_error = LastValidCenter - (MT9V03X_W / 2);
-//         Control_SetDirection(center_error, 0);
-//     }
-    
-//     // 控制车辆前进
-//     BLDC_Set_Duty(MotorSpeed);
-// }
-
-// /**
-//  * @brief 控制车辆方向
-//  * @param direction_error 方向偏差，正值向右转，负值向左转
-//  * @param target_angle 目标角度，长方形长边的方向
-//  */
-// void Control_SetDirection(int16_t direction_error, float target_angle)
-// {
-//     // 比例系数，需要调试
-//     float kp = 0.1;
-    
-//     // 根据长方形的方向和中心偏差计算转向角度
-//     float steering_angle = kp * direction_error;
-    
-//     // 考虑长方形方向的影响
-//     if(target_angle == 90) // 长边水平
-//     {
-//         // 如果长边水平，调整方向使车辆走直线
-//         steering_angle = 0;
-//     }
-    
-//     // 限制转向角度
-//     if(steering_angle > MAX_ANGLE_R) steering_angle = MAX_ANGLE_R;
-//     if(steering_angle < -MAX_ANGLE_R) steering_angle = -MAX_ANGLE_R;
-    
-//     // 设置舵机角度
-//     Steer_set_angle(steering_angle);
-// }
-
-// /**
-//  * @brief 图像处理主函数，在主循环中调用
-//  */
-// void Camera_Main(void)
-// {
-//     // 等待摄像头采集完成
-//     if(mt9v03x_finish_flag)
-//     {
-//         // 处理图像
-//         Camera_ProcessImage();
+        // 计算偏移方向
+        int offset = Line_Center_Position - screen_center;
         
-//         // 重置标志位，准备下一帧图像采集
-//         mt9v03x_finish_flag = 0;
-//     }
-// }
+        if(offset < -10)
+            Line_Direction = -1;  // 白线偏左
+        else if(offset > 10)
+            Line_Direction = 1;   // 白线偏右
+        else
+            Line_Direction = 0;   // 白线居中
+    }
+    else
+    {
+        Line_Detected = 0;
+        Line_Center_Position = -1;
+        Line_Direction = 0;
+    }
+}
 
+/**
+ * @brief 获取白线检测结果
+ * @return 线条方向: -1左偏, 0居中或未检测到, 1右偏
+ */
+int8_t Camera_Get_Line_Direction(void)
+{
+    return Line_Direction;
+}
+
+/**
+ * @brief 获取白线中心位置
+ * @return 白线中心位置 (-1表示未检测到)
+ */
+int16_t Camera_Get_Line_Position(void)
+{
+    return Line_Center_Position;
+}
+
+/**
+ * @brief 检查是否检测到白线
+ * @return 1表示检测到白线, 0表示未检测到
+ */
+uint8_t Camera_Is_Line_Detected(void)
+{
+    return Line_Detected;
+}
+
+/**
+ * @brief 摄像头主处理函数
+ * 建议在主循环中调用
+ */
+void Camera_Process(void)
+{
+    if(mt9v03x_finish_flag)  // 摄像头采集完成
+    {
+        Camera_Line_Detection();
+        mt9v03x_finish_flag = 0;  // 清除标志
+    }
+}

@@ -302,7 +302,8 @@ void GPS_Point_to_Point(uint8_t i)
     if (reach_flag !=1)
     {
         target_angle = (float)angle;
-        Speed_Management((float)distance);
+        if (test_flag != TEST__3) Speed_Management((float)distance);
+        else Speed_Management_For_Test3((float)distance, i);
     }
 
     if (distance < GPS_SWITCH_DISTANCE)
@@ -353,7 +354,7 @@ void GPS_ENU_Point_to_Point(uint8_t i)
     if (reach_flag !=1)
     {
         target_angle = (float)angle;
-        if (test_flag != TEST__4) Speed_Management((float)distance);
+        if (test_flag != TEST__3) Speed_Management((float)distance);
         else Speed_Management_For_Test3((float)distance, i);
     }
     // 修改到达判断条件
@@ -548,7 +549,8 @@ void INS_Point_to_Point(uint8_t i)
     if (reach_flag != 1)
     {
         target_angle = angle;
-        Speed_Management(distance);
+        if (test_flag != TEST__3) Speed_Management((float)distance);
+        else Speed_Management_For_Test3((float)distance, i);
     }
     if (distance < INS_SWITCH_DISTANCE)
     {
