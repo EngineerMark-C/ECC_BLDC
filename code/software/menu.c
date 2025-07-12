@@ -976,16 +976,17 @@ void Display_Camera(void)
         ips114_show_int(200, 64, Camera_Get_Line_Position(), 3);
         
         ips114_show_int(200, 80, MT9V03X_W / 2, 3);
-        
-        // 显示偏移量
-        int16_t offset = Camera_Get_Line_Position() - (MT9V03X_W / 2);
-        ips114_show_int(200, 96, offset, 3);
+
+        ips114_show_int(200, 96, Camera_Get_Line_Offset(), 3);
+
+        ips114_show_int(200, 112,(int8_t)angle_adjustment, 3);
     }
     else
     {
         ips114_show_string(200, 64, "Pos");
         ips114_show_string(200, 80, "Mid");
         ips114_show_string(200, 96, "Off");
+        ips114_show_string(200, 112, "Ang");
     }
 }
 
@@ -1303,18 +1304,18 @@ void Steer_Menu_Key_Process(void)
         {
             if (steer_menu.value < steer_menu.max)
                 steer_menu.value += steer_menu.step;
+            Steer_set_duty(steer_menu.value);
             key_clear_state(KEY_1);
         }
         if (key2_state == KEY_SHORT_PRESS)
         {
             if (steer_menu.value > steer_menu.min)
                 steer_menu.value -= steer_menu.step;
+            Steer_set_duty(steer_menu.value);
             key_clear_state(KEY_2);
         }
         if (key3_state == KEY_SHORT_PRESS)
         {
-            // 保存舵机PWM值
-            Steer_set_duty(steer_menu.value);
             key_clear_state(KEY_3);
         }
         if (key4_state == KEY_SHORT_PRESS)

@@ -3,11 +3,13 @@
 uint8_t Camera_Threshold;                                          // 二值化阈值
 uint8_t Camera_Exposure;                                           // 曝光时间
 uint8_t Camera_Image[MT9V03X_H][MT9V03X_W];                        // 摄像头图像数据
+float angle_adjustment;
 
 // 白线检测相关变量
 int16_t Line_Center_Position = -1;                                // 白线中心位置 (-1表示未检测到)
 uint8_t Line_Detected = 0;                                        // 线条检测标志
 int8_t Line_Direction = 0;                                        // 线条方向: -1左偏, 0居中, 1右偏
+int16_t Line_Offset = 0;                                          // 白线偏移量
 
 line_info_t Line_Info[MT9V03X_H];                                 // 每行的白线信息
 
@@ -82,7 +84,7 @@ uint8_t Find_Line_Edges(int row, int *left_edge, int *right_edge)
     }
     
     // 检查是否找到有效的白线
-    if(left != -1 && right != -1 && (right - left) > 10)  // 最小宽度阈值
+    if(left != -1 && right != -1 && (right - left) > 5)  // 最小宽度阈值
     {
         *left_edge = left;
         *right_edge = right;
@@ -133,17 +135,17 @@ void Camera_Line_Detection(void)
     }
     
     // 判断是否检测到白线
-    if(valid_lines >= 20)  // 至少20行检测到白线才认为有效
+    if(valid_lines >= 15)  // 至少15行检测到白线才认为有效
     {
         Line_Detected = 1;
         Line_Center_Position = total_center / valid_lines;
         
         // 计算偏移方向
-        int offset = Line_Center_Position - screen_center;
-        
-        if(offset < -10)
+        Line_Offset = Line_Center_Position - screen_center;
+
+        if(Line_Offset < -10)
             Line_Direction = -1;  // 白线偏左
-        else if(offset > 10)
+        else if(Line_Offset > 10)
             Line_Direction = 1;   // 白线偏右
         else
             Line_Direction = 0;   // 白线居中
@@ -183,6 +185,37 @@ uint8_t Camera_Is_Line_Detected(void)
     return Line_Detected;
 }
 
+int16_t Camera_Get_Line_Offset(void)
+{
+    return Line_Offset;
+}
+
+/**
+ * @brief 基于摄像头白线检测的舵机角度控制
+ * @return 需要调整的角度
+ */
+void Camera_Steer_Control(void)
+{
+    if(Camera_Is_Line_Detected())
+    {
+        int8_t line_direction = Camera_Get_Line_Direction();
+        switch (line_direction)
+        {
+            case -1:  // 左偏
+                angle_adjustment = -0.25f;;
+                break;
+            case 1:   // 右偏
+                angle_adjustment = 0.25f;
+                break;
+            default:  // 居中
+                angle_adjustment = 0.0f;
+                break;
+        }
+    }
+    else
+        angle_adjustment = 0.0f;
+}
+
 /**
  * @brief 摄像头主处理函数
  * 建议在主循环中调用
@@ -192,6 +225,7 @@ void Camera_Process(void)
     if(mt9v03x_finish_flag)  // 摄像头采集完成
     {
         Camera_Line_Detection();
+        Camera_Steer_Control();
         mt9v03x_finish_flag = 0;  // 清除标志
     }
 }

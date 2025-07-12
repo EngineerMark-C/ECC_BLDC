@@ -1,22 +1,25 @@
 #include "init.h"
 
+#define STEER_CHANGE_MAX                 8.0f
+
 struct PID pid_speed;
 struct PID pid_steer;
 int16_t output_speed;
+float last_steer_output = 0.0f;
 
 // PID参数表
 const PID_Params_t speed_pid_params_table[] = 
 {
-    {5.5f,  550.0f, 2800.0f, 0.0f},    // 低速参数
-    {12.0f, 520.0f, 3200.0f, 0.0f},    // 中速参数
-    {16.0f, 560.0f, 4300.0f, 0.0f},    // 高速参数
+    {5.5f,  550.0f, 2800.0f, 0.0f},                                             // 低速参数
+    {12.0f, 520.0f, 3200.0f, 0.0f},                                             // 中速参数
+    {16.0f, 560.0f, 4300.0f, 0.0f},                                             // 高速参数
 };
 
 const PID_Params_t steer_pid_params_table[] = 
 {
-    {5.0f, 0.7f, 0.0f, 0.0f},           // 舵机PID参数
-    {10.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
-    {15.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
+    {5.0f, 1.0f, 0.0f, 0.0f},                                                    // 舵机PID参数
+    {10.0f, 0.5f, 0.0f, 0.0f},                                                   // 舵机PID参数
+    {15.0f, 0.5f, 0.0f, 0.0f},                                                   // 舵机PID参数
 };
 
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
@@ -231,13 +234,38 @@ void PID_Angle_Calc(struct PID *pid, float current)
     pid->derivative = pid->error - pid->error_last;
     
     // 计算PID输出
-    pid->output = (pid->kp * pid->error + 
-                 pid->ki * pid->integral + 
-                 pid->kd * pid->derivative);
+    float temp_output = (pid->kp * pid->error + 
+                        pid->ki * pid->integral + 
+                        pid->kd * pid->derivative);
+    
+    if(speed > 6.0f)
+    {
+        float output_diff = temp_output - last_steer_output;
+        
+        if(output_diff > STEER_CHANGE_MAX)
+        {
+            pid->output = last_steer_output + STEER_CHANGE_MAX;
+        }
+        else if(output_diff < -STEER_CHANGE_MAX)
+        {
+            pid->output = last_steer_output - STEER_CHANGE_MAX;
+        }
+        else
+        {
+            pid->output = temp_output;
+        }
+    }
+    else
+    {
+        pid->output = temp_output;
+    }
     
     // 输出限幅,防止舵机打角过大(根据实际舵机限位调整)
     if(pid->output > MAX_ANGLE_R) pid->output = MAX_ANGLE_R;
     if(pid->output < -MAX_ANGLE_R) pid->output = -MAX_ANGLE_R;
+
+    // 保存当前输出供下次使用
+    last_steer_output = pid->output;
 
     // 保存上次误差
     pid->error_last = pid->error;

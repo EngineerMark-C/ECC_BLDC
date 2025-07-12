@@ -14,6 +14,7 @@ float S_BRAKING_DISTANCE;                                                       
 
 float GPS_SWITCH_DISTANCE;                                                      // GPS 切换距离
 float INS_SWITCH_DISTANCE;                                                      // INS 切换距离
+float S_SWITCH_DISTANCE = 0.4f;                                                // S   切换距离
 
 float GPS_ENU[MAX_GPS_POINTS][2];                                               // GPS ENU 坐标
 
@@ -76,8 +77,8 @@ void Speed_Management(float distance)
     {
         // 线性减速区间
         // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
-        current_target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (distance / BRAKING_DISTANCE) * 0.6f;
-
+        current_target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (distance / BRAKING_DISTANCE) * 0.7f;
+        // current_target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (distance / BRAKING_DISTANCE) * 0.6f;
         // 确保不低于最小速度
         current_target_speed = fmaxf(current_target_speed, MIN_SPEED);
     }
@@ -98,7 +99,7 @@ void Speed_Management_For_S(float distance)
     {
         // 线性减速区间
         // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
-        current_target_speed = S_MIN_SPEED + (S_MAX_SPEED - S_MIN_SPEED) * (distance / S_BRAKING_DISTANCE) * 0.6f;
+        current_target_speed = S_MIN_SPEED + (S_MAX_SPEED - S_MIN_SPEED) * (distance / S_BRAKING_DISTANCE) * 0.7f;
         // current_target_speed = S_MIN_SPEED + (S_MAX_SPEED - S_MIN_SPEED) * (distance / (S_BRAKING_DISTANCE - INS_SWITCH_DISTANCE)) * 0.6f;
         // 确保不低于最小速度
         current_target_speed = fmaxf(current_target_speed, S_MIN_SPEED);
@@ -353,7 +354,15 @@ void GPS_ENU_Point_to_Point(uint8_t i)
 
     if (reach_flag !=1)
     {
-        target_angle = (float)angle;
+        // target_angle = (float)angle;
+        if (i == Test3Element[3].Point_Index )
+        {
+            target_angle += angle_adjustment;
+        }
+        else
+        {
+            target_angle = (float)angle;
+        }
         if (test_flag != TEST__3) Speed_Management((float)distance);
         else Speed_Management_For_Test3((float)distance, i);
     }
@@ -524,7 +533,7 @@ void S_Point_to_Point(uint8_t i)
             Speed_Management_For_S(distance);
         }
     }
-    if (distance < INS_SWITCH_DISTANCE)
+    if (distance < S_SWITCH_DISTANCE)
     {
         reach_flag = 1;
     }

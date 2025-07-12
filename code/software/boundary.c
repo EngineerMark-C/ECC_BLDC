@@ -6,7 +6,7 @@ float SAFETY_X_MAX;                                                             
 float SAFETY_X_MIN;                                                             // X轴最小安全范围
 float SAFETY_Y_MAX;                                                             // Y轴最大安全范围
 float SAFETY_Y_MIN;                                                             // Y轴最小安全范围
-float SAFETY_MARGIN;                                                             // 安全边界外扩距离（米）
+float SAFETY_MARGIN;                                                            // 安全边界外扩距离（米）
 
 // 自动计算安全边界结构体
 typedef struct {

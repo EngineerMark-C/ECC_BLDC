@@ -71,41 +71,35 @@ void Speed_Management_For_Test3(float distance ,uint8_t i)
 {
     float current_target_speed;
 
-    if (i == Test3Element[0].Point_Index || i == Test3Element[1].Point_Index ||
-        i == Test3Element[2].Point_Index || i == Test3Element[3].Point_Index)
-    {
-        current_target_speed = Test3Element[i].Through_Speed;
-    }
-    else if (i == Test3Element[0].Point_Index-1 || i == Test3Element[1].Point_Index-1 ||
-             i == Test3Element[2].Point_Index-1 || i == Test3Element[3].Point_Index-1)
-    {
-        float minimum_speed = Test3Element[i+1].Through_Speed;
-        if(distance > BRAKING_DISTANCE) {
-            current_target_speed = MAX_SPEED;
-        } 
-        else 
-        {
-            // 线性减速区间
-            // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
-            current_target_speed = minimum_speed + (MAX_SPEED - minimum_speed) * (distance / BRAKING_DISTANCE) * 0.6f;
-            // 确保不低于最小速度
-            current_target_speed = fmaxf(current_target_speed, minimum_speed);
+    // 检查是否为特殊点位
+    int special_index = -1;
+    for (int j = 0; j < 4; j++) {
+        if (i == Test3Element[j].Point_Index) {
+            special_index = j;
+            break;
         }
     }
-    else
-    {
-        // 对于其他点位，使用默认的速度管理逻辑
+    
+    if (special_index >= 0) {
+        current_target_speed = Test3Element[special_index].Through_Speed;
+    }
+    else {
+        // 检查是否为特殊点位的前一个点
+        float minimum_speed = MIN_SPEED;  // 默认最小速度
+        
+        for (int j = 0; j < 4; j++) {
+            if (i == Test3Element[j].Point_Index - 1) {
+                minimum_speed = Test3Element[j].Through_Speed;
+                break;
+            }
+        }
+        
         if(distance > BRAKING_DISTANCE) {
             current_target_speed = MAX_SPEED;
         } 
-        else 
-        {
-            // 线性减速区间
-            // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
-            current_target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (distance / BRAKING_DISTANCE) * 0.6f;
-
-            // 确保不低于最小速度
-            current_target_speed = fmaxf(current_target_speed, MIN_SPEED);
+        else {
+            current_target_speed = minimum_speed + (MAX_SPEED - minimum_speed) * (distance / BRAKING_DISTANCE) * 0.6f;
+            current_target_speed = fmaxf(current_target_speed, minimum_speed);
         }
     }
     target_speed = current_target_speed;
