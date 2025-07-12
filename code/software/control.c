@@ -14,7 +14,7 @@ float S_BRAKING_DISTANCE;                                                       
 
 float GPS_SWITCH_DISTANCE;                                                      // GPS 切换距离
 float INS_SWITCH_DISTANCE;                                                      // INS 切换距离
-float S_SWITCH_DISTANCE = 0.4f;                                                // S   切换距离
+float S_SWITCH_DISTANCE;                                                        // S   切换距离
 
 float GPS_ENU[MAX_GPS_POINTS][2];                                               // GPS ENU 坐标
 

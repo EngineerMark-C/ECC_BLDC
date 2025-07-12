@@ -185,7 +185,8 @@ GPSINSPathMenuItem gps_ins_path_menu[] = {
 
 // 边界编辑菜单项
 BoundaryMenuItem boundary_menu[] = {
-    {"SAFETY_MARGIN", &SAFETY_MARGIN},
+    {"SAFETY_MARGIN_X", &SAFETY_MARGIN_X},
+    {"SAFETY_MARGIN_Y", &SAFETY_MARGIN_Y},
     {"SAFETY_X_MAX", &SAFETY_X_MAX},
     {"SAFETY_X_MIN", &SAFETY_X_MIN},
     {"SAFETY_Y_MAX", &SAFETY_Y_MAX},
@@ -210,7 +211,8 @@ MotorMenuItem motor_menu[] = {
     {"S_BRAKING_DISTANCE", &S_BRAKING_DISTANCE},
     {"S_Distance", &S_Distance},
     {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
-    {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE}
+    {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE},
+    {"S_SWITCH_DISTANCE", &S_SWITCH_DISTANCE}
 };
 
 // 导航模式菜单显示文本数组
@@ -996,16 +998,21 @@ void Display_Boundary(void)
     ips114_show_string(0, 0, "Boundary");
     ips114_show_float(200, 0, adjust_step, 2, 1);
     
-    // 显示可编辑的安全边界外扩距离
-    char buffer[32];
-    sprintf(buffer, "> %s: %.2f",
-            boundary_menu[0].name,
-            *boundary_menu[0].num);
-    ips114_show_string(0, 16, buffer);
+    // 显示前两个可编辑的安全边界外扩距离
+    for (uint8_t i = 0; i < 2; i++)
+    {
+        char buffer[32];
+        sprintf(buffer, "%s%s: %.2f",
+                (i == current_item) ? "> " : "  ",
+                boundary_menu[i].name,
+                *boundary_menu[i].num);
+        ips114_show_string(0, 16 + i * 16, buffer);
+    }
     
     // 显示只读的边界值
-    for (uint8_t i = 1; i < 5; i++)
+    for (uint8_t i = 2; i < 6; i++)
     {
+        char buffer[32];
         sprintf(buffer, "  %s: %.2f",
                 boundary_menu[i].name,
                 *boundary_menu[i].num);
@@ -1013,10 +1020,9 @@ void Display_Boundary(void)
     }
     
     // 底部提示信息
-    ips114_show_string(0, 96, "KEY1:+  KEY2:-  KEY3:Update");
-    ips114_show_string(0, 112, "KEY4:Back");
+    ips114_show_string(0, 96, "KEY1:+  KEY2:-  KEY3:Switch");
+    ips114_show_string(0, 112, "KEY4:Back  KEY5:Update");
 }
-
 // 主路径显示函数
 void Display_Path(void)
 {
@@ -1975,33 +1981,45 @@ void Camera_Menu_Key_Process(void)
 void Boundary_Menu_Key_Process(void)
 {
     Update_Adjust_Step();
+    
     if (key1_state == KEY_SHORT_PRESS)
     {
-        // 增加安全边界外扩距离
-        *boundary_menu[0].num += adjust_step;
-        if (*boundary_menu[0].num < 5.0f) *boundary_menu[0].num = 5.0f; // 设置最小值
+        // 增加当前选中的安全边界外扩距离
+        *boundary_menu[current_item].num += adjust_step;
+        if (*boundary_menu[current_item].num < 5.0f) 
+            *boundary_menu[current_item].num = 5.0f; // 设置最小值
         key_clear_state(KEY_1);
     }
     
     if (key2_state == KEY_SHORT_PRESS)
     {
-        // 减少安全边界外扩距离
-        *boundary_menu[0].num -= adjust_step;
-        if (*boundary_menu[0].num < 5.0f) *boundary_menu[0].num = 5.0f; // 设置最小值
+        // 减少当前选中的安全边界外扩距离
+        *boundary_menu[current_item].num -= adjust_step;
+        if (*boundary_menu[current_item].num < 5.0f) 
+            *boundary_menu[current_item].num = 5.0f; // 设置最小值
         key_clear_state(KEY_2);
     }
     
     if (key3_state == KEY_SHORT_PRESS)
     {
-        Calculate_Safety_Boundary(Navigation_Flag);
+        // 在SAFETY_MARGIN_X和SAFETY_MARGIN_Y之间切换
+        current_item = current_item ? 0 : 1;
         key_clear_state(KEY_3);
     }
     
     if (key4_state == KEY_SHORT_PRESS)
     {
+        // 返回主菜单
         menu_state = MENU_MAIN;
         Save_Test_Data();
         key_clear_state(KEY_4);
+    }
+    
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        // 更新安全边界计算
+        Calculate_Safety_Boundary(Navigation_Flag);
+        key_clear_state(KEY_5);
     }
 }
 

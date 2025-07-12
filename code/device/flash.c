@@ -768,13 +768,15 @@ void Basic_Data_Init(void)
 //                     | 13  | float      | SAFETY_X_MIN        |
 //                     | 14  | float      | SAFETY_Y_MAX        |
 //                     | 15  | float      | SAFETY_Y_MIN        |
-//                     | 16  | float      | SAFETY_MARGIN       |
+//                     | 16  | float      | SAFETY_MARGIN_X     |
 //                     | 17  | float      | MAX_SPEED           |
 //                     | 18  | float      | MIN_SPEED           |
 //                     | 19  | float      | BRAKING_DISTANCE    |
 //                     | 20  | float      | S_MAX_SPEED         |
 //                     | 21  | float      | S_MIN_SPEED         |
 //                     | 22  | float      | S_BRAKING_DISTANCE  |
+//                     | 23  | float      | SAFETY_MARGIN_Y     |
+//                     | 24  | float      | S_SWITCH_DISTANCE   |
 
 
 // 保存科目数据
@@ -824,13 +826,15 @@ void Save_Test_Data(void)
     flash_union_buffer[offset + 13].float_type = SAFETY_X_MIN;
     flash_union_buffer[offset + 14].float_type = SAFETY_Y_MAX;
     flash_union_buffer[offset + 15].float_type = SAFETY_Y_MIN;
-    flash_union_buffer[offset + 16].float_type = SAFETY_MARGIN;
+    flash_union_buffer[offset + 16].float_type = SAFETY_MARGIN_X;
     flash_union_buffer[offset + 17].float_type = MAX_SPEED;
     flash_union_buffer[offset + 18].float_type = MIN_SPEED;
     flash_union_buffer[offset + 19].float_type = BRAKING_DISTANCE;
     flash_union_buffer[offset + 20].float_type = S_MAX_SPEED;
     flash_union_buffer[offset + 21].float_type = S_MIN_SPEED;
     flash_union_buffer[offset + 22].float_type = S_BRAKING_DISTANCE;
+    flash_union_buffer[offset + 23].float_type = SAFETY_MARGIN_Y;
+    flash_union_buffer[offset + 24].float_type = S_SWITCH_DISTANCE;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
@@ -884,13 +888,15 @@ void Test_Data_Init(void)
     SAFETY_X_MIN = flash_union_buffer[offset + 13].float_type;
     SAFETY_Y_MAX = flash_union_buffer[offset + 14].float_type;
     SAFETY_Y_MIN = flash_union_buffer[offset + 15].float_type;
-    SAFETY_MARGIN = flash_union_buffer[offset + 16].float_type;
+    SAFETY_MARGIN_X = flash_union_buffer[offset + 16].float_type;
     MAX_SPEED = flash_union_buffer[offset + 17].float_type;
     MIN_SPEED = flash_union_buffer[offset + 18].float_type;
     BRAKING_DISTANCE = flash_union_buffer[offset + 19].float_type;
     S_MAX_SPEED = flash_union_buffer[offset + 20].float_type;
     S_MIN_SPEED = flash_union_buffer[offset + 21].float_type;
     S_BRAKING_DISTANCE = flash_union_buffer[offset + 22].float_type;
+    SAFETY_MARGIN_Y = flash_union_buffer[offset + 23].float_type;
+    S_SWITCH_DISTANCE = flash_union_buffer[offset + 24].float_type;
 
     // 第一次烧录确保过初始化赋初值
     // Start_GPS_Point = 1;
@@ -909,10 +915,13 @@ void Test_Data_Init(void)
     // SAFETY_X_MIN = 0.0f;
     // SAFETY_Y_MAX = 0.0f;
     // SAFETY_Y_MIN = 0.0f;
-    // SAFETY_MARGIN = 8.0f;
+    // SAFETY_MARGIN_X = 8.0f;
+    SAFETY_MARGIN_Y = 5.0f;
     // MAX_SPEED = 3.0f;
     // MIN_SPEED = 2.0f;
     // BRAKING_DISTANCE = 3.0f;
+    S_SWITCH_DISTANCE = 0.4f;
+
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;

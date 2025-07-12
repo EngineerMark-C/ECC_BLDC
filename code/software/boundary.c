@@ -6,7 +6,8 @@ float SAFETY_X_MAX;                                                             
 float SAFETY_X_MIN;                                                             // X轴最小安全范围
 float SAFETY_Y_MAX;                                                             // Y轴最大安全范围
 float SAFETY_Y_MIN;                                                             // Y轴最小安全范围
-float SAFETY_MARGIN;                                                            // 安全边界外扩距离（米）
+float SAFETY_MARGIN_X;                                                          // X轴安全边界外扩距离（米）
+float SAFETY_MARGIN_Y;                                                          // Y轴安全边界外扩距离（米）
 
 // 自动计算安全边界结构体
 typedef struct {
@@ -39,10 +40,10 @@ void Calculate_GPS_Safety_Boundary(void)
     }
     
     // 应用安全边界外扩
-    current_boundary.x_min = x_min - SAFETY_MARGIN;
-    current_boundary.x_max = x_max + SAFETY_MARGIN;
-    current_boundary.y_min = y_min - SAFETY_MARGIN;
-    current_boundary.y_max = y_max + SAFETY_MARGIN;
+    current_boundary.x_min = x_min - SAFETY_MARGIN_X;
+    current_boundary.x_max = x_max + SAFETY_MARGIN_X;
+    current_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+    current_boundary.y_max = y_max + SAFETY_MARGIN_Y;
     current_boundary.is_initialized = 1;
 }
 
@@ -66,10 +67,10 @@ void Calculate_INS_Safety_Boundary(void)
     }
     
     // 应用安全边界外扩
-    current_boundary.x_min = x_min - SAFETY_MARGIN;
-    current_boundary.x_max = x_max + SAFETY_MARGIN;
-    current_boundary.y_min = y_min - SAFETY_MARGIN;
-    current_boundary.y_max = y_max + SAFETY_MARGIN;
+    current_boundary.x_min = x_min - SAFETY_MARGIN_X;
+    current_boundary.x_max = x_max + SAFETY_MARGIN_X;
+    current_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+    current_boundary.y_max = y_max + SAFETY_MARGIN_Y;
     current_boundary.is_initialized = 1;
 }
 
@@ -93,10 +94,10 @@ void Calculate_S_Safety_Boundary(void)
     }
     
     // 应用安全边界外扩
-    current_boundary.x_min = x_min - SAFETY_MARGIN;
-    current_boundary.x_max = x_max + SAFETY_MARGIN;
-    current_boundary.y_min = y_min - SAFETY_MARGIN;
-    current_boundary.y_max = y_max + SAFETY_MARGIN;
+    current_boundary.x_min = x_min - SAFETY_MARGIN_X;
+    current_boundary.x_max = x_max + SAFETY_MARGIN_X;
+    current_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+    current_boundary.y_max = y_max + SAFETY_MARGIN_Y;
     current_boundary.is_initialized = 1;
 }
 
@@ -137,10 +138,10 @@ void Calculate_GPS_INS_Safety_Boundary(void)
             if (GPS_ENU[i][1] > y_max) y_max = GPS_ENU[i][1];
         }
         
-        gps_boundary.x_min = x_min - SAFETY_MARGIN;
-        gps_boundary.x_max = x_max + SAFETY_MARGIN;
-        gps_boundary.y_min = y_min - SAFETY_MARGIN;
-        gps_boundary.y_max = y_max + SAFETY_MARGIN;
+        gps_boundary.x_min = x_min - SAFETY_MARGIN_X;
+        gps_boundary.x_max = x_max + SAFETY_MARGIN_X;
+        gps_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+        gps_boundary.y_max = y_max + SAFETY_MARGIN_Y;
         gps_boundary.is_initialized = 1;
     }
     
@@ -158,10 +159,10 @@ void Calculate_GPS_INS_Safety_Boundary(void)
             if (INS_Point[i][1] > y_max) y_max = INS_Point[i][1];
         }
         
-        ins_boundary.x_min = x_min - SAFETY_MARGIN;
-        ins_boundary.x_max = x_max + SAFETY_MARGIN;
-        ins_boundary.y_min = y_min - SAFETY_MARGIN;
-        ins_boundary.y_max = y_max + SAFETY_MARGIN;
+        ins_boundary.x_min = x_min - SAFETY_MARGIN_X;
+        ins_boundary.x_max = x_max + SAFETY_MARGIN_X;
+        ins_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+        ins_boundary.y_max = y_max + SAFETY_MARGIN_Y;
         ins_boundary.is_initialized = 1;
     }
     
@@ -180,10 +181,10 @@ void Calculate_GPS_INS_Safety_Boundary(void)
             if (S_Point[i][1] > y_max) y_max = S_Point[i][1];
         }
         
-        s_boundary.x_min = x_min - SAFETY_MARGIN;
-        s_boundary.x_max = x_max + SAFETY_MARGIN;
-        s_boundary.y_min = y_min - SAFETY_MARGIN;
-        s_boundary.y_max = y_max + SAFETY_MARGIN;
+        s_boundary.x_min = x_min - SAFETY_MARGIN_X;
+        s_boundary.x_max = x_max + SAFETY_MARGIN_X;
+        s_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+        s_boundary.y_max = y_max + SAFETY_MARGIN_Y;
         s_boundary.is_initialized = 1;
         
         Merge_Safety_Boundaries(&ins_boundary, &s_boundary);
@@ -225,10 +226,10 @@ void Calculate_Safety_Boundary(NavigationFlag flag)
                     if (S_Point[i][1] > y_max) y_max = S_Point[i][1];
                 }
                 
-                s_boundary.x_min = x_min - SAFETY_MARGIN;
-                s_boundary.x_max = x_max + SAFETY_MARGIN;
-                s_boundary.y_min = y_min - SAFETY_MARGIN;
-                s_boundary.y_max = y_max + SAFETY_MARGIN;
+                s_boundary.x_min = x_min - SAFETY_MARGIN_X;
+                s_boundary.x_max = x_max + SAFETY_MARGIN_X;
+                s_boundary.y_min = y_min - SAFETY_MARGIN_Y;
+                s_boundary.y_max = y_max + SAFETY_MARGIN_Y;
                 s_boundary.is_initialized = 1;
                 
                 Merge_Safety_Boundaries(&current_boundary, &s_boundary);
@@ -256,7 +257,7 @@ void Calculate_Safety_Boundary(NavigationFlag flag)
     SAFETY_Y_MAX = current_boundary.y_max;
 }
 
-// 边界检查函数（更新版）
+// 边界检查函数
 void Safety_Boundary_Check(void)
 {
     // 确保安全边界已初始化
