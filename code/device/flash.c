@@ -916,11 +916,11 @@ void Test_Data_Init(void)
     // SAFETY_Y_MAX = 0.0f;
     // SAFETY_Y_MIN = 0.0f;
     // SAFETY_MARGIN_X = 8.0f;
-    SAFETY_MARGIN_Y = 5.0f;
+    // SAFETY_MARGIN_Y = 5.0f;
     // MAX_SPEED = 3.0f;
     // MIN_SPEED = 2.0f;
     // BRAKING_DISTANCE = 3.0f;
-    S_SWITCH_DISTANCE = 0.4f;
+    // S_SWITCH_DISTANCE = 0.4f;
 
 
     NOW_GPS_Point = Start_GPS_Point;

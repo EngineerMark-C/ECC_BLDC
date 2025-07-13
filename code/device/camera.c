@@ -1,17 +1,19 @@
 #include "init.h"
 
-uint8_t Camera_Threshold;                                          // 二值化阈值
-uint8_t Camera_Exposure;                                           // 曝光时间
-uint8_t Camera_Image[MT9V03X_H][MT9V03X_W];                        // 摄像头图像数据
+#define Camera_Kp                     0.5f                                      // 摄像头控制Kp参数
+
+uint8_t Camera_Threshold;                                                       // 二值化阈值
+uint8_t Camera_Exposure;                                                        // 曝光时间
+uint8_t Camera_Image[MT9V03X_H][MT9V03X_W];                                     // 摄像头图像数据
 float angle_adjustment;
 
 // 白线检测相关变量
-int16_t Line_Center_Position = -1;                                // 白线中心位置 (-1表示未检测到)
-uint8_t Line_Detected = 0;                                        // 线条检测标志
-int8_t Line_Direction = 0;                                        // 线条方向: -1左偏, 0居中, 1右偏
-int16_t Line_Offset = 0;                                          // 白线偏移量
+int16_t Line_Center_Position = -1;                                              // 白线中心位置 (-1表示未检测到)
+uint8_t Line_Detected = 0;                                                      // 线条检测标志
+int8_t Line_Direction = 0;                                                      // 线条方向: -1左偏, 0居中, 1右偏
+int16_t Line_Offset = 0;                                                        // 白线偏移量
 
-line_info_t Line_Info[MT9V03X_H];                                 // 每行的白线信息
+line_info_t Line_Info[MT9V03X_H];                                               // 每行的白线信息
 
 void Camera_Init(void)
 {
@@ -198,19 +200,7 @@ void Camera_Steer_Control(void)
 {
     if(Camera_Is_Line_Detected())
     {
-        int8_t line_direction = Camera_Get_Line_Direction();
-        switch (line_direction)
-        {
-            case -1:  // 左偏
-                angle_adjustment = -0.25f;;
-                break;
-            case 1:   // 右偏
-                angle_adjustment = 0.25f;
-                break;
-            default:  // 居中
-                angle_adjustment = 0.0f;
-                break;
-        }
+        angle_adjustment = Line_Offset * Camera_Kp;
     }
     else
         angle_adjustment = 0.0f;

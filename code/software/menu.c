@@ -1019,9 +1019,7 @@ void Display_Boundary(void)
         ips114_show_string(0, 16 + i * 16, buffer);
     }
     
-    // 底部提示信息
-    ips114_show_string(0, 96, "KEY1:+  KEY2:-  KEY3:Switch");
-    ips114_show_string(0, 112, "KEY4:Back  KEY5:Update");
+    ips114_show_string(0, 112, "K3:Switch K4:Back K5:Update");
 }
 // 主路径显示函数
 void Display_Path(void)
@@ -1246,7 +1244,7 @@ void Main_Menu_Key_Process(void)
             break;
         case 6:
             menu_state = MENU_SPEED_MANAGE;
-            current_item = 0;
+            start_index = 0;
             break;
         case 7:
             menu_state = MENU_GPS_INFO;
@@ -1269,7 +1267,6 @@ void Main_Menu_Key_Process(void)
             break;
         case 13:
             menu_state = MENU_Boundary;
-            current_item = 0;
             break;
         case 14:
             menu_state = MENU_PATH;
@@ -1285,7 +1282,6 @@ void Main_Menu_Key_Process(void)
             break;
         case 18:
             menu_state = MENU_TEST3_Element;
-            current_item = 0;
             break;
         }
         key_clear_state(KEY_3);
