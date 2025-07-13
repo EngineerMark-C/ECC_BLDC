@@ -56,7 +56,8 @@ int core0_main(void)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         Menu();                                                                 // 菜单逻辑
-        system_delay_ms(50);                                                    // 将刷新间隔增加到50ms
+        // system_delay_ms(50);                                                    // 将刷新间隔增加到50ms
+        Get_Now_Location();                                                     // 获取当前位置
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         // uint32 time = end_time - start_time;
         // float time_us = (float)time / 100.0f;
