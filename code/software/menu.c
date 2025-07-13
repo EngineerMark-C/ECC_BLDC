@@ -2375,7 +2375,7 @@ void Test3_Element_Menu_Key_Process(void)
         {
             // 进入编辑模式
             edit_mode = true;
-            edit_coord = false; // 默认先编辑Point_Index
+            edit_coord = true; // 默认先编辑Point_Index
             key_clear_state(KEY_3);
         }
         

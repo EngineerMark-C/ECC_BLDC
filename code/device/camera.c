@@ -1,6 +1,6 @@
 #include "init.h"
 
-#define Camera_Kp                     0.5f                                      // 摄像头控制Kp参数
+#define Camera_Kp                     0.4f                                    // 摄像头控制Kp参数
 
 uint8_t Camera_Threshold;                                                       // 二值化阈值
 uint8_t Camera_Exposure;                                                        // 曝光时间

@@ -1,11 +1,8 @@
 #include "init.h"
 
-#define STEER_CHANGE_MAX                 8.0f
-
 struct PID pid_speed;
 struct PID pid_steer;
 int16_t output_speed;
-float last_steer_output = 0.0f;
 
 // PID参数表
 const PID_Params_t speed_pid_params_table[] = 
@@ -17,9 +14,10 @@ const PID_Params_t speed_pid_params_table[] =
 
 const PID_Params_t steer_pid_params_table[] = 
 {
-    {5.0f, 1.0f, 0.0f, 0.0f},                                                    // 舵机PID参数
-    {10.0f, 0.5f, 0.0f, 0.0f},                                                   // 舵机PID参数
-    {15.0f, 0.5f, 0.0f, 0.0f},                                                   // 舵机PID参数
+    {5.0f, 0.68f, 0.0f, 0.0f},                                                  // 舵机PID参数
+    {8.0f, 0.40f, 0.0f, 0.0f},                                                  // 舵机PID参数
+    {12.0f, 0.28f, 0.0f, 0.0f},                                                 // 舵机PID参数
+    {14.0f, 0.20f, 0.0f, 0.0f},                                                 // 舵机PID参数
 };
 
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
@@ -96,9 +94,13 @@ void Update_Steer_PID_Params(float now_speed)
     {
         PID_set_params(&pid_steer, steer_pid_params_table[1].kp, steer_pid_params_table[1].ki, steer_pid_params_table[1].kd);
     }
-    else
+    else if(now_speed > steer_pid_params_table[1].max_speed && now_speed <= steer_pid_params_table[2].max_speed)
     {
         PID_set_params(&pid_steer, steer_pid_params_table[2].kp, steer_pid_params_table[2].ki, steer_pid_params_table[2].kd);
+    }
+    else
+    {
+        PID_set_params(&pid_steer, steer_pid_params_table[3].kp, steer_pid_params_table[3].ki, steer_pid_params_table[3].kd);
     }
 }
 
@@ -211,7 +213,6 @@ void Motor_PID_Control(float target)
     BLDC_Set_Duty(output_speed);
 }
 
-// 角度 PID
 void PID_Angle_Calc(struct PID *pid, float current)
 {
     pid->current = current;
@@ -234,38 +235,13 @@ void PID_Angle_Calc(struct PID *pid, float current)
     pid->derivative = pid->error - pid->error_last;
     
     // 计算PID输出
-    float temp_output = (pid->kp * pid->error + 
-                        pid->ki * pid->integral + 
-                        pid->kd * pid->derivative);
-    
-    if(speed > 6.0f)
-    {
-        float output_diff = temp_output - last_steer_output;
-        
-        if(output_diff > STEER_CHANGE_MAX)
-        {
-            pid->output = last_steer_output + STEER_CHANGE_MAX;
-        }
-        else if(output_diff < -STEER_CHANGE_MAX)
-        {
-            pid->output = last_steer_output - STEER_CHANGE_MAX;
-        }
-        else
-        {
-            pid->output = temp_output;
-        }
-    }
-    else
-    {
-        pid->output = temp_output;
-    }
+    pid->output = (pid->kp * pid->error + 
+                 pid->ki * pid->integral + 
+                 pid->kd * pid->derivative);
     
     // 输出限幅,防止舵机打角过大(根据实际舵机限位调整)
     if(pid->output > MAX_ANGLE_R) pid->output = MAX_ANGLE_R;
     if(pid->output < -MAX_ANGLE_R) pid->output = -MAX_ANGLE_R;
-
-    // 保存当前输出供下次使用
-    last_steer_output = pid->output;
 
     // 保存上次误差
     pid->error_last = pid->error;

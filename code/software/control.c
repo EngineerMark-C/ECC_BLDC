@@ -303,8 +303,38 @@ void GPS_Point_to_Point(uint8_t i)
     if (reach_flag !=1)
     {
         target_angle = (float)angle;
-        if (test_flag != TEST__3) Speed_Management((float)distance);
-        else Speed_Management_For_Test3((float)distance, i);
+        Speed_Management((float)distance);
+    }
+
+    if (distance < GPS_SWITCH_DISTANCE)
+    {
+        reach_flag = 1;
+    }
+}
+
+void GPS_Point_to_Point_For_Test3(uint8_t i)
+{
+    double angle = get_two_points_azimuth(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
+    double distance = get_two_points_distance(NOW_location.latitude, NOW_location.longitude, GPS_Point[i][0], GPS_Point[i][1]);
+
+    if (NOW_GPS_Point < End_GPS_Point) 
+    {
+        // 计算下一个目标角度
+        Caculate_Next_GPS_Angle(i);
+    }
+
+    if (reach_flag !=1)
+    {
+        // target_angle = (float)angle;
+        if (i == Test3Element[3].Point_Index )
+        {
+            target_angle += angle_adjustment;
+        }
+        else
+        {
+            target_angle = (float)angle;
+        }
+        Speed_Management_For_Test3((float)distance, i);
     }
 
     if (distance < GPS_SWITCH_DISTANCE)
@@ -322,7 +352,14 @@ void GPS_Navigation(void)
     }
     if (Start_GPS_Point < End_GPS_Point)
     {
-        GPS_Point_to_Point(NOW_GPS_Point);
+        if (test_flag == TEST__3)
+        {
+            GPS_Point_to_Point_For_Test3(NOW_GPS_Point);
+        }
+        else
+        {
+            GPS_Point_to_Point(NOW_GPS_Point);
+        }
         if (reach_flag )
         {
             target_angle = next_target_angle;
@@ -354,6 +391,34 @@ void GPS_ENU_Point_to_Point(uint8_t i)
 
     if (reach_flag !=1)
     {
+        target_angle = (float)angle;
+        Speed_Management((float)distance);
+    }
+    // 修改到达判断条件
+    if (distance < GPS_SWITCH_DISTANCE)
+    {
+        reach_flag = 1;
+    }
+}
+
+void GPS_ENU_Point_to_Point_For_Test3(uint8_t i)
+{
+    // 使用平面坐标系计算
+    float dx = GPS_ENU[i][0] - position[0];  // 东向差值
+    float dy = GPS_ENU[i][1] - position[1];  // 北向差值
+
+
+    if (i < End_GPS_Point) 
+    {
+        Caculate_Next_ENU_Angle(i);
+    }
+
+    float angle = RAD_TO_ANGLE(atan2f(dy, dx));
+    angle = angle < 0 ? angle + 360 : angle;
+    float distance = sqrtf(dx*dx + dy*dy);
+
+    if (reach_flag !=1)
+    {
         // target_angle = (float)angle;
         if (i == Test3Element[3].Point_Index )
         {
@@ -363,8 +428,7 @@ void GPS_ENU_Point_to_Point(uint8_t i)
         {
             target_angle = (float)angle;
         }
-        if (test_flag != TEST__3) Speed_Management((float)distance);
-        else Speed_Management_For_Test3((float)distance, i);
+        Speed_Management_For_Test3((float)distance, i);
     }
     // 修改到达判断条件
     if (distance < GPS_SWITCH_DISTANCE)
@@ -381,7 +445,14 @@ void GPS_ENU_Navigation(void)
     }
     if (Start_GPS_Point < End_GPS_Point)
     {
-        GPS_ENU_Point_to_Point(NOW_GPS_Point);
+        if (test_flag == TEST__3)
+        {
+            GPS_ENU_Point_to_Point_For_Test3(NOW_GPS_Point);
+        }
+        else
+        {
+            GPS_ENU_Point_to_Point(NOW_GPS_Point);
+        }
         if (reach_flag)
         {
             target_angle = next_target_angle;
@@ -555,12 +626,50 @@ void INS_Point_to_Point(uint8_t i)
     }
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
+
     if (reach_flag != 1)
     {
         target_angle = angle;
-        if (test_flag != TEST__3) Speed_Management((float)distance);
-        else Speed_Management_For_Test3((float)distance, i);
+        Speed_Management((float)distance);
     }
+
+    if (distance < INS_SWITCH_DISTANCE)
+    {
+        reach_flag = 1;
+    }
+}
+
+void INS_Point_to_Point_For_Test3(uint8_t i)
+{
+    // 使用平面坐标系计算（单位：米）
+    float dx = INS_Point_Navigation_Frame[i][0] - position[0];
+    float dy = INS_Point_Navigation_Frame[i][1] - position[1];
+
+    // 计算平面方位角（0-360度）
+    float angle = RAD_TO_ANGLE(atan2f(dy, dx));
+    angle = angle < 0 ? angle + 360 : angle;
+    
+    if (i < End_INS_Point) 
+    {
+        Caculate_Next_INS_Point_Angle(i);
+    }
+    // 计算欧几里得距离
+    float distance = sqrtf(dx*dx + dy*dy);
+
+    if (reach_flag !=1)
+    {
+        // target_angle = (float)angle;
+        if (i == Test3Element[3].Point_Index )
+        {
+            target_angle += angle_adjustment;
+        }
+        else
+        {
+            target_angle = (float)angle;
+        }
+        Speed_Management_For_Test3((float)distance, i);
+    }
+
     if (distance < INS_SWITCH_DISTANCE)
     {
         reach_flag = 1;
@@ -608,7 +717,14 @@ void INS_Navigation(void)
         }
         else
         {
-            INS_Point_to_Point(NOW_INS_Point);
+            if (test_flag == TEST__3)
+            {
+                INS_Point_to_Point_For_Test3(NOW_INS_Point);
+            }
+            else
+            {
+                INS_Point_to_Point(NOW_INS_Point);
+            }
             if (reach_flag)
             {
                 target_speed = MIN_SPEED;
@@ -622,6 +738,9 @@ void INS_Navigation(void)
         }
     }
 }
+
+// 由于 GPS 和 INS 的 Index 并不统一
+// 复合导航暂不支持科目三特殊处理
 
 void GPS_INS_Navigation(void)
 {

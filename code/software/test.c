@@ -72,33 +72,40 @@ void Speed_Management_For_Test3(float distance ,uint8_t i)
     float current_target_speed;
 
     // 检查是否为特殊点位
-    int special_index = -1;
-    for (int j = 0; j < 4; j++) {
-        if (i == Test3Element[j].Point_Index) {
+    int8_t special_index = -1;
+    for (uint8_t j = 0; j < 4; j++)
+    {
+        if (i == Test3Element[j].Point_Index)
+        {
             special_index = j;
             break;
         }
     }
     
-    if (special_index >= 0) {
+    if (special_index >= 0)
+    {
         current_target_speed = Test3Element[special_index].Through_Speed;
     }
-    else {
+    else
+    {
         // 检查是否为特殊点位的前一个点
         float minimum_speed = MIN_SPEED;  // 默认最小速度
-        
-        for (int j = 0; j < 4; j++) {
-            if (i == Test3Element[j].Point_Index - 1) {
+
+        for (uint8_t j = 0; j < 4; j++)
+        {
+            if (i == Test3Element[j].Point_Index - 1)
+            {
                 minimum_speed = Test3Element[j].Through_Speed;
                 break;
             }
         }
         
-        if(distance > BRAKING_DISTANCE) {
+        if(distance > BRAKING_DISTANCE)
+        {
             current_target_speed = MAX_SPEED;
         } 
         else {
-            current_target_speed = minimum_speed + (MAX_SPEED - minimum_speed) * (distance / BRAKING_DISTANCE) * 0.6f;
+            current_target_speed = minimum_speed + (MAX_SPEED - minimum_speed) * (distance / BRAKING_DISTANCE) * 0.7f;
             current_target_speed = fmaxf(current_target_speed, minimum_speed);
         }
     }
