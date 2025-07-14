@@ -11,7 +11,7 @@
 // #define MAX_ANGLE_R                     21.3f                                   // R 车舵机最大转角
 
 #define PWM_STEER_MIN_R                 580                                     // R 车舵机PWM右极限
-#define PWM_STEER_MIDDLE_R              760                                     // R 车舵机PWM中值
+#define PWM_STEER_MIDDLE_R              765                                     // R 车舵机PWM中值
 #define PWM_STEER_MAX_R                 940                                     // R 车舵机PWM左极限
 #define MAX_ANGLE_R                     30.0f                                   // R 车舵机最大转角
 

@@ -212,7 +212,8 @@ MotorMenuItem motor_menu[] = {
     {"S_Distance", &S_Distance},
     {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
     {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE},
-    {"S_SWITCH_DISTANCE", &S_SWITCH_DISTANCE}
+    {"S_SWITCH_DISTANCE", &S_SWITCH_DISTANCE},
+    {"ACCEL_DISTANCE", &ACCELERATION_DISTANCE}
 };
 
 // 导航模式菜单显示文本数组

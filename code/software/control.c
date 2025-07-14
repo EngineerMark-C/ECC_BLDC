@@ -6,7 +6,7 @@ float target_angle = 0.0f;                                                      
 float MAX_SPEED;                                                                // 最大速度
 float MIN_SPEED;                                                                // 最小速度
 float BRAKING_DISTANCE;                                                         // 开始减速距离
-float Brake_Threshold = 6.0f;                                                   // 刹车阈值
+float ACCELERATION_DISTANCE;                                                    // 加速距离
 
 float S_MAX_SPEED;                                                              // S 型走位最大速度
 float S_MIN_SPEED;                                                              // S 型走位最小速度
@@ -49,6 +49,8 @@ float next_target_angle = 0.0f;                                                 
 
 float now_s_distance = 0.0f;                                                    // 当前S型走位距离
 
+float now_distance = 0.0f;                                                      // 当前距离
+
 uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
 
 typedef struct {
@@ -70,8 +72,38 @@ void Speed_Management(float distance)
     float current_target_speed;
 
     // 动态速度曲线：距离越近速度越慢
-    if(distance > BRAKING_DISTANCE) {
+    if(distance > BRAKING_DISTANCE)
+    {
         current_target_speed = MAX_SPEED;
+    } 
+    else 
+    {
+        // 线性减速区间
+        // 当前目标速度 = 靠近速度 + (最大速度 - 靠近速度) * (当前距离 / 减速距离)
+        current_target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (distance / BRAKING_DISTANCE) * 0.7f;
+        // current_target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (distance / BRAKING_DISTANCE) * 0.6f;
+        // 确保不低于最小速度
+        current_target_speed = fmaxf(current_target_speed, MIN_SPEED);
+    }
+    target_speed = current_target_speed;
+}
+
+void Speed_Management_For_Test1(float distance)
+{
+    float current_target_speed;
+
+    // 动态速度曲线：距离越近速度越慢
+    if(distance > ACCELERATION_DISTANCE)
+    {
+        if (now_distance < ACCELERATION_DISTANCE)
+        {
+            current_target_speed = MAX_SPEED * (now_distance / ACCELERATION_DISTANCE) * 0.7f;
+            current_target_speed = fmaxf(current_target_speed, MIN_SPEED);
+        }
+        else
+        {
+            current_target_speed = MAX_SPEED;
+        }
     } 
     else 
     {
@@ -232,6 +264,7 @@ void S_Point_Generate_All(void)
         else if (i == Back_INS_Point) 
         {
             S_Point[i][0] = INS_Point[i][0];
+            S_Point[i][1] = INS_Point[i][1];
         }
         else
         {
@@ -469,7 +502,7 @@ void GPS_ENU_Navigation(void)
 void Caculate_Next_S_Point_Angle(uint8_t i)
 {
     // 计算下一个 S 型走位点
-    if (i < End_S_Point) 
+    if (i < End_S_Point)
     {
         float dx = S_Point_Navigation_Frame[i+1][0] - S_Point_Navigation_Frame[i][0];
         float dy = S_Point_Navigation_Frame[i+1][1] - S_Point_Navigation_Frame[i][1];
@@ -479,7 +512,7 @@ void Caculate_Next_S_Point_Angle(uint8_t i)
 
         next_target_angle = next_angle;
     }
-    else 
+    else
     {
         next_target_angle = target_angle;
     }
@@ -518,6 +551,22 @@ void Caculate_Next_INS_Point_Angle(uint8_t i)
     {
         next_target_angle = target_angle;
     }
+}
+
+void Caculate_Now_INS_Point_Distance(uint8_t i)
+{
+    float dx, dy;
+    if (i == 0) 
+    {
+        dx = position[0];
+        dy = position[1];
+    }
+    else 
+    {
+        dx = position[0] - INS_Point_Navigation_Frame[i-1][0];
+        dy = position[1] - INS_Point_Navigation_Frame[i-1][1];
+    }
+    now_distance = sqrtf(dx*dx + dy*dy);
 }
 
 void INS_Point_Y_Zero(void)
@@ -624,13 +673,23 @@ void INS_Point_to_Point(uint8_t i)
     {
         Caculate_Next_INS_Point_Angle(i);
     }
+
+    Caculate_Now_INS_Point_Distance(i);
     // 计算欧几里得距离
     float distance = sqrtf(dx*dx + dy*dy);
 
     if (reach_flag != 1)
     {
         target_angle = angle;
-        Speed_Management((float)distance);
+        if (test_flag == TEST__1)
+        {
+            Speed_Management_For_Test1((float)distance);
+        }
+        else
+        {
+            Speed_Management((float)distance);
+        }
+        // Speed_Management((float)distance);
     }
 
     if (distance < INS_SWITCH_DISTANCE)
