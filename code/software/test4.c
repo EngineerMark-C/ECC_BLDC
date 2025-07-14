@@ -13,12 +13,6 @@ uint8_t timer_10ms_flag = 0;
 uint8_t command_complete_flag = 1;
 uint8_t voice_recognition_flag = 0;
 
-// static float start_x = 0.0f;          // 记录开始时的X坐标
-// static float start_yaw = 0.0f;        // 记录开始时的偏航角
-// static float total_rotated = 0.0f;    // 记录总的旋转角度
-// static float last_yaw = 0.0f;         // 上次的偏航角
-// static uint8_t rotation_state = 0;    // 旋转状态：0=未开始，1=旋转中，2=完成
-
 //************************************延时函数****************************************//
 /**
  * @brief 基于定时器标志的延时函数
@@ -281,15 +275,18 @@ void Handle_Move_Backward_10M(void)
 void Handle_Snake_Forward_10M(void)
 {
     target_speed = 2.0f;
-
     target_angle = 30.0f;
     delay_ms(1000);
+    target_speed = 2.0f;
     target_angle = -30.0f;
     delay_ms(1000);
+    target_speed = 2.0f;
     target_angle = 30.0f;
     delay_ms(1000);
+    target_speed = 2.0f;
     target_angle = -30.0f;
     delay_ms(1000);
+    target_speed = 2.0f;
     target_angle = 30.0f;
     delay_ms(1000);
 

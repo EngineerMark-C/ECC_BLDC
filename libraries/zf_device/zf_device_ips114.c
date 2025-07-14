@@ -58,6 +58,7 @@
 #include "zf_driver_soft_spi.h"
 #include "zf_driver_spi.h"
 #include "zf_device_ips114.h"
+#include "camera.h"
 
         uint16                  ips114_width_max    = 240;
         uint16                  ips114_height_max   = 135;
@@ -900,6 +901,93 @@ void ips114_show_gray_image (uint16 x, uint16 y, const uint8 *image, uint16 widt
             {
                 data_buffer[i] = (RGB565_WHITE);
             }
+        }
+        ips114_write_16bit_data_array(data_buffer, dis_width);
+    }
+    IPS114_CS(1);
+}
+
+/**
+ * @brief 在IPS屏幕上显示带白线标记的图像
+ * @param x 显示起始x坐标
+ * @param y 显示起始y坐标
+ * @param dis_width 显示宽度
+ * @param dis_height 显示高度
+ * @param threshold 二值化阈值(0表示显示灰度图)
+ */
+void Camera_Show_Line_Detection(uint16_t x, uint16_t y, uint16_t dis_width, uint16_t dis_height, uint8_t threshold)
+{
+    // 如果程序在输出了断言信息 并且提示出错位置在这里
+    // 那么一般是屏幕显示的时候超过屏幕分辨率范围了
+    zf_assert(x < ips114_width_max);
+    zf_assert(y < ips114_height_max);
+
+    uint32_t i = 0, j = 0;
+    uint16_t color = 0, temp = 0;
+    uint16_t data_buffer[dis_width];
+    const uint8_t *image_temp;
+
+    IPS114_CS(0);
+    ips114_set_region(x, y, x + dis_width - 1, y + dis_height - 1);
+
+    for(j = 0; j < dis_height; j++)
+    {
+        int actual_row = j * MT9V03X_H / dis_height;
+        image_temp = (const uint8_t*)Camera_Image[actual_row];
+        
+        for(i = 0; i < dis_width; i++)
+        {
+            int actual_col = i * MT9V03X_W / dis_width;
+            temp = *(image_temp + actual_col);
+            
+            // 检查当前像素是否在白线标记范围内
+            uint8_t is_line_mark = 0;
+            if(Line_Info[actual_row].valid)
+            {
+                // 标记左边界（加粗至2像素宽度）
+                if(actual_col >= Line_Info[actual_row].left_edge - 2 && 
+                   actual_col <= Line_Info[actual_row].left_edge + 2)
+                {
+                    is_line_mark = 1;
+                    color = RGB565_RED;  // 红色标记左边界
+                }
+                // 标记右边界（加粗至2像素宽度）
+                else if(actual_col >= Line_Info[actual_row].right_edge - 2 && 
+                        actual_col <= Line_Info[actual_row].right_edge + 2)
+                {
+                    is_line_mark = 1;
+                    color = RGB565_RED;  // 红色标记右边界
+                }
+                // 标记中心线（加粗至2像素宽度）
+                else if(actual_col >= Line_Info[actual_row].center - 2 && 
+                        actual_col <= Line_Info[actual_row].center + 2)
+                {
+                    is_line_mark = 1;
+                    color = RGB565_RED;  // 红色标记中心线
+                }
+            }
+            
+            // 如果不是线条标记，则按原来的方式显示
+            if(!is_line_mark)
+            {
+                if(threshold == 0)
+                {
+                    // 显示灰度图
+                    color = (0x001f & ((temp) >> 3)) << 11;
+                    color = color | (((0x003f) & ((temp) >> 2)) << 5);
+                    color = color | (0x001f & ((temp) >> 3));
+                }
+                else if(temp < threshold)
+                {
+                    color = RGB565_BLACK;
+                }
+                else
+                {
+                    color = RGB565_WHITE;
+                }
+            }
+            
+            data_buffer[i] = color;
         }
         ips114_write_16bit_data_array(data_buffer, dis_width);
     }

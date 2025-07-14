@@ -48,7 +48,7 @@ int core0_main(void)
     debug_init();                                                               // 初始化默认调试串口
     cpu_wait_event_ready();                                                     // 等待所有核心初始化完毕
     Init();                                                                     // 初始化函数
-    Update_Menu_For_Test_Mode();                                                // 更新菜单配置（根据科目模式）
+    Update_Menu_For_Test_Mode();                                                // 更新菜单配置
     // Reset_All_Flash_Data();                                                    // 重置所有Flash数据区域
     // target_speed = 2.0f;                                                       // 目标速度
     // icm42688_init();                                                           // 初始化 ICM42688
@@ -56,16 +56,17 @@ int core0_main(void)
     {
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         Menu();                                                                 // 菜单逻辑
-        system_delay_ms(100);                                                   // 将刷新间隔增加到100ms
+        // system_delay_ms(50);                                                    // 将刷新间隔增加到50ms
+        Get_Now_Location();                                                     // 获取当前位置
         // uint32 end_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
-        // time = end_time - start_time;
+        // uint32 time = end_time - start_time;
         // float time_us = (float)time / 100.0f;
         // printf("所需时间: %.2f us\n", time_us);
         // printf("%f\n", yaw);
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
-        printf("%f,%f\n", speed, target_speed);
+        // printf("%f,%f\n", speed, target_speed);
         // printf("%d\n", wifi_uart_information.wifi_uart_connect_state);
         // printf("%s\n", wifi_uart_information.wifi_uart_local_ip);
         // wifi_process();                                                           // 处理接收到的数据
