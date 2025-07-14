@@ -2,7 +2,7 @@
 #define _flash_h_
 
 #define FLASH_SECTION_INDEX             (0)                                     // 存储数据用的扇区
-#define FLASH_PAGE_INDEX                (8)                                     // 存储数据用的页码       目前未使用
+#define FLASH_PAGE_INDEX                (1)                                     // 存储数据用的页码       目前未使用
 
 void Flash_Init(void);
 
@@ -39,6 +39,13 @@ void INS_Points_Init(void);
 
 void Save_S_Point(void);
 void S_Point_Init(void);
+
+//************************************Test3Element数据处理**********************************//
+#define FLASH_TEST3_ELEMENT_INDEX       (8)                                     // 存储 Test3Element 数据用的页码
+#define TEST3_ELEMENT_SIZE              (2)                                     // Test3Element 数据大小（索引 + 速度）
+
+void Save_Test3Element(void);
+void Test3Element_Init(void);
 
 //************************************基础数据处理****************************************//
 #define FLASH_BASIC_DATA_INDEX          (6)                                     // 存储基础数据用的页码

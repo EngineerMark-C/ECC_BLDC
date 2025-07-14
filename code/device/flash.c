@@ -15,8 +15,9 @@ typedef union {
 // 3. 初始化 GPS 点位
 // 4. 初始化 ENU 点位
 // 5. 初始化 INS 点位
-// 6. 初始化 S 型走位点
-// 7. 初始化发车方向
+// 6. 初始化 test3元素数据
+// 7. 初始化 S 型走位点
+// 8. 初始化 发车方向
 
 void Flash_Init(void)
 {
@@ -26,6 +27,7 @@ void Flash_Init(void)
     GPS_Points_Init();
     WGS84_to_ENU_Init();
     INS_Points_Init();
+    Test3Element_Init();
     S_Point_Init();
     ips114_show_string(CENTER_X , CENTER_Y + IMAGE_HEIGHT + 10, "Welcome!");
 
@@ -622,7 +624,58 @@ void S_Point_Init(void)
         }
         Vehicle_To_Navigation_S();
         ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "S Points Loaded.");
-        system_delay_ms(1000);  // 显示1秒
+        system_delay_ms(500);  // 显示0.5秒
+        ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 26);
+    }
+}
+
+//************************************Test3Element数据处理****************************************//
+//                     | 索引 | 数据类型    | 说明                           |
+//                     |------|-----------|-------------------------------|
+//                     | 0    | uint8     | Test3Element[0].Point_Index   |   坡道
+//                     | 1    | float     | Test3Element[0].Through_Speed |   坡道
+//                     | 2    | uint8     | Test3Element[1].Point_Index   |   草地
+//                     | 3    | float     | Test3Element[1].Through_Speed |   草地
+//                     | 4    | uint8     | Test3Element[2].Point_Index   |   颠簸
+//                     | 5    | float     | Test3Element[2].Through_Speed |   颠簸
+//                     | 6    | uint8     | Test3Element[3].Point_Index   |   狭路
+//                     | 7    | float     | Test3Element[3].Through_Speed |   狭路
+
+// 保存 Test3Element 数据
+void Save_Test3Element(void)
+{
+    flash_buffer_clear();
+    
+    // 写入Test3Element数据
+    for(uint8_t i = 0; i < 4; i++)
+    {
+        flash_union_buffer[i * TEST3_ELEMENT_SIZE].uint8_type = Test3Element[i].Point_Index;
+        flash_union_buffer[i * TEST3_ELEMENT_SIZE + 1].float_type = Test3Element[i].Through_Speed;
+    }
+    
+    // 擦除并写入Flash
+    flash_erase_page(FLASH_SECTION_INDEX, FLASH_TEST_DATA_INDEX);
+    flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_TEST_DATA_INDEX);
+    ips114_show_string(60, CENTER_Y, "Element Saved.");
+    system_delay_ms(500);
+}
+
+// 上电初始化时调用
+void Test3Element_Init(void)
+{
+    ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Loading Element...");
+
+    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_TEST_DATA_INDEX);
+
+    if(flash_union_buffer[0].uint8_type != 0xFF)  // 检查首字节是否有效
+    {
+        for(uint8_t i = 0; i < 4; i++)
+        {
+            Test3Element[i].Point_Index = flash_union_buffer[i * TEST3_ELEMENT_SIZE].uint8_type;
+            Test3Element[i].Through_Speed = flash_union_buffer[i * TEST3_ELEMENT_SIZE + 1].float_type;
+        }
+        ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Element Loaded.");
+        system_delay_ms(500);  // 显示0.5秒
         ips114_clear_lines(CENTER_Y + IMAGE_HEIGHT + 10, CENTER_Y + IMAGE_HEIGHT + 26);
     }
 }
@@ -639,6 +692,7 @@ void S_Point_Init(void)
 //                     | 6    | float     | acc_bias[0]         |
 //                     | 7    | float     | acc_bias[1]         |
 //                     | 8    | float     | acc_bias[2]         |
+//                     | 9    | uint8     | Camera_Exposure     |
 
 // 保存基础数据
 void Save_Basic_Data(void)
@@ -653,6 +707,7 @@ void Save_Basic_Data(void)
     flash_union_buffer[6].float_type = acc_bias[0];
     flash_union_buffer[7].float_type = acc_bias[1];
     flash_union_buffer[8].float_type = acc_bias[2];
+    flash_union_buffer[9].uint8_type = Camera_Exposure;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_BASIC_DATA_INDEX);
@@ -675,6 +730,7 @@ void Basic_Data_Init(void)
     acc_bias[0] = flash_union_buffer[6].float_type;
     acc_bias[1] = flash_union_buffer[7].float_type;
     acc_bias[2] = flash_union_buffer[8].float_type;
+    Camera_Exposure = flash_union_buffer[9].uint8_type;
 
     // 第一次烧录确保初始化赋初值
     // test_flag = 3;
@@ -686,6 +742,7 @@ void Basic_Data_Init(void)
     // acc_bias[0] = 0.0f;
     // acc_bias[1] = 0.0f;
     // acc_bias[2] = 0.0f;
+    // Camera_Exposure = 64;
 
     ips114_show_string(CENTER_X - 30, CENTER_Y + IMAGE_HEIGHT + 10, "Basic Data Loaded.");
     system_delay_ms(500);
@@ -711,13 +768,16 @@ void Basic_Data_Init(void)
 //                     | 13  | float      | SAFETY_X_MIN        |
 //                     | 14  | float      | SAFETY_Y_MAX        |
 //                     | 15  | float      | SAFETY_Y_MIN        |
-//                     | 16  | float      | SAFETY_MARGIN       |
+//                     | 16  | float      | SAFETY_MARGIN_X     |
 //                     | 17  | float      | MAX_SPEED           |
 //                     | 18  | float      | MIN_SPEED           |
 //                     | 19  | float      | BRAKING_DISTANCE    |
 //                     | 20  | float      | S_MAX_SPEED         |
 //                     | 21  | float      | S_MIN_SPEED         |
 //                     | 22  | float      | S_BRAKING_DISTANCE  |
+//                     | 23  | float      | SAFETY_MARGIN_Y     |
+//                     | 24  | float      | S_SWITCH_DISTANCE   |
+//                     | 25  | float      | ACCEL_DISTANCE      |
 
 
 // 保存科目数据
@@ -767,13 +827,16 @@ void Save_Test_Data(void)
     flash_union_buffer[offset + 13].float_type = SAFETY_X_MIN;
     flash_union_buffer[offset + 14].float_type = SAFETY_Y_MAX;
     flash_union_buffer[offset + 15].float_type = SAFETY_Y_MIN;
-    flash_union_buffer[offset + 16].float_type = SAFETY_MARGIN;
+    flash_union_buffer[offset + 16].float_type = SAFETY_MARGIN_X;
     flash_union_buffer[offset + 17].float_type = MAX_SPEED;
     flash_union_buffer[offset + 18].float_type = MIN_SPEED;
     flash_union_buffer[offset + 19].float_type = BRAKING_DISTANCE;
     flash_union_buffer[offset + 20].float_type = S_MAX_SPEED;
     flash_union_buffer[offset + 21].float_type = S_MIN_SPEED;
     flash_union_buffer[offset + 22].float_type = S_BRAKING_DISTANCE;
+    flash_union_buffer[offset + 23].float_type = SAFETY_MARGIN_Y;
+    flash_union_buffer[offset + 24].float_type = S_SWITCH_DISTANCE;
+    flash_union_buffer[offset + 25].float_type = ACCELERATION_DISTANCE;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
@@ -827,13 +890,16 @@ void Test_Data_Init(void)
     SAFETY_X_MIN = flash_union_buffer[offset + 13].float_type;
     SAFETY_Y_MAX = flash_union_buffer[offset + 14].float_type;
     SAFETY_Y_MIN = flash_union_buffer[offset + 15].float_type;
-    SAFETY_MARGIN = flash_union_buffer[offset + 16].float_type;
+    SAFETY_MARGIN_X = flash_union_buffer[offset + 16].float_type;
     MAX_SPEED = flash_union_buffer[offset + 17].float_type;
     MIN_SPEED = flash_union_buffer[offset + 18].float_type;
     BRAKING_DISTANCE = flash_union_buffer[offset + 19].float_type;
     S_MAX_SPEED = flash_union_buffer[offset + 20].float_type;
     S_MIN_SPEED = flash_union_buffer[offset + 21].float_type;
     S_BRAKING_DISTANCE = flash_union_buffer[offset + 22].float_type;
+    SAFETY_MARGIN_Y = flash_union_buffer[offset + 23].float_type;
+    S_SWITCH_DISTANCE = flash_union_buffer[offset + 24].float_type;
+    ACCELERATION_DISTANCE = flash_union_buffer[offset + 25].float_type;
 
     // 第一次烧录确保过初始化赋初值
     // Start_GPS_Point = 1;
@@ -852,10 +918,13 @@ void Test_Data_Init(void)
     // SAFETY_X_MIN = 0.0f;
     // SAFETY_Y_MAX = 0.0f;
     // SAFETY_Y_MIN = 0.0f;
-    // SAFETY_MARGIN = 8.0f;
+    // SAFETY_MARGIN_X = 8.0f;
+    // SAFETY_MARGIN_Y = 5.0f;
     // MAX_SPEED = 3.0f;
     // MIN_SPEED = 2.0f;
     // BRAKING_DISTANCE = 3.0f;
+    // S_SWITCH_DISTANCE = 0.4f;
+    ACCELERATION_DISTANCE = 8.0f;
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;

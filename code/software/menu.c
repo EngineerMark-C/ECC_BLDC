@@ -4,6 +4,8 @@
 #define GPS_INS_PATH_MENU_COUNT (sizeof(gps_ins_path_menu) / sizeof(GPSINSPathMenuItem))
 #define Motor_MENU_ITEMS_COUNT (sizeof(motor_menu) / sizeof(MotorMenuItem))
 #define TEST_MODE_COUNT (sizeof(test_mode_names) / sizeof(test_mode_names[0]))
+#define TEST3_MENU_ITEMS_COUNT (sizeof(test3_menu) / sizeof(Test3MenuItem))
+
 
 // 定义菜单状态
 typedef enum
@@ -26,6 +28,7 @@ typedef enum
     MENU_Direction,      // 方向向量采集状态
     MENU_Voice_Led,      // 语音LED状态
     MENU_TEST_MODE,      // 科目模式选择状态
+    MENU_TEST3_Element,  // 科目三元素数据编辑状态
 } MenuState;
 
 // 主菜单项定义
@@ -59,11 +62,20 @@ typedef struct
     uint8_t *num;
 } GPSINSPathMenuItem;
 
+// 边界编辑菜单项定义
 typedef struct
 {
     const char *name;
     float *num;
 } BoundaryMenuItem;
+
+// 科目三菜单项定义
+typedef struct
+{
+    const char *name;
+    uint8_t *index;
+    float *speed;
+} Test3MenuItem;
 
 // 全部菜单项（NO_TEST模式）
 MainMenuItem all_menu_items[] = {
@@ -128,6 +140,7 @@ MainMenuItem test3_menu_items[] = {
     {"ENU Point", 3},
     {"INS Point", 4},
     {"GPS Path Setup", 5},
+    {"Test3 Element", 18},
     {"Speed Manage", 6},
     {"GPS Info", 7},
     {"Speed & IMU", 8},
@@ -172,7 +185,8 @@ GPSINSPathMenuItem gps_ins_path_menu[] = {
 
 // 边界编辑菜单项
 BoundaryMenuItem boundary_menu[] = {
-    {"SAFETY_MARGIN", &SAFETY_MARGIN},
+    {"SAFETY_MARGIN_X", &SAFETY_MARGIN_X},
+    {"SAFETY_MARGIN_Y", &SAFETY_MARGIN_Y},
     {"SAFETY_X_MAX", &SAFETY_X_MAX},
     {"SAFETY_X_MIN", &SAFETY_X_MIN},
     {"SAFETY_Y_MAX", &SAFETY_Y_MAX},
@@ -197,7 +211,9 @@ MotorMenuItem motor_menu[] = {
     {"S_BRAKING_DISTANCE", &S_BRAKING_DISTANCE},
     {"S_Distance", &S_Distance},
     {"GPS_SWITCH_DISTANCE", &GPS_SWITCH_DISTANCE},
-    {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE}
+    {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE},
+    {"S_SWITCH_DISTANCE", &S_SWITCH_DISTANCE},
+    {"ACCEL_DISTANCE", &ACCELERATION_DISTANCE}
 };
 
 // 导航模式菜单显示文本数组
@@ -206,7 +222,16 @@ const char *nav_mode_names[] = {
     "GPS-ENU Navigation",
     "INS Navigation",
     "GPS-INS Navigation",
-    "GPS-ENU-INS Navigation"};
+    "GPS-ENU-INS Navigation"
+};
+
+// 科目三元素数据
+Test3MenuItem test3_menu[] = {
+    {"Ramp Point", &Test3Element[0].Point_Index, &Test3Element[0].Through_Speed},
+    {"Grass Point", &Test3Element[1].Point_Index, &Test3Element[1].Through_Speed},
+    {"Bump Point", &Test3Element[2].Point_Index, &Test3Element[2].Through_Speed},
+    {"Narrow Point", &Test3Element[3].Point_Index, &Test3Element[3].Through_Speed}
+};
 
 // 科目模式名称数组
 const char *test_mode_names[] = {
@@ -372,6 +397,9 @@ void Display_Menu(void)
     case MENU_TEST_MODE:
         Display_Test_Mode_Menu();
         break;
+    case MENU_TEST3_Element:
+        Display_Test3_Element_Menu();
+        break;
     }
 }
 
@@ -446,6 +474,9 @@ void Menu(void)
         break;
     case MENU_TEST_MODE:
         Test_Mode_Key_Process();
+        break;
+    case MENU_TEST3_Element:
+        Test3_Element_Menu_Key_Process();
         break;
     case MENU_SPEED_IMU:
     case MENU_GPS_INFO:
@@ -907,16 +938,59 @@ void Display_Camera(void)
         }
         else if (Camera_Choose == 1)
         {
-            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 188, 120, Camera_Threshold); // 显示二值化图像
+            // ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 188, 120, Camera_Threshold); // 显示二值化图像
+            Camera_Show_Line_Detection(0, 0, MT9V03X_W, MT9V03X_H, Camera_Threshold);
         }
         mt9v03x_finish_flag = 0;
     }
     // 显示相机类型和阈值
     char buffer[32];
-    sprintf(buffer, "Mode:%s Thres:%d",
-            Camera_Choose ? "Binary" : "Normal",
+    if (Camera_Choose == 0)
+    {
+        sprintf(buffer, "Mode:%s Expos:%d","Normal",
+            Camera_Exposure);
+    }
+    else
+    {
+        sprintf(buffer, "Mode:%s Thres:%d","Binary",
             Camera_Threshold);
+    }
     ips114_show_string(0, 112, buffer);
+
+    ips114_show_string(200, 16, Camera_Is_Line_Detected() ? "Yes" : "No");
+
+    ips114_show_int(200, 32, Camera_Get_Line_Direction(), 2);
+    // 显示方向含义
+    char dir_text[1];
+    int8_t direction = Camera_Get_Line_Direction();
+    if (direction == -1)
+        sprintf(dir_text, "L");
+    else if (direction == 0)
+        sprintf(dir_text, "C");
+    else if (direction == 1)
+        sprintf(dir_text, "R");
+    else
+        sprintf(dir_text, "N");
+    ips114_show_string(200, 48, dir_text);
+
+    if (Camera_Is_Line_Detected())
+    {
+
+        ips114_show_int(200, 64, Camera_Get_Line_Position(), 3);
+        
+        ips114_show_int(200, 80, MT9V03X_W / 2, 3);
+
+        ips114_show_int(200, 96, Camera_Get_Line_Offset(), 3);
+
+        ips114_show_int(200, 112,(int8_t)angle_adjustment, 3);
+    }
+    else
+    {
+        ips114_show_string(200, 64, "Pos");
+        ips114_show_string(200, 80, "Mid");
+        ips114_show_string(200, 96, "Off");
+        ips114_show_string(200, 112, "Ang");
+    }
 }
 
 // 边界编辑界面
@@ -925,27 +999,29 @@ void Display_Boundary(void)
     ips114_show_string(0, 0, "Boundary");
     ips114_show_float(200, 0, adjust_step, 2, 1);
     
-    // 显示可编辑的安全边界外扩距离
-    char buffer[32];
-    sprintf(buffer, "> %s: %.2f",
-            boundary_menu[0].name,
-            *boundary_menu[0].num);
-    ips114_show_string(0, 16, buffer);
+    // 显示前两个可编辑的安全边界外扩距离
+    for (uint8_t i = 0; i < 2; i++)
+    {
+        char buffer[32];
+        sprintf(buffer, "%s%s: %.2f",
+                (i == current_item) ? "> " : "  ",
+                boundary_menu[i].name,
+                *boundary_menu[i].num);
+        ips114_show_string(0, 16 + i * 16, buffer);
+    }
     
     // 显示只读的边界值
-    for (uint8_t i = 1; i < 5; i++)
+    for (uint8_t i = 2; i < 6; i++)
     {
+        char buffer[32];
         sprintf(buffer, "  %s: %.2f",
                 boundary_menu[i].name,
                 *boundary_menu[i].num);
         ips114_show_string(0, 16 + i * 16, buffer);
     }
     
-    // 底部提示信息
-    ips114_show_string(0, 96, "KEY1:+  KEY2:-  KEY3:Update");
-    ips114_show_string(0, 112, "KEY4:Back");
+    ips114_show_string(0, 112, "K3:Switch K4:Back K5:Update");
 }
-
 // 主路径显示函数
 void Display_Path(void)
 {
@@ -1087,6 +1163,41 @@ void Display_Test_Mode_Menu(void)
     ips114_show_string(0, 112, "KEY3:Select  KEY4:Back");
 }
 
+void Display_Test3_Element_Menu(void)
+{
+    ips114_show_string(0, 0, "Test3 Element");
+    ips114_show_float(200, 0, adjust_step, 2, 1);
+    
+    // 显示当前可见范围的菜单项（Y轴间隔16像素）
+    for (uint8_t i = 0; i < visible_items && i < TEST3_MENU_ITEMS_COUNT; i++)
+    {
+        uint8_t item_num = start_index + i;
+        if (item_num >= TEST3_MENU_ITEMS_COUNT)
+            break;
+
+        char buffer[32];
+        sprintf(buffer, "%s%s: %d, Speed: %.1f",
+                (item_num == current_item) ? "> " : "  ",
+                test3_menu[item_num].name,
+                *test3_menu[item_num].index,
+                *test3_menu[item_num].speed);
+        ips114_show_string(0, 16 + i * 16, buffer);
+    }
+    
+    // 底部提示信息
+    if (edit_mode)
+    {
+        ips114_show_string(0, 96, "K1:+ K2:- K3:Switch K4:Exit");
+        char edit_info[32];
+        sprintf(edit_info, "Editing: %s", edit_coord ? "Index" : "Speed");
+        ips114_show_string(0, 112, edit_info);
+    }
+    else
+    {
+        ips114_show_string(0, 112, "K1:+ K2:- K3:Edit K4:Exit");
+    }
+}
+
 // 主菜单按键处理
 void Main_Menu_Key_Process(void)
 {
@@ -1134,7 +1245,7 @@ void Main_Menu_Key_Process(void)
             break;
         case 6:
             menu_state = MENU_SPEED_MANAGE;
-            current_item = 0;
+            start_index = 0;
             break;
         case 7:
             menu_state = MENU_GPS_INFO;
@@ -1157,7 +1268,6 @@ void Main_Menu_Key_Process(void)
             break;
         case 13:
             menu_state = MENU_Boundary;
-            current_item = 0;
             break;
         case 14:
             menu_state = MENU_PATH;
@@ -1170,6 +1280,9 @@ void Main_Menu_Key_Process(void)
             break;
         case 17:
             menu_state = MENU_TEST_MODE;
+            break;
+        case 18:
+            menu_state = MENU_TEST3_Element;
             break;
         }
         key_clear_state(KEY_3);
@@ -1194,18 +1307,18 @@ void Steer_Menu_Key_Process(void)
         {
             if (steer_menu.value < steer_menu.max)
                 steer_menu.value += steer_menu.step;
+            Steer_set_duty(steer_menu.value);
             key_clear_state(KEY_1);
         }
         if (key2_state == KEY_SHORT_PRESS)
         {
             if (steer_menu.value > steer_menu.min)
                 steer_menu.value -= steer_menu.step;
+            Steer_set_duty(steer_menu.value);
             key_clear_state(KEY_2);
         }
         if (key3_state == KEY_SHORT_PRESS)
         {
-            // 保存舵机PWM值
-            Steer_set_duty(steer_menu.value);
             key_clear_state(KEY_3);
         }
         if (key4_state == KEY_SHORT_PRESS)
@@ -1806,7 +1919,6 @@ void Nav_Mode_Key_Process(void)
 void Camera_Menu_Key_Process(void)
 {
     Update_Adjust_Step();
-    // 按键3：切换显示模式（原始/二值化）
     if (key3_state == KEY_SHORT_PRESS)
     {
         Camera_Choose = Camera_Choose ? 0 : 1;
@@ -1832,6 +1944,27 @@ void Camera_Menu_Key_Process(void)
             key_clear_state(KEY_2);
         }
     }
+    if (Camera_Choose == 0)
+    {
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (Camera_Exposure > 0)
+            {
+                Camera_Exposure -= (uint8_t)adjust_step;
+            }
+            mt9v03x_set_exposure_time(Camera_Exposure);
+            key_clear_state(KEY_1);
+        }
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (Camera_Exposure < 255)
+            {
+                Camera_Exposure += (uint8_t)adjust_step;
+            }
+            mt9v03x_set_exposure_time(Camera_Exposure);
+            key_clear_state(KEY_2);
+        }
+    }
     // 按键4：返回主菜单
     if (key4_state == KEY_SHORT_PRESS)
     {
@@ -1845,33 +1978,45 @@ void Camera_Menu_Key_Process(void)
 void Boundary_Menu_Key_Process(void)
 {
     Update_Adjust_Step();
+    
     if (key1_state == KEY_SHORT_PRESS)
     {
-        // 增加安全边界外扩距离
-        *boundary_menu[0].num += adjust_step;
-        if (*boundary_menu[0].num < 5.0f) *boundary_menu[0].num = 5.0f; // 设置最小值
+        // 增加当前选中的安全边界外扩距离
+        *boundary_menu[current_item].num += adjust_step;
+        if (*boundary_menu[current_item].num < 5.0f) 
+            *boundary_menu[current_item].num = 5.0f; // 设置最小值
         key_clear_state(KEY_1);
     }
     
     if (key2_state == KEY_SHORT_PRESS)
     {
-        // 减少安全边界外扩距离
-        *boundary_menu[0].num -= adjust_step;
-        if (*boundary_menu[0].num < 5.0f) *boundary_menu[0].num = 5.0f; // 设置最小值
+        // 减少当前选中的安全边界外扩距离
+        *boundary_menu[current_item].num -= adjust_step;
+        if (*boundary_menu[current_item].num < 5.0f) 
+            *boundary_menu[current_item].num = 5.0f; // 设置最小值
         key_clear_state(KEY_2);
     }
     
     if (key3_state == KEY_SHORT_PRESS)
     {
-        Calculate_Safety_Boundary(Navigation_Flag);
+        // 在SAFETY_MARGIN_X和SAFETY_MARGIN_Y之间切换
+        current_item = current_item ? 0 : 1;
         key_clear_state(KEY_3);
     }
     
     if (key4_state == KEY_SHORT_PRESS)
     {
+        // 返回主菜单
         menu_state = MENU_MAIN;
         Save_Test_Data();
         key_clear_state(KEY_4);
+    }
+    
+    if (key5_state == KEY_SHORT_PRESS)
+    {
+        // 更新安全边界计算
+        Calculate_Safety_Boundary(Navigation_Flag);
+        key_clear_state(KEY_5);
     }
 }
 
@@ -2154,5 +2299,93 @@ void Test_Mode_Key_Process(void)
     {
         menu_state = MENU_MAIN;
         key_clear_state(KEY_4);
+    }
+}
+
+void Test3_Element_Menu_Key_Process(void)
+{
+    Update_Adjust_Step();
+
+    if (edit_mode)
+    {
+        // 编辑模式处理
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (!edit_coord)
+            {
+                *test3_menu[current_item].speed += adjust_step;
+            }
+            else
+            {
+                *test3_menu[current_item].index += adjust_step;
+            }
+            key_clear_state(KEY_1);
+        }
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (!edit_coord)
+            {
+                *test3_menu[current_item].speed -= adjust_step;
+            }
+            else
+            {
+                *test3_menu[current_item].index -= adjust_step;
+            }
+            key_clear_state(KEY_2);
+        }
+        if (key3_state == KEY_SHORT_PRESS)
+        {
+            // 切换编辑项目
+            edit_coord = !edit_coord;
+            key_clear_state(KEY_3);
+        }
+        
+        if (key4_state == KEY_SHORT_PRESS)
+        {
+            // 退出编辑模式
+            edit_mode = false;
+            key_clear_state(KEY_4);
+        }
+    }
+    else
+    {
+        // 非编辑模式处理
+        if (key1_state == KEY_SHORT_PRESS)
+        {
+            if (current_item > 0)
+            {
+                current_item--;
+                if (current_item < start_index)
+                    start_index = current_item;
+            }
+            key_clear_state(KEY_1);
+        }
+        
+        if (key2_state == KEY_SHORT_PRESS)
+        {
+            if (current_item < TEST3_MENU_ITEMS_COUNT - 1)
+            {
+                current_item++;
+                if (current_item >= start_index + visible_items)
+                    start_index = current_item - visible_items + 1;
+            }
+            key_clear_state(KEY_2);
+        }
+        
+        if (key3_state == KEY_SHORT_PRESS)
+        {
+            // 进入编辑模式
+            edit_mode = true;
+            edit_coord = true; // 默认先编辑Point_Index
+            key_clear_state(KEY_3);
+        }
+        
+        if (key4_state == KEY_SHORT_PRESS)
+        {
+            // 返回主菜单
+            Save_Test3Element();
+            menu_state = MENU_MAIN;
+            key_clear_state(KEY_4);
+        }
     }
 }

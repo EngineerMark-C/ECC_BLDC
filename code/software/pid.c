@@ -7,17 +7,26 @@ int16_t output_speed;
 // PID参数表
 const PID_Params_t speed_pid_params_table[] = 
 {
-    {5.5f,  550.0f, 2800.0f, 0.0f},    // 低速参数
-    {12.0f, 520.0f, 3200.0f, 0.0f},    // 中速参数
-    {16.0f, 560.0f, 4300.0f, 0.0f},    // 高速参数
+    {5.5f,  550.0f, 2800.0f, 0.0f},                                             // 低速参数
+    {12.0f, 520.0f, 3200.0f, 0.0f},                                             // 中速参数
+    {16.0f, 560.0f, 4300.0f, 0.0f},                                             // 高速参数
 };
 
 const PID_Params_t steer_pid_params_table[] = 
 {
-    {5.0f, 0.7f, 0.0f, 0.0f},           // 舵机PID参数
-    {10.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
-    {15.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
+    {3.0f, 1.0f, 0.0f, 0.0f},                                                  // 舵机PID参数
+    {5.0f, 0.78f, 0.0f, 0.0f},
+    {8.0f, 0.40f, 0.0f, 0.0f},                                                  // 舵机PID参数
+    {12.0f, 0.30f, 0.0f, 0.0f},                                                 // 舵机PID参数
+    {14.0f, 0.28f, 0.0f, 0.0f},                                                 // 舵机PID参数
 };
+
+// const PID_Params_t steer_pid_params_table[] = 
+// {
+//     {5.0f, 0.7f, 0.0f, 0.0f},           // 舵机PID参数
+//     {10.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
+//     {15.0f, 0.3f, 0.0f, 0.0f},          // 舵机PID参数
+// };
 
 void PID_init(struct PID *pid, float kp, float ki, float kd, uint8_t mode, float integral_limit)
 {
@@ -67,37 +76,50 @@ void PID_set_params(struct PID *pid, float kp, float ki, float kd)
 
 void Update_Speed_PID_Params(float target_speed)
 {
-    // 根据目标速度选择 PID 参数
+    const PID_Params_t* params;
+
+    // 快速确定参数组
     if (target_speed <= speed_pid_params_table[0].max_speed)
-    {
-        PID_set_params(&pid_speed, speed_pid_params_table[0].kp, speed_pid_params_table[0].ki, speed_pid_params_table[0].kd);
-    }
-    else if (target_speed > speed_pid_params_table[0].max_speed && target_speed <= speed_pid_params_table[1].max_speed)
-    {
-        PID_set_params(&pid_speed, speed_pid_params_table[1].kp, speed_pid_params_table[1].ki, speed_pid_params_table[1].kd);
-    }
+        params = &speed_pid_params_table[0];
+    else if (target_speed <= speed_pid_params_table[1].max_speed)
+        params = &speed_pid_params_table[1];
     else
-    {
-        PID_set_params(&pid_speed, speed_pid_params_table[2].kp, speed_pid_params_table[2].ki, speed_pid_params_table[2].kd);
-    }
+        params = &speed_pid_params_table[2];
+
+    PID_set_params(&pid_speed, params->kp, params->ki, params->kd);
 }
 
 void Update_Steer_PID_Params(float now_speed)
 {
-    // 根据当前速度选择舵机 PID 参数
+    const PID_Params_t* params;
+    
+    // 快速确定参数组
     if (now_speed <= steer_pid_params_table[0].max_speed)
-    {
-        PID_set_params(&pid_steer, steer_pid_params_table[0].kp, steer_pid_params_table[0].ki, steer_pid_params_table[0].kd);
-    }
-    else if (now_speed > steer_pid_params_table[0].max_speed && now_speed <= steer_pid_params_table[1].max_speed)
-    {
-        PID_set_params(&pid_steer, steer_pid_params_table[1].kp, steer_pid_params_table[1].ki, steer_pid_params_table[1].kd);
-    }
+        params = &steer_pid_params_table[0];
+    else if (now_speed <= steer_pid_params_table[1].max_speed)
+        params = &steer_pid_params_table[1];
+    else if (now_speed <= steer_pid_params_table[2].max_speed)
+        params = &steer_pid_params_table[2];
+    else if (now_speed <= steer_pid_params_table[3].max_speed)
+        params = &steer_pid_params_table[3];
     else
-    {
-        PID_set_params(&pid_steer, steer_pid_params_table[2].kp, steer_pid_params_table[2].ki, steer_pid_params_table[2].kd);
-    }
+        params = &steer_pid_params_table[4];
+    PID_set_params(&pid_steer, params->kp, params->ki, params->kd);
 }
+
+// void Update_Steer_PID_Params(float now_speed)
+// {
+//     const PID_Params_t* params;
+    
+//     // 快速确定参数组
+//     if (now_speed <= steer_pid_params_table[0].max_speed)
+//         params = &steer_pid_params_table[0];
+//     else if (now_speed <= steer_pid_params_table[1].max_speed)
+//         params = &steer_pid_params_table[1];
+//     else
+//         params = &steer_pid_params_table[2];
+//     PID_set_params(&pid_steer, params->kp, params->ki, params->kd);
+// }
 
 // 重置 PID 控制器状态
 void PID_reset(struct PID *pid)
@@ -208,7 +230,6 @@ void Motor_PID_Control(float target)
     BLDC_Set_Duty(output_speed);
 }
 
-// 角度 PID
 void PID_Angle_Calc(struct PID *pid, float current)
 {
     pid->current = current;

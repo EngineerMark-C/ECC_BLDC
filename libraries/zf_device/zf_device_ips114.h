@@ -131,6 +131,7 @@ void    ips114_show_double              (uint16 x,uint16 y, const double dat, ui
 void    ips114_show_binary_image        (uint16 x, uint16 y, const uint8 *image, uint16 width, uint16 height, uint16 dis_width, uint16 dis_height);                     // IPS114 显示二值图像 数据每八个点组成一个字节数据
 void    ips114_show_gray_image          (uint16 x, uint16 y, const uint8 *image, uint16 width, uint16 height, uint16 dis_width, uint16 dis_height, uint8 threshold);    // IPS114 显示 8bit 灰度图像 带二值化阈值
 void    ips114_show_rgb565_image        (uint16 x, uint16 y, const uint16 *image, uint16 width, uint16 height, uint16 dis_width, uint16 dis_height, uint8 color_mode);  // IPS114 显示 RGB565 彩色图像
+void    Camera_Show_Line_Detection      (uint16 x, uint16 y, uint16 dis_width, uint16 dis_height, uint8 threshold);                                                     // 摄像头显示线条检测结果
 
 void    ips114_show_wave                (uint16 x, uint16 y, const uint16 *wave, uint16 width, uint16 value_max, uint16 dis_width, uint16 dis_value_max);               // IPS114 显示波形
 void    ips114_show_chinese             (uint16 x, uint16 y, uint8 size, const uint8 *chinese_buffer, uint8 number, const uint16 color);                                // IPS114 汉字显示

@@ -5,7 +5,7 @@ struct Now_gnss NOW_location;
 void GPS_Init(void)
 {
     gnss_init(TAU1201);
-    pit_ms_init(PIT2, 100);                                                     // 初始化PIT2为周期中断100ms周期
+    pit_ms_init(PIT2, 10);                                                     // 初始化PIT2为周期中断20ms周期   实际上是导航更新的周期
 }
 
 void Get_Now_Location(void)
