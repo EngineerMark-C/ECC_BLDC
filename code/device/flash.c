@@ -777,7 +777,8 @@ void Basic_Data_Init(void)
 //                     | 22  | float      | S_BRAKING_DISTANCE  |
 //                     | 23  | float      | SAFETY_MARGIN_Y     |
 //                     | 24  | float      | S_SWITCH_DISTANCE   |
-//                     | 25  | float      | ACCEL_DISTANCE      |
+//                     | 25  | float      | GO_ACCEL_DISTANCE   |
+//                     | 26  | float      | BACK_ACCEL_DISTANCE |
 
 
 // 保存科目数据
@@ -836,7 +837,8 @@ void Save_Test_Data(void)
     flash_union_buffer[offset + 22].float_type = S_BRAKING_DISTANCE;
     flash_union_buffer[offset + 23].float_type = SAFETY_MARGIN_Y;
     flash_union_buffer[offset + 24].float_type = S_SWITCH_DISTANCE;
-    flash_union_buffer[offset + 25].float_type = ACCELERATION_DISTANCE;
+    flash_union_buffer[offset + 25].float_type = GO_ACCELERATION_DISTANCE;
+    flash_union_buffer[offset + 26].float_type = BACK_ACCELERATION_DISTANCE;
 
     // 擦除并写入Flash
     flash_erase_page(FLASH_SECTION_INDEX, FLASH_INS_DATA_INDEX);
@@ -899,7 +901,8 @@ void Test_Data_Init(void)
     S_BRAKING_DISTANCE = flash_union_buffer[offset + 22].float_type;
     SAFETY_MARGIN_Y = flash_union_buffer[offset + 23].float_type;
     S_SWITCH_DISTANCE = flash_union_buffer[offset + 24].float_type;
-    ACCELERATION_DISTANCE = flash_union_buffer[offset + 25].float_type;
+    GO_ACCELERATION_DISTANCE = flash_union_buffer[offset + 25].float_type;
+    BACK_ACCELERATION_DISTANCE = flash_union_buffer[offset + 26].float_type;
 
     // 第一次烧录确保过初始化赋初值
     // Start_GPS_Point = 1;
@@ -924,7 +927,8 @@ void Test_Data_Init(void)
     // MIN_SPEED = 2.0f;
     // BRAKING_DISTANCE = 3.0f;
     // S_SWITCH_DISTANCE = 0.4f;
-    ACCELERATION_DISTANCE = 8.0f;
+    // GO_ACCELERATION_DISTANCE = 5.0f;
+    // BACK_ACCELERATION_DISTANCE = 8.0f;
 
     NOW_GPS_Point = Start_GPS_Point;
     NOW_INS_Point = Start_INS_Point;

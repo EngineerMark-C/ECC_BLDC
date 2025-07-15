@@ -6,7 +6,8 @@ float target_angle = 0.0f;                                                      
 float MAX_SPEED;                                                                // 最大速度
 float MIN_SPEED;                                                                // 最小速度
 float BRAKING_DISTANCE;                                                         // 开始减速距离
-float ACCELERATION_DISTANCE;                                                    // 加速距离
+float GO_ACCELERATION_DISTANCE;                                                 // 启动加速距离
+float BACK_ACCELERATION_DISTANCE;                                               // 反向加速距离
 
 float S_MAX_SPEED;                                                              // S 型走位最大速度
 float S_MIN_SPEED;                                                              // S 型走位最小速度
@@ -91,13 +92,29 @@ void Speed_Management(float distance)
 void Speed_Management_For_Test1(float distance)
 {
     float current_target_speed;
+    float current_acceleration_distance;
+    
+    // 根据当前INS点位选择加速距离
+    if (NOW_INS_Point == 1)
+    {
+        current_acceleration_distance = GO_ACCELERATION_DISTANCE;
+    }
+    else if (NOW_INS_Point == 2)
+    {
+        current_acceleration_distance = BACK_ACCELERATION_DISTANCE;
+    }
+    else
+    {
+        // 默认使用GO_ACCELERATION_DISTANCE
+        current_acceleration_distance = GO_ACCELERATION_DISTANCE;
+    }
 
     // 动态速度曲线：距离越近速度越慢
-    if(distance > ACCELERATION_DISTANCE)
+    if(distance > current_acceleration_distance)
     {
-        if (now_distance < ACCELERATION_DISTANCE)
+        if (now_distance < current_acceleration_distance)
         {
-            current_target_speed = MAX_SPEED * (now_distance / ACCELERATION_DISTANCE) * 0.7f;
+            current_target_speed = MAX_SPEED * (now_distance / current_acceleration_distance) * 0.7f;
             current_target_speed = fmaxf(current_target_speed, MIN_SPEED);
         }
         else
@@ -336,7 +353,14 @@ void GPS_Point_to_Point(uint8_t i)
     if (reach_flag !=1)
     {
         target_angle = (float)angle;
-        Speed_Management((float)distance);
+        if (test_flag == TEST__1)
+        {
+            Speed_Management_For_Test1((float)distance);
+        }
+        else
+        {
+            Speed_Management((float)distance);
+        }
     }
 
     if (distance < GPS_SWITCH_DISTANCE)
@@ -425,7 +449,14 @@ void GPS_ENU_Point_to_Point(uint8_t i)
     if (reach_flag !=1)
     {
         target_angle = (float)angle;
-        Speed_Management((float)distance);
+        if (test_flag == TEST__1)
+        {
+            Speed_Management_For_Test1((float)distance);
+        }
+        else
+        {
+            Speed_Management((float)distance);
+        }
     }
     // 修改到达判断条件
     if (distance < GPS_SWITCH_DISTANCE)
