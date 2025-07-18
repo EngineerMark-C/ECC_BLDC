@@ -214,7 +214,8 @@ MotorMenuItem motor_menu[] = {
     {"INS_SWITCH_DISTANCE", &INS_SWITCH_DISTANCE},
     {"S_SWITCH_DISTANCE", &S_SWITCH_DISTANCE},
     {"GO_ACCEL_DISTANCE", &GO_ACCELERATION_DISTANCE},
-    {"BK_ACCEL_DISTANCE", &BACK_ACCELERATION_DISTANCE}
+    {"BK_ACCEL_DISTANCE", &BACK_ACCELERATION_DISTANCE},
+    {"TURN_ANGLE", &turn_angle}
 };
 
 // 导航模式菜单显示文本数组
@@ -1290,12 +1291,12 @@ void Main_Menu_Key_Process(void)
     }
     if (key5_state == KEY_SHORT_PRESS)
     {
-        if (Fire_Flag == 0)
-        {
-            system_delay_ms(2000);
-        }
-        Fire_Flag = Fire_Flag ? 0 : 1;
-        key_clear_state(KEY_5);
+        //  if (Fire_Flag == 0)
+        //  {
+        //      system_delay_ms(2000);
+        //  }
+        //  Fire_Flag = Fire_Flag ? 0 : 1;
+        //  key_clear_state(KEY_5);
     }
 }
 

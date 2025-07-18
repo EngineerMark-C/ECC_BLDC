@@ -52,6 +52,8 @@ float now_s_distance = 0.0f;                                                    
 
 float now_distance = 0.0f;                                                      // 当前距离
 
+float turn_angle;                                                               // 转向角度
+
 uint8_t GPS_TO_INS_Point = 0;                                                   // GPS点位转换到INS点位
 
 typedef struct {

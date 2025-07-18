@@ -52,8 +52,11 @@ int core0_main(void)
     // Reset_All_Flash_Data();                                                    // 重置所有Flash数据区域
     // target_speed = 2.0f;                                                       // 目标速度
     // icm42688_init();                                                           // 初始化 ICM42688
+    Fire_Flag =1;
     while (TRUE)
     {
+        
+        //Fire_Flag =1;
         // uint32 start_time = IfxStm_getLower(IfxStm_getAddress(IfxStm_Index_0));
         Menu();                                                                 // 菜单逻辑
         // system_delay_ms(50);                                                    // 将刷新间隔增加到50ms
@@ -63,6 +66,7 @@ int core0_main(void)
         // float time_us = (float)time / 100.0f;
         // printf("所需时间: %.2f us\n", time_us);
         // printf("%f\n", yaw);
+        // printf("%d\n", Fire_Flag);
         // printf("%f,%f,%f\n", ax_raw, ay_raw, az_raw);
         // printf("%f,%f,%f\n", gx_raw, gy_raw, gz_raw);
         // printf("%f,%f,%f\n", pitch, roll, yaw);
