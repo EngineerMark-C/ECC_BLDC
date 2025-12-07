@@ -52,7 +52,7 @@ int core0_main(void)
     // Reset_All_Flash_Data();                                                    // 重置所有Flash数据区域
     // target_speed = 2.0f;                                                       // 目标速度
     // icm42688_init();                                                           // 初始化 ICM42688
-    Fire_Flag =1;
+    //Fire_Flag =1;
     while (TRUE)
     {
         
