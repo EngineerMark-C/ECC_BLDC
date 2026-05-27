@@ -14,7 +14,8 @@ extern float S_BRAKING_DISTANCE;
 extern float GPS_SWITCH_DISTANCE;                                               // GPS 切换距离
 extern float INS_SWITCH_DISTANCE;                                               // INS 切换距离
 extern float S_SWITCH_DISTANCE;                                                 // S   切换距离
-extern float ACCELERATION_DISTANCE;                                             // 加速    距离
+extern float GO_ACCELERATION_DISTANCE;                                          // 启动 加速距离
+extern float BACK_ACCELERATION_DISTANCE;                                        // 返回 加速距离
 
 //************************************** 点位数据 *******************************************//
 extern double GPS_Point[MAX_GPS_POINTS][2];                                     // GPS 数据
@@ -49,6 +50,7 @@ extern uint8_t End_S_Point;
 extern uint8_t NOW_S_Point;
 
 extern float next_target_angle;                                                 // 下一个目标角度
+extern float turn_angle;                                                        // 转向角度
 
 extern uint8_t GPS_TO_INS_Point;                                                // 切换导航点位
 

@@ -1,7 +1,7 @@
 #ifndef _mode_h_
 #define _mode_h_
 
-extern uint8_t Fire_Flag;
+extern volatile uint8_t Fire_Flag;
 
 typedef enum {
     GPS_NAV_Flag,                                                    //GPS导航标志位

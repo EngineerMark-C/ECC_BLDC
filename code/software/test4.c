@@ -410,6 +410,9 @@ void Execute_Complete_Command(void)
         pit_disable(ASR_PIT);
         printf("音频接收定时器已关闭。\r\n");
 
+        pit_enable(PIT0);  // 启用PIT0定时器
+        pit_enable(PIT1);  // 启用PIT1定时器
+        pit_enable(PIT2);  // 启用PIT2定时器
         // 断开WiFi连接
         wifi_uart_disconnected_wifi();
         printf("WiFi连接已断开。\r\n");

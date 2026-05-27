@@ -350,6 +350,9 @@ void audio_init()
     fifo_init(&adc_data_fifo, FIFO_DATA_16BIT, adc_get_data, (ASR_SEND_DATA_MAX_LENTH * 2));        // 初始化音频接收fifo
 
     pit_disable(ASR_PIT);                                                                           // 连接wifi前先关闭定时器
+    pit_disable(PIT0);                                                                              // 关闭PIT0定时器，避免干扰
+    pit_disable(PIT1);                                                                              // 关闭PIT1定时器，避免干扰
+    pit_disable(PIT2);                                                                              // 关闭PIT2定时器，避免干扰
     while(wifi_uart_init(ASR_WIFI_SSID, ASR_WIFI_PASSWORD, WIFI_UART_STATION))                      // 连接 WiFi 模块到指定的 WiFi 网络
     {
         printf("wifi连接失败，开始重连...\r\n");
